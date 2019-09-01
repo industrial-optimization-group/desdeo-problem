@@ -150,6 +150,22 @@ class ScalarObjective(ObjectiveBase):
 
 
 class VectorObjective(VectorObjectiveBase):
+    """An objective object that calculated one or more objective functions.
+
+    Args:
+        names (List[str]): Names of the various objectives in a list
+        evaluator (Callable): The function that evaluates the objective values
+        lower_bounds (Union[List(float), np.ndarray), optional): Lower bounds of the
+        objective values. Defaults to None.
+        upper_bounds (Union[List(float), np.ndarray), optional): Upper bounds of the
+        objective values. Defaults to None.
+
+    Raises:
+        ObjectiveError: When lengths the input arrays are different.
+        ObjectiveError: When any of the lower bounds is not smaller than the
+        corresponding upper bound.
+
+    """
     def __init__(
         self,
         names: List(str),
