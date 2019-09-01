@@ -25,6 +25,15 @@ class VariableError(Exception):
     pass
 
 
+class VariableBuilderError(Exception):
+    """Raised when an error is encountered during the handling of the
+    Variable objects.
+
+    """
+
+    pass
+
+
 class Variable:
     """Simple variable with a name, initial value and bounds.
 
@@ -118,6 +127,22 @@ def variable_builder(
     lower_bounds: np.ndarray = None,
     upper_bounds: np.ndarray = None,
 ):
+    """Automatically build all variable objects.
+
+    Args:
+        names (List[str]): Names of the variables
+        initial_values (np.ndarray): Initial values taken by the variables.
+        lower_bounds (np.ndarray, optional): Lower bounds of the variables. If None,
+            it defaults to negative infinity. Defaults to None.
+        upper_bounds (np.ndarray, optional): Upper bounds of the variables. If None,
+            it defaults to positive infinity. Defaults to None.
+
+    Raises:
+        VariableError: Lengths of the input arrays are different.
+
+    Returns:
+        List[Variable]: List of variable objects
+    """
     # assert that all inputs have the same size
     num_of_variables = len(names)
     if initial_values is None:
@@ -128,21 +153,25 @@ def variable_builder(
             "initial_values array should be the same"
         )
         logger.error(msg)
-        raise VariableError(msg)
+        raise VariableBuilderError(msg)
+    if lower_bounds is None:
+        lower_bounds = [-np.inf] * num_of_variables
     if not (num_of_variables == len(lower_bounds)):
         msg = (
             "The length of the list of names and the number of elements in the "
             "lower_bounds array should be the same"
         )
         logger.error(msg)
-        raise VariableError(msg)
+        raise VariableBuilderError(msg)
+    if upper_bounds is None:
+        upper_bounds = [np.inf] * num_of_variables
     if not (num_of_variables == len(upper_bounds)):
         msg = (
             "The length of the list of names and the number of elements in the "
             "upper_bounds array should be the same"
         )
         logger.error(msg)
-        raise VariableError(msg)
+        raise VariableBuilderError(msg)
     # if most checks passed
     variables = [
         Variable(*var_data)
