@@ -6,13 +6,11 @@ import logging
 import logging.config
 from abc import ABC, abstractmethod
 from os import path
-from typing import Callable
+from typing import Callable, Tuple, List, Union
 
 import numpy as np
 
-log_conf_path = path.join(
-    path.dirname(path.abspath(__file__)), "../logger.cfg"
-)
+log_conf_path = path.join(path.dirname(path.abspath(__file__)), "../logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
 
@@ -30,6 +28,23 @@ class ObjectiveBase(ABC):
 
     @abstractmethod
     def evaluate(self, decision_vector: np.ndarray) -> float:
+        """Evaluates the objective according to a decision variable vector.
+
+        Args:
+            variables (np.ndarray): A vector of Variables to be used in
+            the evaluation of the objective.
+
+        """
+        pass
+
+
+class VectorObjectiveBase(ABC):
+    """The abstract base class for multiple objectives which are calculated at once.
+
+    """
+
+    @abstractmethod
+    def evaluate(self, decision_vector: np.ndarray) -> Tuple(float):
         """Evaluates the objective according to a decision variable vector.
 
         Args:
@@ -70,9 +85,9 @@ class ScalarObjective(ObjectiveBase):
     ) -> None:
         # Check that the bounds make sense
         if not (lower_bound < upper_bound):
-            msg = (
-                "Lower bound {} should be less than the upper bound " "{}."
-            ).format(lower_bound, upper_bound)
+            msg = ("Lower bound {} should be less than the upper bound " "{}.").format(
+                lower_bound, upper_bound
+            )
             logger.error(msg)
             raise ObjectiveError(msg)
 
@@ -131,4 +146,111 @@ class ScalarObjective(ObjectiveBase):
         # Store the value of the objective
         self.value = result
 
+        return result
+
+
+class VectorObjective(VectorObjectiveBase):
+    def __init__(
+        self,
+        names: List(str),
+        evaluator: Callable,
+        lower_bounds: Union[List(float), np.ndarray] = None,
+        upper_bounds: Union[List(float), np.ndarray] = None,
+    ):
+        n_of_objectives = len(names)
+        if lower_bounds in None:
+            lower_bound = np.full(n_of_objectives, -np.inf)
+        if upper_bounds is None:
+            upper_bounds = np.full(n_of_objectives, np.inf)
+        lower_bounds = np.asarray(lower_bounds)
+        upper_bounds = np.asarray(upper_bounds)
+        # Check if list lengths are the same
+        if not (n_of_objectives == len(lower_bound)):
+            msg = (
+                "The length of the list of names and the number of elements in the "
+                "lower_bounds array should be the same"
+            )
+        logger.error(msg)
+        raise ObjectiveError(msg)
+        if not (n_of_objectives == len(upper_bounds)):
+            msg = (
+                "The length of the list of names and the number of elements in the "
+                "upper_bounds array should be the same"
+            )
+        logger.error(msg)
+        raise ObjectiveError(msg)
+        # Check if all lower bounds are smaller than the corresponding upper bounds
+        if not (np.all(lower_bounds < upper_bounds)):
+            msg = "Lower bounds should be less than the upper bound "
+            logger.error(msg)
+            raise ObjectiveError(msg)
+        self.__names: List[str] = names
+        self.__n_of_objectives: int = n_of_objectives
+        self.__evaluator: Callable = evaluator
+        self.__values: Tuple[float] = (0.0,) * n_of_objectives
+        self.__lower_bounds: np.ndarray = lower_bounds
+        self.__upper_bounds: np.ndarray = upper_bounds
+
+    @property
+    def names(self) -> str:
+        return self.__names
+
+    @property
+    def n_of_objectives(self) -> int:
+        return self.__n_of_objectives
+
+    @property
+    def values(self) -> Tuple[float]:
+        return self.__values
+
+    @values.setter
+    def values(self, values: Tuple[float]):
+        self.__values = values
+
+    @property
+    def evaluator(self) -> Callable:
+        return self.__evaluator
+
+    @property
+    def lower_bounds(self) -> np.ndarray:
+        return self.__lower_bounds
+
+    @property
+    def upper_bounds(self) -> np.ndarray:
+        return self.__upper_bounds
+
+    def evaluate(self, decision_vector: np.ndarray) -> Tuple[float]:
+        """Evaluate the multiple objective functions value.
+
+        Args:
+            decision_vector (np.ndarray): A vector of variables to evaluate the
+            objective function with.
+        Returns:
+            float: The evaluated value of the objective function.
+
+        Raises:
+            ObjectiveError: When a bad argument is supplies to the evaluator or when
+                the evaluator returns an unexpected number of outputs.
+
+        """
+        try:
+            result = self.__evaluator(decision_vector)
+        except (TypeError, IndexError) as e:
+            msg = "Bad argument {} supplied to the evaluator: {}".format(
+                str(decision_vector), str(e)
+            )
+            logger.error(msg)
+            raise ObjectiveError(msg)
+        result = tuple(result)
+        if not (len(result) == self.n_of_objectives):
+            msg = (
+                "Number of output ({}) elements not equal to the expected "
+                "number of output elements ({})".format(
+                    str(result), self.n_of_objectives
+                )
+            )
+            logger.error(msg)
+            raise ObjectiveError(msg)
+        # Store the value of the objective
+        self.value = result
         return result
