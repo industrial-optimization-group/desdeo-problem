@@ -4,7 +4,7 @@ __all__ = [
     "constraint_function_factory",
 ]
 
-from .Constraint import (
+from desdeo_problem.Constraint import (
     ConstraintError,
     ScalarConstraint,
     constraint_function_factory,

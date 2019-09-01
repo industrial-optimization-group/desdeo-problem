@@ -602,10 +602,7 @@ class MOProblem(ProblemBase):
         self.__variables: List[Variable] = variables
         self.__constraints: List[ScalarConstraint] = constraints
         self.__n_of_variables: int = len(self.variables)
-        self.__n_of_objectives: int = reduce(
-            lambda obj1, obj2: number_of_objectives(obj1) + number_of_objectives(obj2),
-            self.__objectives,
-        )
+        self.__n_of_objectives: int = sum(map(number_of_objectives, self.__objectives))
         if self.constraints is not None:
             self.__n_of_constraints: int = len(self.constraints)
         else:
@@ -787,6 +784,12 @@ class MOProblem(ProblemBase):
         if len(shape) == 1:
             decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
 
+        # Checking bounds
+        if np.any(self.get_variable_lower_bounds() > decision_vectors):
+            raise ValueError("Some decision variable values violate lower bounds")
+        if np.any(self.get_variable_upper_bounds() < decision_vectors):
+            raise ValueError("Some decision variable values violate upper bounds")
+
         (n_rows, n_cols) = np.shape(decision_vectors)
 
         if n_cols != self.n_of_variables:
@@ -812,9 +815,14 @@ class MOProblem(ProblemBase):
         obj_column = 0
         for objective in self.objectives:
             elem_in_curr_obj = number_of_objectives(objective)
-            objective_vectors[:, obj_column : obj_column + elem_in_curr_obj] = np.array(
-                list(map(objective.evaluate, decision_vectors))
-            )
+            if elem_in_curr_obj == 1:
+                objective_vectors[:, obj_column] = np.array(
+                    list(map(objective.evaluate, decision_vectors))
+                )
+            elif elem_in_curr_obj > 1:
+                objective_vectors[
+                    :, obj_column : obj_column + elem_in_curr_obj
+                ] = np.array(list(map(objective.evaluate, decision_vectors)))
             obj_column = obj_column + elem_in_curr_obj
 
         # Calculate the constraint values
@@ -825,6 +833,19 @@ class MOProblem(ProblemBase):
                 )
 
         return (objective_vectors, constraint_values)
+
+    def evaluate_constraint_values(self) -> Optional[np.ndarray]:
+        """Evaluate just the constraint function values using the attributes
+        decision_vectors and objective_vectors
+
+        Raises:
+            NotImplementedError
+
+        Note:
+            Currently not supported by ScalarMOProblem
+
+        """
+        raise NotImplementedError("Not implemented for ScalarMOProblem")
 
 
 def number_of_objectives(obj_instance: Union[ScalarObjective, VectorObjective]) -> int:

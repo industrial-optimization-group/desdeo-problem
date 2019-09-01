@@ -44,7 +44,7 @@ class VectorObjectiveBase(ABC):
     """
 
     @abstractmethod
-    def evaluate(self, decision_vector: np.ndarray) -> Tuple(float):
+    def evaluate(self, decision_vector: np.ndarray) -> Tuple[float]:
         """Evaluates the objective according to a decision variable vector.
 
         Args:
@@ -153,11 +153,11 @@ class VectorObjective(VectorObjectiveBase):
     """An objective object that calculated one or more objective functions.
 
     Args:
-        names (List[str]): Names of the various objectives in a list
+        name (List[str]): Names of the various objectives in a list
         evaluator (Callable): The function that evaluates the objective values
-        lower_bounds (Union[List(float), np.ndarray), optional): Lower bounds of the
+        lower_bounds (Union[List[float], np.ndarray), optional): Lower bounds of the
         objective values. Defaults to None.
-        upper_bounds (Union[List(float), np.ndarray), optional): Upper bounds of the
+        upper_bounds (Union[List[float], np.ndarray), optional): Upper bounds of the
         objective values. Defaults to None.
 
     Raises:
@@ -168,20 +168,20 @@ class VectorObjective(VectorObjectiveBase):
     """
     def __init__(
         self,
-        names: List(str),
+        name: List[str],
         evaluator: Callable,
-        lower_bounds: Union[List(float), np.ndarray] = None,
-        upper_bounds: Union[List(float), np.ndarray] = None,
+        lower_bounds: Union[List[float], np.ndarray] = None,
+        upper_bounds: Union[List[float], np.ndarray] = None,
     ):
-        n_of_objectives = len(names)
+        n_of_objectives = len(name)
         if lower_bounds is None:
-            lower_bound = np.full(n_of_objectives, -np.inf)
+            lower_bounds = np.full(n_of_objectives, -np.inf)
         if upper_bounds is None:
             upper_bounds = np.full(n_of_objectives, np.inf)
         lower_bounds = np.asarray(lower_bounds)
         upper_bounds = np.asarray(upper_bounds)
         # Check if list lengths are the same
-        if not (n_of_objectives == len(lower_bound)):
+        if not (n_of_objectives == len(lower_bounds)):
             msg = (
                 "The length of the list of names and the number of elements in the "
                 "lower_bounds array should be the same"
@@ -200,7 +200,7 @@ class VectorObjective(VectorObjectiveBase):
             msg = "Lower bounds should be less than the upper bound "
             logger.error(msg)
             raise ObjectiveError(msg)
-        self.__names: List[str] = names
+        self.__name: List[str] = name
         self.__n_of_objectives: int = n_of_objectives
         self.__evaluator: Callable = evaluator
         self.__values: Tuple[float] = (0.0,) * n_of_objectives
@@ -208,8 +208,8 @@ class VectorObjective(VectorObjectiveBase):
         self.__upper_bounds: np.ndarray = upper_bounds
 
     @property
-    def names(self) -> str:
-        return self.__names
+    def name(self) -> str:
+        return self.__name
 
     @property
     def n_of_objectives(self) -> int:
