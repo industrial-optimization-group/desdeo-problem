@@ -22,7 +22,7 @@ def obj3(x):
     return y3
 
 
-f1_2= VectorObjective(['y1', 'y2'], obj1_2)
+f1_2 = VectorObjective(["y1", "y2"], obj1_2)
 f3 = ScalarObjective("f3", obj3)
 prob = MOProblem([f1_2, f3], variables, None)
 data = np.asarray([[1, 1, 1], [1, -1, 0]])
