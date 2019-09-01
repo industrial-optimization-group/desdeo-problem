@@ -7,7 +7,7 @@ necessary class to be used.
 import logging
 import logging.config
 from os import path
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import numpy as np
 
@@ -123,19 +123,19 @@ class Variable:
 
 def variable_builder(
     names: List[str],
-    initial_values: np.ndarray,
-    lower_bounds: np.ndarray = None,
-    upper_bounds: np.ndarray = None,
+    initial_values: Union[List[float], np.ndarray],
+    lower_bounds: Union[List[float], np.ndarray] = None,
+    upper_bounds: Union[List[float], np.ndarray] = None,
 ):
     """Automatically build all variable objects.
 
     Args:
         names (List[str]): Names of the variables
         initial_values (np.ndarray): Initial values taken by the variables.
-        lower_bounds (np.ndarray, optional): Lower bounds of the variables. If None,
-            it defaults to negative infinity. Defaults to None.
-        upper_bounds (np.ndarray, optional): Upper bounds of the variables. If None,
-            it defaults to positive infinity. Defaults to None.
+        lower_bounds (Union[List[float], np.ndarray], optional): Lower bounds of the
+            variables. If None, it defaults to negative infinity. Defaults to None.
+        upper_bounds (Union[List[float], np.ndarray], optional): Upper bounds of the
+            variables. If None, it defaults to positive infinity. Defaults to None.
 
     Raises:
         VariableError: Lengths of the input arrays are different.
