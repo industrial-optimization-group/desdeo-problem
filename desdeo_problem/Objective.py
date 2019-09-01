@@ -10,7 +10,7 @@ from typing import Callable, Tuple, List, Union
 
 import numpy as np
 
-log_conf_path = path.join(path.dirname(path.abspath(__file__)), "../logger.cfg")
+log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
 
@@ -174,7 +174,7 @@ class VectorObjective(VectorObjectiveBase):
         upper_bounds: Union[List(float), np.ndarray] = None,
     ):
         n_of_objectives = len(names)
-        if lower_bounds in None:
+        if lower_bounds is None:
             lower_bound = np.full(n_of_objectives, -np.inf)
         if upper_bounds is None:
             upper_bounds = np.full(n_of_objectives, np.inf)
@@ -186,15 +186,15 @@ class VectorObjective(VectorObjectiveBase):
                 "The length of the list of names and the number of elements in the "
                 "lower_bounds array should be the same"
             )
-        logger.error(msg)
-        raise ObjectiveError(msg)
+            logger.error(msg)
+            raise ObjectiveError(msg)
         if not (n_of_objectives == len(upper_bounds)):
             msg = (
                 "The length of the list of names and the number of elements in the "
                 "upper_bounds array should be the same"
             )
-        logger.error(msg)
-        raise ObjectiveError(msg)
+            logger.error(msg)
+            raise ObjectiveError(msg)
         # Check if all lower bounds are smaller than the corresponding upper bounds
         if not (np.all(lower_bounds < upper_bounds)):
             msg = "Lower bounds should be less than the upper bound "

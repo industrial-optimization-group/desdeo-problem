@@ -8,16 +8,16 @@ import logging.config
 from abc import ABC, abstractmethod
 from os import path
 from typing import List, Optional, Tuple, Union
+from functools import reduce
+from operator import iadd
 
 import numpy as np
 
 from desdeo_problem.Constraint import ScalarConstraint
-from desdeo_problem.Objective import ScalarObjective
+from desdeo_problem.Objective import ScalarObjective, VectorObjective
 from desdeo_problem.Variable import Variable
 
-log_conf_path = path.join(
-    path.dirname(path.abspath(__file__)), "../logger.cfg"
-)
+log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
 
@@ -402,13 +402,7 @@ class ScalarMOProblem(ProblemBase):
         if constraint_values is not None:
             for (col_i, constraint) in enumerate(self.constraints):
                 constraint_values[:, col_i] = np.array(
-                    list(
-                        map(
-                            constraint.evaluate,
-                            decision_vectors,
-                            objective_vectors,
-                        )
-                    )
+                    list(map(constraint.evaluate, decision_vectors, objective_vectors))
                 )
 
         return (objective_vectors, constraint_values)
@@ -458,9 +452,7 @@ class ScalarDataProblem(ProblemBase):
 
     """
 
-    def __init__(
-        self, decision_vectors: np.ndarray, objective_vectors: np.ndarray
-    ):
+    def __init__(self, decision_vectors: np.ndarray, objective_vectors: np.ndarray):
         super().__init__()
         self.decision_vectors: np.ndarray = decision_vectors
         self.objective_vectors: np.ndarray = objective_vectors
@@ -594,3 +586,265 @@ class ScalarDataProblem(ProblemBase):
             raise NotImplementedError(msg)
 
         return (self.objective_vectors[idx],)
+
+
+class MOProblem(ProblemBase):
+    def __init__(
+        self,
+        objectives: List[Union[ScalarObjective, VectorObjective]],
+        variables: List[Variable],
+        constraints: List[ScalarConstraint],
+        nadir: Optional[np.ndarray] = None,
+        ideal: Optional[np.ndarray] = None,
+    ):
+        super().__init__()
+        self.__objectives: List[Union[ScalarObjective, VectorObjective]] = objectives
+        self.__variables: List[Variable] = variables
+        self.__constraints: List[ScalarConstraint] = constraints
+        self.__n_of_variables: int = len(self.variables)
+        self.__n_of_objectives: int = reduce(
+            lambda obj1, obj2: number_of_objectives(obj1) + number_of_objectives(obj2),
+            self.__objectives,
+        )
+        if self.constraints is not None:
+            self.__n_of_constraints: int = len(self.constraints)
+        else:
+            self.__n_of_constraints = 0
+
+        # Nadir vector must be the same size as the number of objectives
+        if nadir is not None:
+            if len(nadir) != self.n_of_objectives:
+                msg = (
+                    "The length of the nadir vector does not match the"
+                    "number of objectives: Length nadir {}, number of "
+                    "objectives {}."
+                ).format(len(nadir), self.n_of_objectives)
+                logger.error(msg)
+                raise ProblemError(msg)
+
+        # Ideal vector must be the same size as the number of objectives
+        if ideal is not None:
+            if len(ideal) != self.n_of_objectives:
+                msg = (
+                    "The length of the ideal vector does not match the"
+                    "number of objectives: Length ideal {}, number of "
+                    "objectives {}."
+                ).format(len(ideal), self.n_of_objectives)
+                logger.error(msg)
+                raise ProblemError(msg)
+
+        self.__nadir = nadir
+        self.__ideal = ideal
+
+    @property
+    def n_of_constraints(self) -> int:
+        return self.__n_of_constraints
+
+    @n_of_constraints.setter
+    def n_of_constraints(self, val: int):
+        self.__n_of_constraints = val
+
+    @property
+    def objectives(self) -> List[ScalarObjective]:
+        return self.__objectives
+
+    @objectives.setter
+    def objectives(self, val: List[ScalarObjective]):
+        self.__objectives = val
+
+    @property
+    def variables(self) -> List[Variable]:
+        return self.__variables
+
+    @variables.setter
+    def variables(self, val: List[Variable]):
+        self.__variables = val
+
+    @property
+    def constraints(self) -> List[ScalarConstraint]:
+        return self.__constraints
+
+    @constraints.setter
+    def constraints(self, val: List[ScalarConstraint]):
+        self.__constraints = val
+
+    @property
+    def n_of_objectives(self) -> int:
+        return self.__n_of_objectives
+
+    @n_of_objectives.setter
+    def n_of_objectives(self, val: int):
+        self.__n_of_objectives = val
+
+    @property
+    def n_of_variables(self) -> int:
+        return self.__n_of_variables
+
+    @n_of_variables.setter
+    def n_of_variables(self, val: int):
+        self.__n_of_variables = val
+
+    @property
+    def nadir(self) -> np.ndarray:
+        return self.__nadir
+
+    @nadir.setter
+    def nadir(self, val: np.ndarray):
+        self.__nadir = val
+
+    @property
+    def ideal(self) -> np.ndarray:
+        return self.__ideal
+
+    @ideal.setter
+    def ideal(self, val: np.ndarray):
+        self.__ideal = val
+
+    def get_variable_bounds(self) -> Union[np.ndarray, None]:
+        """Return the upper and lower bounds of each decision variable present
+        in the problem as a 2D numpy array. The first column corresponds to the
+        lower bounds of each variable, and the second column to the upper
+        bound.
+
+        Returns:
+           np.ndarray: Lower and upper bounds of each variable
+           as a 2D numpy array. If undefined variables, return None instead.
+
+        """
+        if self.variables is not None:
+            bounds = np.ndarray((self.n_of_variables, 2))
+            for ind, var in enumerate(self.variables):
+                bounds[ind] = np.array(var.get_bounds())
+            return bounds
+        else:
+            logger.info(
+                "Attempted to get variable bounds for a "
+                "MOProblem with no defined variables."
+            )
+            return None
+
+    def get_variable_names(self) -> List[str]:
+        """Return the variable names of the variables present in the problem in
+        the order they were added.
+
+        Returns:
+            List[str]: Names of the variables in the order they were added.
+
+        """
+        return [var.name for var in self.variables]
+
+    def get_objective_names(self) -> List[str]:
+        """Return the names of the objectives present in the problem in the
+        order they were added.
+
+        Returns:
+            List[str]: Names of the objectives in the order they were added.
+
+        """
+        obj_list = [list(obj.name) for obj in self.objectives]
+        return reduce(iadd, obj_list, [])
+
+    def get_variable_lower_bounds(self) -> np.ndarray:
+        """Return the lower bounds of each variable as a list. The order of the bounds
+        follows the order the variables were added to the problem.
+
+        Returns:
+            np.ndarray: An array with the lower bounds of the variables.
+        """
+        return np.array([var.get_bounds()[0] for var in self.variables])
+
+    def get_variable_upper_bounds(self) -> np.ndarray:
+        """Return the upper bounds of each variable as a list. The order of the bounds
+        follows the order the variables were added to the problem.
+
+        Returns:
+            np.ndarray: An array with the upper bounds of the variables.
+        """
+        return np.array([var.get_bounds()[1] for var in self.variables])
+
+    def evaluate(
+        self, decision_vectors: np.ndarray
+    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        """Evaluates the problem using an ensemble of input vectors.
+
+        Args:
+            decision_vectors (np.ndarray): An 2D array of decision variable
+            input vectors. Each column represent the values of each decision
+            variable.
+
+        Returns:
+            Tuple[np.ndarray, Union[None, np.ndarray]]: If constraint are
+            defined, returns the objective vector values and corresponding
+            constraint values. Or, if no constraints are defined, returns just
+            the objective vector values with None as the constraint values.
+
+        Raises:
+            ProblemError: The decision_vectors have wrong dimensions.
+
+        """
+        # Reshape decision_vectors with single row to work with the code
+        shape = np.shape(decision_vectors)
+        if len(shape) == 1:
+            decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
+
+        (n_rows, n_cols) = np.shape(decision_vectors)
+
+        if n_cols != self.n_of_variables:
+            msg = (
+                "The length of the input vectors does not match the number "
+                "of variables in the problem: Input vector length {}, "
+                "number of variables {}."
+            ).format(n_cols, self.n_of_variables)
+            logger.error(msg)
+            raise ProblemError(msg)
+
+        objective_vectors: np.ndarray = np.ndarray(
+            (n_rows, self.n_of_objectives), dtype=float
+        )
+        if self.n_of_constraints > 0:
+            constraint_values: np.ndarray = np.ndarray(
+                (n_rows, self.n_of_constraints), dtype=float
+            )
+        else:
+            constraint_values = None
+
+        # Calculate the objective values
+        obj_column = 0
+        for objective in self.objectives:
+            elem_in_curr_obj = number_of_objectives(objective)
+            objective_vectors[:, obj_column : obj_column + elem_in_curr_obj] = np.array(
+                list(map(objective.evaluate, decision_vectors))
+            )
+            obj_column = obj_column + elem_in_curr_obj
+
+        # Calculate the constraint values
+        if constraint_values is not None:
+            for (col_i, constraint) in enumerate(self.constraints):
+                constraint_values[:, col_i] = np.array(
+                    list(map(constraint.evaluate, decision_vectors, objective_vectors))
+                )
+
+        return (objective_vectors, constraint_values)
+
+
+def number_of_objectives(obj_instance: Union[ScalarObjective, VectorObjective]) -> int:
+    """Return the number of objectives in the given obj_instance.
+
+    Args:
+        obj_instance (Union[ScalarObjective, VectorObjective]): An instance of one of
+            the objective classes
+
+    Raises:
+        ProblemError: Raised when obj_instance is not an instance of the supported
+            classes
+
+    Returns:
+        int: Number of objectives in obj_instance
+    """
+    if isinstance(obj_instance, ScalarObjective):
+        return 1
+    elif isinstance(obj_instance, VectorObjective):
+        return obj_instance.n_of_objectives
+    else:
+        msg = "Supported objective types: ScalarObjective and VectorObjective"
+        raise ProblemError(msg)
