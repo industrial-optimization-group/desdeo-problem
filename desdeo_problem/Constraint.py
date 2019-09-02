@@ -10,11 +10,13 @@ from typing import Callable, List
 
 import numpy as np
 
-log_conf_path = path.join(
-    path.dirname(path.abspath(__file__)), "./logger.cfg"
-)
+log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
+# To prevent unexpected outputs in ipython console
+logging.getLogger("parso.python.diff").disabled = True
+logging.getLogger("parso.cache").disabled = True
+logging.getLogger("parso.cache.pickle").disabled = True
 
 
 class ConstraintError(Exception):
@@ -152,9 +154,9 @@ class ScalarConstraint(ConstraintBase):
         try:
             result = self.__evaluator(decision_vector, objective_vector)
         except (TypeError, IndexError) as e:
-            msg = (
-                "Bad arguments {} and {} supplied to the evaluator:" " {}"
-            ).format(str(decision_vector), objective_vector, str(e))
+            msg = ("Bad arguments {} and {} supplied to the evaluator:" " {}").format(
+                str(decision_vector), objective_vector, str(e)
+            )
             logger.error(msg)
             raise ConstraintError(msg)
 
@@ -166,9 +168,7 @@ supported_operators: List[str] = ["==", "<", ">"]
 constraint_function_factory."""
 
 
-def constraint_function_factory(
-    lhs: Callable, rhs: float, operator: str
-) -> Callable:
+def constraint_function_factory(lhs: Callable, rhs: float, operator: str) -> Callable:
     """A function that creates an evaluator to be used with the ScalarConstraint
     class. Constraints should be formulated in a way where all the mathematical
     expression are on the left hand side, and the constants on the right hand
@@ -199,27 +199,21 @@ def constraint_function_factory(
 
     if operator == "==":
 
-        def equals(
-            decision_vector: np.ndarray, objective_vector: np.ndarray
-        ) -> float:
+        def equals(decision_vector: np.ndarray, objective_vector: np.ndarray) -> float:
             return -abs(lhs(decision_vector, objective_vector) - rhs)
 
         return equals
 
     elif operator == "<":
 
-        def lt(
-            decision_vector: np.ndarray, objective_vector: np.ndarray
-        ) -> float:
+        def lt(decision_vector: np.ndarray, objective_vector: np.ndarray) -> float:
             return rhs - lhs(decision_vector, objective_vector)
 
         return lt
 
     elif operator == ">":
 
-        def gt(
-            decision_vector: np.ndarray, objective_vector: np.ndarray
-        ) -> float:
+        def gt(decision_vector: np.ndarray, objective_vector: np.ndarray) -> float:
             return lhs(decision_vector, objective_vector) - rhs
 
         return gt
