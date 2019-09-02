@@ -592,7 +592,7 @@ class MOProblem(ProblemBase):
     """A multiobjective optimization problem with user defined objective funcitons,
     constraints and variables.
 
-    
+
     Args:
         objectives (List[Union[ScalarObjective, VectorObjective]]): A list containing
             the objectives of the problem.
@@ -602,14 +602,15 @@ class MOProblem(ProblemBase):
             Defaults to None.
         ideal (Optional[np.ndarray], optional): Ideal point of the problem.
             Defaults to None.
-    
+
     Raises:
         ProblemError: If ideal or nadir vectors are not the same size as number of
             objectives.
-    
+
     Returns:
         [type]: [description]
     """
+
     def __init__(
         self,
         objectives: List[Union[ScalarObjective, VectorObjective]],
