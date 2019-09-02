@@ -130,7 +130,7 @@ def variable_builder(
     initial_values: Union[List[float], np.ndarray],
     lower_bounds: Union[List[float], np.ndarray] = None,
     upper_bounds: Union[List[float], np.ndarray] = None,
-):
+) -> List[Variable]:
     """Automatically build all variable objects.
 
     Args:
