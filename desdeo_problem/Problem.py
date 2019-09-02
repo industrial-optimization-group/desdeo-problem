@@ -589,6 +589,27 @@ class ScalarDataProblem(ProblemBase):
 
 
 class MOProblem(ProblemBase):
+    """A multiobjective optimization problem with user defined objective funcitons,
+    constraints and variables.
+
+    
+    Args:
+        objectives (List[Union[ScalarObjective, VectorObjective]]): A list containing
+            the objectives of the problem.
+        variables (List[Variable]): A list containing the variables of the problem.
+        constraints (List[ScalarConstraint]): A list of the constraints of the problem.
+        nadir (Optional[np.ndarray], optional): Nadir point of the problem.
+            Defaults to None.
+        ideal (Optional[np.ndarray], optional): Ideal point of the problem.
+            Defaults to None.
+    
+    Raises:
+        ProblemError: If ideal or nadir vectors are not the same size as number of
+            objectives.
+    
+    Returns:
+        [type]: [description]
+    """
     def __init__(
         self,
         objectives: List[Union[ScalarObjective, VectorObjective]],
@@ -777,6 +798,7 @@ class MOProblem(ProblemBase):
 
         Raises:
             ProblemError: The decision_vectors have wrong dimensions.
+            ValueError: If decision_vectors violate the lower or upper bounds.
 
         """
         # Reshape decision_vectors with single row to work with the code
