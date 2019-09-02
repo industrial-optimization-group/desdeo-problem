@@ -14,6 +14,10 @@ import numpy as np
 log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
+# To prevent unexpected outputs in ipython console
+logging.getLogger("parso.python.diff").disabled = True
+logging.getLogger("parso.cache").disabled = True
+logging.getLogger("parso.cache.pickle").disabled = True
 
 
 class VariableError(Exception):
@@ -79,7 +83,7 @@ class Variable:
             raise VariableError(msg)
 
         # Check that the initial value is between the bounds
-        if not (lower_bound < initial_value < upper_bound):
+        if not (lower_bound <= initial_value <= upper_bound):
             msg = (
                 "The initial value {} should be between the "
                 "upper ({}) and lower ({}) bounds.".format(

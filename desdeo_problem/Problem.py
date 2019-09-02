@@ -20,6 +20,10 @@ from desdeo_problem.Variable import Variable
 log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
+# To prevent unexpected outputs in ipython console
+logging.getLogger("parso.python.diff").disabled = True
+logging.getLogger("parso.cache").disabled = True
+logging.getLogger("parso.cache.pickle").disabled = True
 
 
 class ProblemError(Exception):
