@@ -7,7 +7,8 @@ import logging
 import logging.config
 from abc import ABC, abstractmethod
 from os import path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict, NamedTuple
+# , TypedDict coming in py3.8
 from functools import reduce
 from operator import iadd
 
@@ -30,6 +31,27 @@ class ProblemError(Exception):
     """Raised when an error related to the Problem class is encountered.
 
     """
+# TODO consider replacing namedtuple with attr.s for validation purposes.
+
+
+class EvaluationResults(NamedTuple):
+    """The return object of <problem>.evaluate methods.
+
+    Attributes:
+        objectives (np.ndarray): The objective function values for each input
+            vector.
+        fitness (np.ndarray): Equal to objective values if objective is to be
+            minimized. Multiplied by (-1) if objective to be maximized.
+        constraints (Union[None, np.ndarray]): The constraint values of the
+            problem corresponding each input vector.
+        uncertainity (Union[None, np.ndarray]): The uncertainity in the
+            objective values.
+
+    """
+    objectives: np.ndarray
+    fitness: np.ndarray
+    constraints: Union[None, np.ndarray] = None
+    uncertainity: Union[None, np.ndarray] = None
 
 
 class ProblemBase(ABC):
@@ -101,7 +123,7 @@ class ProblemBase(ABC):
     @abstractmethod
     def evaluate(
         self, decision_vectors: np.ndarray
-    ) -> Union[np.ndarray, Tuple[np.ndarray, Union[np.ndarray, None]]]:
+    ) -> Dict:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
@@ -109,11 +131,15 @@ class ProblemBase(ABC):
             input vectors.
 
         Returns:
-            (tuple): tuple containing:
-                solutions (np.ndarray): The corresponding objective function
-                values for each input vector.
-                constraints (Union[np.ndarray, None]): The constraint values
-                of the problem corresponding each input vector.
+            (Dict): Dict with the following keys:
+                'objectives' (np.ndarray): The objective function values for each input
+                    vector.
+                'constraints' (Union[np.ndarray, None]): The constraint values of the
+                    problem corresponding each input vector.
+                'fitness' (np.ndarray): Equal to objective values if objective is to be
+                    minimized. Multiplied by (-1) if objective to be maximized.
+                'uncertainity' (Union[np.ndarray, None]): The uncertainity in the
+                    objective values.
 
         """
         pass
@@ -352,7 +378,7 @@ class ScalarMOProblem(ProblemBase):
 
     def evaluate(
         self, decision_vectors: np.ndarray
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
@@ -787,7 +813,7 @@ class MOProblem(ProblemBase):
 
     def evaluate(
         self, decision_vectors: np.ndarray
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
