@@ -298,4 +298,5 @@ class VectorObjective(VectorObjectiveBase):
             raise ObjectiveError(msg)
         # Store the value of the objective
         self.value = result
-        return ObjectiveEvaluationResults(result)
+        uncertainity = None
+        return ObjectiveEvaluationResults(result, uncertainity)
