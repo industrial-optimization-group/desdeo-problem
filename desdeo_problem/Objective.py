@@ -6,7 +6,7 @@ import logging
 import logging.config
 from abc import ABC, abstractmethod
 from os import path
-from typing import Callable, Tuple, List, Union
+from typing import Callable, Tuple, List, Union, NamedTuple
 
 import numpy as np
 
@@ -23,6 +23,21 @@ class ObjectiveError(Exception):
     """Raised when an error related to the Objective class is encountered.
 
     """
+# TODO consider replacing namedtuples with attr.s
+
+
+class ObjectiveEvaluationResults(NamedTuple):
+    """The return object of <problem>.evaluate methods.
+
+    Attributes:
+        objectives (Union[float, np.ndarray]): The objective function value/s for the
+            input vector.
+        uncertainity (Union[None, float, np.ndarray]): The uncertainity in the
+            objective value/s.
+
+    """
+    objectives: Union[float, np.ndarray]
+    uncertainity: Union[None, float, np.ndarray] = None
 
 
 class ObjectiveBase(ABC):
@@ -31,7 +46,7 @@ class ObjectiveBase(ABC):
     """
 
     @abstractmethod
-    def evaluate(self, decision_vector: np.ndarray) -> float:
+    def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluates the objective according to a decision variable vector.
 
         Args:
@@ -48,7 +63,7 @@ class VectorObjectiveBase(ABC):
     """
 
     @abstractmethod
-    def evaluate(self, decision_vector: np.ndarray) -> Tuple[float]:
+    def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluates the objective according to a decision variable vector.
 
         Args:
@@ -67,6 +82,7 @@ class ScalarObjective(ObjectiveBase):
         evaluator (Callable): The function to evaluate the objective's value.
         lower_bound (float): The lower bound of the objective.
         upper_bound (float): The upper bound of the objective.
+        maximize (bool): Boolean to determine whether the objective is to be maximized.
 
     Attributes:
         name (str): Name of the objective.
@@ -74,6 +90,7 @@ class ScalarObjective(ObjectiveBase):
         evaluator (Callable): The function to evaluate the objective's value.
         lower_bound (float): The lower bound of the objective.
         upper_bound (float): The upper bound of the objective.
+        maximize (bool): Boolean to determine whether the objective is to be maximized.
 
     Raises:
         ObjectiveError: When ill formed bounds are given.
@@ -86,6 +103,7 @@ class ScalarObjective(ObjectiveBase):
         evaluator: Callable,
         lower_bound: float = -np.inf,
         upper_bound: float = np.inf,
+        maximize: bool = False,
     ) -> None:
         # Check that the bounds make sense
         if not (lower_bound < upper_bound):
@@ -100,6 +118,7 @@ class ScalarObjective(ObjectiveBase):
         self.__value: float = 0.0
         self.__lower_bound: float = lower_bound
         self.__upper_bound: float = upper_bound
+        self.maximize: bool = maximize  # TODO implement set/getters. Have validation.
 
     @property
     def name(self) -> str:
@@ -125,17 +144,18 @@ class ScalarObjective(ObjectiveBase):
     def upper_bound(self) -> float:
         return self.__upper_bound
 
-    def evaluate(self, decision_vector: np.ndarray) -> float:
+    def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluate the objective functions value.
 
         Args:
             variables (np.ndarray): A vector of variables to evaluate the
-            objective function with.
+                objective function with.
         Returns:
-            float: The evaluated value of the objective function.
+            ObjectiveEvaluationResults: A named tuple containing the evaluated value,
+                and uncertainity of evaluation of the objective function.
 
         Raises:
-            ObjectiveError: When a bad argument is supplies to the evaluator.
+            ObjectiveError: When a bad argument is supplied to the evaluator.
 
         """
         try:
@@ -149,8 +169,8 @@ class ScalarObjective(ObjectiveBase):
 
         # Store the value of the objective
         self.value = result
-
-        return result
+        uncertainity = None
+        return ObjectiveEvaluationResults(result, uncertainity)
 
 
 class VectorObjective(VectorObjectiveBase):
@@ -163,6 +183,7 @@ class VectorObjective(VectorObjectiveBase):
         objective values. Defaults to None.
         upper_bounds (Union[List[float], np.ndarray), optional): Upper bounds of the
         objective values. Defaults to None.
+        maximize (bool): Boolean to determine whether the objective is to be maximized.
 
     Raises:
         ObjectiveError: When lengths the input arrays are different.
@@ -177,6 +198,7 @@ class VectorObjective(VectorObjectiveBase):
         evaluator: Callable,
         lower_bounds: Union[List[float], np.ndarray] = None,
         upper_bounds: Union[List[float], np.ndarray] = None,
+        maximize: bool = False,
     ):
         n_of_objectives = len(name)
         if lower_bounds is None:
@@ -211,6 +233,7 @@ class VectorObjective(VectorObjectiveBase):
         self.__values: Tuple[float] = (0.0,) * n_of_objectives
         self.__lower_bounds: np.ndarray = lower_bounds
         self.__upper_bounds: np.ndarray = upper_bounds
+        self.maximize: bool = maximize
 
     @property
     def name(self) -> str:
@@ -240,14 +263,15 @@ class VectorObjective(VectorObjectiveBase):
     def upper_bounds(self) -> np.ndarray:
         return self.__upper_bounds
 
-    def evaluate(self, decision_vector: np.ndarray) -> Tuple[float]:
+    def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluate the multiple objective functions value.
 
         Args:
             decision_vector (np.ndarray): A vector of variables to evaluate the
             objective function with.
         Returns:
-            float: The evaluated value of the objective function.
+            ObjectiveEvaluationResults: A named tuple containing the evaluated value,
+                and uncertainity of evaluation of the objective function.
 
         Raises:
             ObjectiveError: When a bad argument is supplies to the evaluator or when
@@ -274,4 +298,5 @@ class VectorObjective(VectorObjectiveBase):
             raise ObjectiveError(msg)
         # Store the value of the objective
         self.value = result
-        return result
+        uncertainity = None
+        return ObjectiveEvaluationResults(result, uncertainity)

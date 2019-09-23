@@ -7,7 +7,9 @@ import logging
 import logging.config
 from abc import ABC, abstractmethod
 from os import path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union, NamedTuple
+
+# , TypedDict coming in py3.8
 from functools import reduce
 from operator import iadd
 
@@ -30,6 +32,30 @@ class ProblemError(Exception):
     """Raised when an error related to the Problem class is encountered.
 
     """
+
+
+# TODO consider replacing namedtuple with attr.s for validation purposes.
+
+
+class EvaluationResults(NamedTuple):
+    """The return object of <problem>.evaluate methods.
+
+    Attributes:
+        objectives (np.ndarray): The objective function values for each input
+            vector.
+        fitness (np.ndarray): Equal to objective values if objective is to be
+            minimized. Multiplied by (-1) if objective to be maximized.
+        constraints (Union[None, np.ndarray]): The constraint values of the
+            problem corresponding each input vector.
+        uncertainity (Union[None, np.ndarray]): The uncertainity in the
+            objective values.
+
+    """
+
+    objectives: np.ndarray
+    fitness: np.ndarray
+    constraints: Union[None, np.ndarray] = None
+    uncertainity: Union[None, np.ndarray] = None
 
 
 class ProblemBase(ABC):
@@ -99,9 +125,7 @@ class ProblemBase(ABC):
         pass
 
     @abstractmethod
-    def evaluate(
-        self, decision_vectors: np.ndarray
-    ) -> Union[np.ndarray, Tuple[np.ndarray, Union[np.ndarray, None]]]:
+    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
@@ -109,11 +133,15 @@ class ProblemBase(ABC):
             input vectors.
 
         Returns:
-            (tuple): tuple containing:
-                solutions (np.ndarray): The corresponding objective function
-                values for each input vector.
-                constraints (Union[np.ndarray, None]): The constraint values
-                of the problem corresponding each input vector.
+            (Dict): Dict with the following keys:
+                'objectives' (np.ndarray): The objective function values for each input
+                    vector.
+                'constraints' (Union[np.ndarray, None]): The constraint values of the
+                    problem corresponding each input vector.
+                'fitness' (np.ndarray): Equal to objective values if objective is to be
+                    minimized. Multiplied by (-1) if objective to be maximized.
+                'uncertainity' (Union[np.ndarray, None]): The uncertainity in the
+                    objective values.
 
         """
         pass
@@ -216,6 +244,12 @@ class ScalarMOProblem(ProblemBase):
 
         self.__nadir = nadir
         self.__ideal = ideal
+
+        # Multiplier to convert maximization to minimization
+        max_multiplier = np.asarray([1, -1])
+        to_maximize = [objective.maximize for objective in objectives]
+        to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
+        self._max_multiplier = max_multiplier[to_maximize]
 
     @property
     def n_of_constraints(self) -> int:
@@ -350,9 +384,7 @@ class ScalarMOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def evaluate(
-        self, decision_vectors: np.ndarray
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
@@ -388,7 +420,10 @@ class ScalarMOProblem(ProblemBase):
 
         objective_vectors: np.ndarray = np.ndarray(
             (n_rows, self.n_of_objectives), dtype=float
-        )
+        )  # ??? Use np.zeros instead of this?
+        uncertainity: np.ndarray = np.ndarray(
+            (n_rows, self.n_of_objectives), dtype=float
+        )  # ??? Use np.zeros instead of this?
         if self.n_of_constraints > 0:
             constraint_values: np.ndarray = np.ndarray(
                 (n_rows, self.n_of_constraints), dtype=float
@@ -398,9 +433,12 @@ class ScalarMOProblem(ProblemBase):
 
         # Calculate the objective values
         for (col_i, objective) in enumerate(self.objectives):
-            objective_vectors[:, col_i] = np.array(
+            objective_vectors[:, col_i], uncertainity[:, col_i] = np.array(
                 list(map(objective.evaluate, decision_vectors))
             )
+
+        # Calculate fitnnes, which is always to be minimized
+        fitness = objective_vectors * self._max_multiplier
 
         # Calculate the constraint values
         if constraint_values is not None:
@@ -409,7 +447,9 @@ class ScalarMOProblem(ProblemBase):
                     list(map(constraint.evaluate, decision_vectors, objective_vectors))
                 )
 
-        return (objective_vectors, constraint_values)
+        return EvaluationResults(
+            objective_vectors, fitness, constraint_values, uncertainity
+        )
 
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
         """Evaluate just the constraint function values using the attributes
@@ -659,6 +699,12 @@ class MOProblem(ProblemBase):
         self.__nadir = nadir
         self.__ideal = ideal
 
+        # Multiplier to convert maximization to minimization
+        max_multiplier = np.asarray([1, -1])
+        to_maximize = [objective.maximize for objective in objectives]
+        to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
+        self._max_multiplier = max_multiplier[to_maximize]
+
     @property
     def n_of_constraints(self) -> int:
         return self.__n_of_constraints
@@ -785,9 +831,7 @@ class MOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def evaluate(
-        self, decision_vectors: np.ndarray
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
@@ -831,6 +875,11 @@ class MOProblem(ProblemBase):
         objective_vectors: np.ndarray = np.ndarray(
             (n_rows, self.n_of_objectives), dtype=float
         )
+
+        uncertainity: np.ndarray = np.ndarray(
+            (n_rows, self.n_of_objectives), dtype=float
+        )
+
         if self.n_of_constraints > 0:
             constraint_values: np.ndarray = np.ndarray(
                 (n_rows, self.n_of_constraints), dtype=float
@@ -842,15 +891,22 @@ class MOProblem(ProblemBase):
         obj_column = 0
         for objective in self.objectives:
             elem_in_curr_obj = number_of_objectives(objective)
+
             if elem_in_curr_obj == 1:
-                objective_vectors[:, obj_column] = np.array(
-                    list(map(objective.evaluate, decision_vectors))
-                )
-            elif elem_in_curr_obj > 1:
-                objective_vectors[
-                    :, obj_column : obj_column + elem_in_curr_obj
+                objective_vectors[:, obj_column], uncertainity[
+                    :, obj_column
                 ] = np.array(list(map(objective.evaluate, decision_vectors)))
+
+            elif elem_in_curr_obj > 1:
+                (
+                    objective_vectors[:, obj_column : obj_column + elem_in_curr_obj],
+                    uncertainity[:, obj_column : obj_column + elem_in_curr_obj],
+                ) = np.array(list(map(objective.evaluate, decision_vectors)))
+
             obj_column = obj_column + elem_in_curr_obj
+
+        # Calculate fitnnes, which is always to be minimized
+        fitness = objective_vectors * self._max_multiplier
 
         # Calculate the constraint values
         if constraint_values is not None:
@@ -859,7 +915,9 @@ class MOProblem(ProblemBase):
                     list(map(constraint.evaluate, decision_vectors, objective_vectors))
                 )
 
-        return (objective_vectors, constraint_values)
+        return EvaluationResults(
+            objective_vectors, fitness, constraint_values, uncertainity
+        )
 
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
         """Evaluate just the constraint function values using the attributes
