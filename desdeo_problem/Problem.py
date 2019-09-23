@@ -112,14 +112,6 @@ class ProblemBase(ABC):
     def decision_vectors(self, val: np.ndarray):
         self.__decision_vectors = val
 
-    @property
-    def objective_vectors(self) -> np.ndarray:
-        return self.__objective_vectors
-
-    @objective_vectors.setter
-    def objective_vectors(self, val: np.ndarray):
-        self.__objective_vectors = val
-
     @abstractmethod
     def get_variable_bounds(self) -> Union[None, np.ndarray]:
         pass
