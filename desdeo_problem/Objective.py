@@ -23,6 +23,8 @@ class ObjectiveError(Exception):
     """Raised when an error related to the Objective class is encountered.
 
     """
+
+
 # TODO consider replacing namedtuples with attr.s
 
 
@@ -36,6 +38,7 @@ class ObjectiveEvaluationResults(NamedTuple):
             objective value/s.
 
     """
+
     objectives: Union[float, np.ndarray]
     uncertainity: Union[None, float, np.ndarray] = None
 
@@ -90,7 +93,8 @@ class ScalarObjective(ObjectiveBase):
         evaluator (Callable): The function to evaluate the objective's value.
         lower_bound (float): The lower bound of the objective.
         upper_bound (float): The upper bound of the objective.
-        maximize (bool): Boolean to determine whether the objective is to be maximized.
+        maximize (List[bool]): List of boolean to determine whether the objectives are 
+            to be maximized. All false by default
 
     Raises:
         ObjectiveError: When ill formed bounds are given.
@@ -103,7 +107,7 @@ class ScalarObjective(ObjectiveBase):
         evaluator: Callable,
         lower_bound: float = -np.inf,
         upper_bound: float = np.inf,
-        maximize: bool = False,
+        maximize: List[bool] = [False],
     ) -> None:
         # Check that the bounds make sense
         if not (lower_bound < upper_bound):
@@ -169,7 +173,9 @@ class ScalarObjective(ObjectiveBase):
 
         # Store the value of the objective
         self.value = result
-        uncertainity = None
+        uncertainity = np.full_like(result, np.nan, dtype=float)
+        # Have to set dtype because if the tuple is of ints, then this array also
+        # becomes dtype int. There's no nan value of int type
         return ObjectiveEvaluationResults(result, uncertainity)
 
 
@@ -183,7 +189,8 @@ class VectorObjective(VectorObjectiveBase):
         objective values. Defaults to None.
         upper_bounds (Union[List[float], np.ndarray), optional): Upper bounds of the
         objective values. Defaults to None.
-        maximize (bool): Boolean to determine whether the objective is to be maximized.
+        maximize (List[bool]): *List* of boolean to determine whether the objectives are
+            to be maximized. All false by default
 
     Raises:
         ObjectiveError: When lengths the input arrays are different.
@@ -198,7 +205,7 @@ class VectorObjective(VectorObjectiveBase):
         evaluator: Callable,
         lower_bounds: Union[List[float], np.ndarray] = None,
         upper_bounds: Union[List[float], np.ndarray] = None,
-        maximize: bool = False,
+        maximize: List[bool] = None,
     ):
         n_of_objectives = len(name)
         if lower_bounds is None:
@@ -233,7 +240,10 @@ class VectorObjective(VectorObjectiveBase):
         self.__values: Tuple[float] = (0.0,) * n_of_objectives
         self.__lower_bounds: np.ndarray = lower_bounds
         self.__upper_bounds: np.ndarray = upper_bounds
-        self.maximize: bool = maximize
+        if maximize is None:
+            self.maximize = [False] * n_of_objectives
+        else:
+            self.maximize: bool = maximize
 
     @property
     def name(self) -> str:
@@ -298,5 +308,7 @@ class VectorObjective(VectorObjectiveBase):
             raise ObjectiveError(msg)
         # Store the value of the objective
         self.value = result
-        uncertainity = None
+        uncertainity = np.full_like(result, np.nan, dtype=float)
+        # Have to set dtype because if the tuple is of ints, then this array also
+        # becomes dtype int. There's no nan value of int type
         return ObjectiveEvaluationResults(result, uncertainity)

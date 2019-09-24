@@ -57,6 +57,16 @@ class EvaluationResults(NamedTuple):
     constraints: Union[None, np.ndarray] = None
     uncertainity: Union[None, np.ndarray] = None
 
+    def __str__(self):
+        prnt_msg = (
+            "Evaluation Results Object \n"
+            f"Objective values are: \n{self.objectives}\n"
+            f"Constraint violation values are: \n{self.constraints}\n"
+            f"Fitness values are: \n{self.fitness}\n"
+            f"Uncertainity values are: \n{self.uncertainity}\n"
+        )
+        return prnt_msg
+
 
 class ProblemBase(ABC):
     """The base class from which every other class representing a problem should
@@ -240,6 +250,7 @@ class ScalarMOProblem(ProblemBase):
         # Multiplier to convert maximization to minimization
         max_multiplier = np.asarray([1, -1])
         to_maximize = [objective.maximize for objective in objectives]
+        to_maximize = sum(to_maximize, [])  # To flatten the list
         to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
         self._max_multiplier = max_multiplier[to_maximize]
 
@@ -425,11 +436,16 @@ class ScalarMOProblem(ProblemBase):
 
         # Calculate the objective values
         for (col_i, objective) in enumerate(self.objectives):
-            objective_vectors[:, col_i], uncertainity[:, col_i] = np.array(
-                list(map(objective.evaluate, decision_vectors))
+            results = list(map(objective.evaluate, decision_vectors))
+
+            objective_vectors[:, col_i] = np.asarray(
+                [result.objectives for result in results]
+            )
+            uncertainity[:, col_i] = np.asarray(
+                [result.uncertainity for result in results]
             )
 
-        # Calculate fitnnes, which is always to be minimized
+        # Calculate fitness, which is always to be minimized
         fitness = objective_vectors * self._max_multiplier
 
         # Calculate the constraint values
@@ -694,6 +710,7 @@ class MOProblem(ProblemBase):
         # Multiplier to convert maximization to minimization
         max_multiplier = np.asarray([1, -1])
         to_maximize = [objective.maximize for objective in objectives]
+        to_maximize = sum(to_maximize, [])  # To flatten the list
         to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
         self._max_multiplier = max_multiplier[to_maximize]
 
@@ -885,19 +902,29 @@ class MOProblem(ProblemBase):
             elem_in_curr_obj = number_of_objectives(objective)
 
             if elem_in_curr_obj == 1:
-                objective_vectors[:, obj_column], uncertainity[
-                    :, obj_column
-                ] = np.array(list(map(objective.evaluate, decision_vectors)))
+                results = list(map(objective.evaluate, decision_vectors))
+
+                objective_vectors[:, obj_column] = np.asarray(
+                    [result.objectives for result in results]
+                )
+                uncertainity[:, obj_column] = np.asarray(
+                    [result.uncertainity for result in results]
+                )
 
             elif elem_in_curr_obj > 1:
-                (
-                    objective_vectors[:, obj_column : obj_column + elem_in_curr_obj],
-                    uncertainity[:, obj_column : obj_column + elem_in_curr_obj],
-                ) = np.array(list(map(objective.evaluate, decision_vectors)))
+                results = list(map(objective.evaluate, decision_vectors))
+
+                objective_vectors[
+                    :, obj_column : obj_column + elem_in_curr_obj
+                ] = np.asarray([result.objectives for result in results])
+
+                uncertainity[
+                    :, obj_column : obj_column + elem_in_curr_obj
+                ] = np.asarray([result.uncertainity for result in results])
 
             obj_column = obj_column + elem_in_curr_obj
 
-        # Calculate fitnnes, which is always to be minimized
+        # Calculate fitness, which is always to be minimized
         fitness = objective_vectors * self._max_multiplier
 
         # Calculate the constraint values
