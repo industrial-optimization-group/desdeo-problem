@@ -14,10 +14,17 @@ from functools import reduce
 from operator import iadd
 
 import numpy as np
+import pandas as pd
 
 from desdeo_problem.Constraint import ScalarConstraint
-from desdeo_problem.Objective import ScalarObjective, VectorObjective
+from desdeo_problem.Objective import (
+    ScalarObjective,
+    VectorObjective,
+    ScalarDataObjective,
+    VectorDataObjective,
+)
 from desdeo_problem.Variable import Variable
+from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
 
 log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
@@ -436,15 +443,18 @@ class ScalarMOProblem(ProblemBase):
 
         # Calculate the objective values
         for (col_i, objective) in enumerate(self.objectives):
-            results = list(map(objective.evaluate, decision_vectors))
-
+            # Remove the following if the alternative works
+            """ results = list(map(objective.evaluate, decision_vectors))
+            
             objective_vectors[:, col_i] = np.asarray(
                 [result.objectives for result in results]
             )
             uncertainity[:, col_i] = np.asarray(
                 [result.uncertainity for result in results]
-            )
-
+            )"""
+            results = objective.evaluate(decision_vectors)
+            objective_vectors[:, col_i] = results.objectives
+            uncertainity[:, col_i] = results.uncertainity
         # Calculate fitness, which is always to be minimized
         fitness = objective_vectors * self._max_multiplier
 
@@ -452,7 +462,7 @@ class ScalarMOProblem(ProblemBase):
         if constraint_values is not None:
             for (col_i, constraint) in enumerate(self.constraints):
                 constraint_values[:, col_i] = np.array(
-                    list(map(constraint.evaluate, decision_vectors, objective_vectors))
+                    constraint.evaluate(decision_vectors, objective_vectors)
                 )
 
         return EvaluationResults(
@@ -667,7 +677,7 @@ class MOProblem(ProblemBase):
         self,
         objectives: List[Union[ScalarObjective, VectorObjective]],
         variables: List[Variable],
-        constraints: List[ScalarConstraint],
+        constraints: List[ScalarConstraint] = None,
         nadir: Optional[np.ndarray] = None,
         ideal: Optional[np.ndarray] = None,
     ):
@@ -819,7 +829,7 @@ class MOProblem(ProblemBase):
             List[str]: Names of the objectives in the order they were added.
 
         """
-        obj_list = [list(obj.name) for obj in self.objectives]
+        obj_list = [[(obj.name)] for obj in self.objectives]
         return reduce(iadd, obj_list, [])
 
     def get_variable_lower_bounds(self) -> np.ndarray:
@@ -902,25 +912,29 @@ class MOProblem(ProblemBase):
             elem_in_curr_obj = number_of_objectives(objective)
 
             if elem_in_curr_obj == 1:
-                results = list(map(objective.evaluate, decision_vectors))
 
+                """results = list(map(objective.evaluate, decision_vectors))
                 objective_vectors[:, obj_column] = np.asarray(
                     [result.objectives for result in results]
                 )
                 uncertainity[:, obj_column] = np.asarray(
                     [result.uncertainity for result in results]
-                )
+                )"""
 
+                results = objective.evaluate(decision_vectors)
+                objective_vectors[:, obj_column] = results.objectives
+                uncertainity[:, obj_column] = results.uncertainity
             elif elem_in_curr_obj > 1:
-                results = list(map(objective.evaluate, decision_vectors))
+                # results = list(map(objective.evaluate, decision_vectors))
+                results = objective.evaluate(decision_vectors)
 
                 objective_vectors[
                     :, obj_column : obj_column + elem_in_curr_obj
-                ] = np.asarray([result.objectives for result in results])
+                ] = results.objectives
 
                 uncertainity[
                     :, obj_column : obj_column + elem_in_curr_obj
-                ] = np.asarray([result.uncertainity for result in results])
+                ] = results.uncertainity
 
             obj_column = obj_column + elem_in_curr_obj
 
@@ -931,7 +945,7 @@ class MOProblem(ProblemBase):
         if constraint_values is not None:
             for (col_i, constraint) in enumerate(self.constraints):
                 constraint_values[:, col_i] = np.array(
-                    list(map(constraint.evaluate, decision_vectors, objective_vectors))
+                    constraint.evaluate(decision_vectors, objective_vectors)
                 )
 
         return EvaluationResults(
@@ -973,3 +987,89 @@ def number_of_objectives(obj_instance: Union[ScalarObjective, VectorObjective]) 
     else:
         msg = "Supported objective types: ScalarObjective and VectorObjective"
         raise ProblemError(msg)
+
+
+class DataProblem(MOProblem):
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        variable_names: List[str],
+        objective_names: List[str],
+        objectives: List[
+            Union[
+                ScalarDataObjective,
+                VectorObjective,
+                ScalarDataObjective,
+                VectorDataObjective,
+            ]
+        ] = None,
+        variables: List[Variable] = None,
+        constraints: List[ScalarConstraint] = None,
+        nadir: Optional[np.ndarray] = None,
+        ideal: Optional[np.ndarray] = None,
+    ):
+        if not isinstance(data, pd.DataFrame):
+            msg = "Please provide data in the pandas dataframe format"
+            raise ProblemError(msg)
+        if not all(obj in data.columns for obj in objective_names):
+            msg = "Provided objective names not found in provided dataframe columns"
+            raise ProblemError(msg)
+        if objectives is not None:
+            msg = "Support for custom objectives objects not implemented yet"
+            raise NotImplementedError(msg)
+        if variables is not None:
+            msg = "Support for custom variables objects not implemented yet"
+            raise NotImplementedError(msg)
+        if objectives is None:
+            objectives = []
+            for obj in objective_names:
+                objectives.append(
+                    ScalarDataObjective(data=data[variable_names + [obj]], name=obj)
+                )
+        if variables is None:
+            variables = []
+            for var in variable_names:
+                initial_value = data[var].mean(axis=0)
+                lower_bound = data[var].min(axis=0)
+                upper_bound = data[var].max(axis=0)
+                variables.append(
+                    Variable(
+                        name=var,
+                        initial_value=initial_value,
+                        lower_bound=lower_bound,
+                        upper_bound=upper_bound,
+                    )
+                )
+        super().__init__(objectives, variables, constraints)
+
+    def train(
+        self,
+        models: Union[BaseRegressor, List[BaseRegressor]],
+        index: List[int] = None,
+        data: pd.DataFrame = None,
+    ):
+        if not isinstance(models, list):
+            models = [models] * len(self.get_objective_names())
+        elif len(models) == 1:
+            models = models * len(self.get_objective_names())
+        for model, name in zip(models, self.get_objective_names()):
+            self.train_one_objective(name, model, index, data)
+
+    def train_one_objective(
+        self,
+        name: str,
+        model: BaseRegressor,
+        index: List[int] = None,
+        data: pd.DataFrame = None,
+    ):
+        if name not in self.get_objective_names():
+            raise ProblemError(
+                f'"{name}" not found in the list of'
+                f"original objective names: {self.get_objective_names()}"
+            )
+        obj_index = self.get_objective_names().index(name)
+        if isinstance(self.objectives[obj_index], ScalarDataObjective):
+            self.objectives[obj_index].train(model, index, data)
+        else:
+            msg = "Support for VectorDataObjective not supported yet"
+            raise ProblemError(msg)

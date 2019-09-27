@@ -9,6 +9,9 @@ from os import path
 from typing import Callable, Tuple, List, Union, NamedTuple
 
 import numpy as np
+import pandas as pd
+
+from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor, ModelError
 
 log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
@@ -42,15 +45,36 @@ class ObjectiveEvaluationResults(NamedTuple):
     objectives: Union[float, np.ndarray]
     uncertainity: Union[None, float, np.ndarray] = None
 
+    def __str__(self):
+        prnt_msg = (
+            "Objective Evaluation Results Object \n"
+            f"Objective values are: \n{self.objectives}\n"
+            f"Uncertainity values are: \n{self.uncertainity}\n"
+        )
+        return prnt_msg
+
 
 class ObjectiveBase(ABC):
     """The abstract base class for objectives.
 
     """
 
-    @abstractmethod
     def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluates the objective according to a decision variable vector.
+
+        Args:
+            variables (np.ndarray): A vector of Variables to be used in
+            the evaluation of the objective.
+
+        """
+        return self.func_evaluate(decision_vector)
+
+    @abstractmethod
+    def func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        """Evaluates the true objective value according to a decision variable vector.
+
+        Uses the true (potentially expensive) evaluater if available. Otherwise,
+        defaults to self.evaluate().
 
         Args:
             variables (np.ndarray): A vector of Variables to be used in
@@ -65,7 +89,6 @@ class VectorObjectiveBase(ABC):
 
     """
 
-    @abstractmethod
     def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluates the objective according to a decision variable vector.
 
@@ -74,7 +97,20 @@ class VectorObjectiveBase(ABC):
             the evaluation of the objective.
 
         """
-        pass
+        return self.func_evaluate(decision_vector)
+
+    @abstractmethod
+    def func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        """Evaluates the true objective value according to a decision variable vector.
+
+        Uses the true (potentially expensive) evaluater if available.
+
+        Args:
+            variables (np.ndarray): A vector of Variables to be used in
+            the evaluation of the objective.
+
+        """
+        return self.evaluate(decision_vector)
 
 
 class ScalarObjective(ObjectiveBase):
@@ -93,7 +129,7 @@ class ScalarObjective(ObjectiveBase):
         evaluator (Callable): The function to evaluate the objective's value.
         lower_bound (float): The lower bound of the objective.
         upper_bound (float): The upper bound of the objective.
-        maximize (List[bool]): List of boolean to determine whether the objectives are 
+        maximize (List[bool]): List of boolean to determine whether the objectives are
             to be maximized. All false by default
 
     Raises:
@@ -148,7 +184,7 @@ class ScalarObjective(ObjectiveBase):
     def upper_bound(self) -> float:
         return self.__upper_bound
 
-    def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+    def func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluate the objective functions value.
 
         Args:
@@ -273,7 +309,7 @@ class VectorObjective(VectorObjectiveBase):
     def upper_bounds(self) -> np.ndarray:
         return self.__upper_bounds
 
-    def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+    def func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluate the multiple objective functions value.
 
         Args:
@@ -297,18 +333,156 @@ class VectorObjective(VectorObjectiveBase):
             logger.error(msg)
             raise ObjectiveError(msg)
         result = tuple(result)
-        if not (len(result) == self.n_of_objectives):
-            msg = (
-                "Number of output ({}) elements not equal to the expected "
-                "number of output elements ({})".format(
-                    str(result), self.n_of_objectives
-                )
-            )
-            logger.error(msg)
-            raise ObjectiveError(msg)
+
         # Store the value of the objective
         self.value = result
         uncertainity = np.full_like(result, np.nan, dtype=float)
         # Have to set dtype because if the tuple is of ints, then this array also
         # becomes dtype int. There's no nan value of int type
         return ObjectiveEvaluationResults(result, uncertainity)
+
+
+class ScalarDataObjective(ScalarObjective):
+    def __init__(
+        self,
+        name: List[str],
+        data: pd.DataFrame,
+        evaluator: Union[None, Callable] = None,
+        lower_bound: float = -np.inf,
+        upper_bound: float = np.inf,
+        maximize: List[bool] = [False],
+    ) -> None:
+        if name in data.columns:
+            super().__init__(name, evaluator, lower_bound, upper_bound, maximize)
+        else:
+            msg = f'Name "{name}" not found in the dataframe provided'
+            raise ObjectiveError(msg)
+        self.X = data.drop(name, axis=1)
+        self.y = data[name]
+        self.variable_names = self.X.columns
+        self._model = None
+
+    def train(
+        self, model: BaseRegressor, index: List[int] = None, data: pd.DataFrame = None
+    ):
+        self._model = model
+        if index is None and data is None:
+            self._model.fit(self.X, self.y)
+            return
+        elif index is not None:
+            self._model.fit(self.X[index], self.y[index])
+            return
+        elif data is not None:
+            self._model.fit(data[self.variable_names], data[self.name])
+            return
+        msg = "I don't know how you got this error"
+        raise ObjectiveError(msg)
+
+    def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        try:
+            result, uncertainity = self._model.predict(decision_vector)
+        except ModelError:
+            msg = "Bad argument supplied to the model"
+            raise ObjectiveError(msg)
+        return ObjectiveEvaluationResults(result, uncertainity)
+
+    def func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        if self.__evaluator is None:
+            msg = "No analytical function provided"
+            raise ObjectiveError(msg)
+        results = super().func_evaluate(decision_vector)
+        self.X = np.vstack((self.X, decision_vector))
+        self.y = np.vstack((self.y, results.objectives))
+        return results
+
+
+class VectorDataObjective(VectorObjective):
+    def __init__(
+        self,
+        name: List[str],
+        data: pd.DataFrame,
+        evaluator: Union[None, Callable] = None,
+        lower_bounds: Union[List[float], np.ndarray] = None,
+        upper_bounds: Union[List[float], np.ndarray] = None,
+        maximize: List[bool] = None,
+    ) -> None:
+        if all(obj in data.columns for obj in name):
+            super().__init__(name, evaluator, lower_bounds, upper_bounds, maximize)
+        else:
+            msg = f'Name "{name}" not found in the dataframe provided'
+            raise ObjectiveError(msg)
+        self.X = data.drop(name, axis=1)
+        self.y = data[name]
+        self.variable_names = self.X.columns
+        self._model = dict.fromkeys(name)  # TODO: Make the set of keys immutable?
+        self._model_trained = dict.fromkeys(name, False)
+
+    def train(
+        self,
+        models: Union[BaseRegressor, List[BaseRegressor]],
+        index: List[int] = None,
+        data: pd.DataFrame = None,
+    ):
+        if not isinstance(models, list):
+            models = [models] * len(self.name)
+        elif len(models) == 1:
+            models = models * len(self.name)
+        for model, name in zip(models, self.name):
+            self.train_one_objective(name, model, index, data)
+
+    def train_one_objective(
+        self,
+        name: str,
+        model: BaseRegressor,
+        index: List[int] = None,
+        data: pd.DataFrame = None,
+    ):
+        if name not in self.name:
+            raise ObjectiveError(
+                f'"{name}" not found in the list of'
+                f"original objective names: {self.name}"
+            )
+        self._model[name] = model
+        if index is None and data is None:
+            self._model[name].fit(self.X, self.y[name])
+            self._model_trained[name] = True
+            return
+        elif index is not None:
+            self._model[name].fit(self.X[index], self.y[name][index])
+            self._model_trained[name] = True
+            return
+        elif data is not None:
+            self._model[name].fit(data[self.variable_names], data[name])
+            self._model_trained[name] = True
+            return
+        msg = "I don't know how you got this error"
+        raise ObjectiveError(msg)
+
+    def evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        if not all(self._model_trained.values()):
+            msg = (
+                f"Some or all models have not been trained.\n"
+                f"Models for the following objectives have been trained:\n"
+                f"{self._model_trained}"
+            )
+            raise ObjectiveError(msg)
+        result = pd.DataFrame(index=range(decision_vector.shape[0]), columns=self.name)
+        uncertainity = pd.DataFrame(
+            index=range(decision_vector.shape[0]), columns=self.name
+        )
+        for name, model in self._model.items():
+            try:
+                result[name], uncertainity[name] = model.predict(decision_vector)
+            except ModelError:
+                msg = "Bad argument supplied to the model"
+                raise ObjectiveError(msg)
+        return ObjectiveEvaluationResults(result, uncertainity)
+
+    def func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        if self.__evaluator is None:
+            msg = "No analytical function provided"
+            raise ObjectiveError(msg)
+        results = super().func_evaluate(decision_vector)
+        self.X = np.vstack((self.X, decision_vector))
+        self.y = np.vstack((self.y, results.objectives))
+        return results
