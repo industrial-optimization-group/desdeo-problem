@@ -153,7 +153,6 @@ class ProblemBase(ABC):
                     objective values.
 
         """
-        pass
 
     @abstractmethod
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
@@ -164,7 +163,6 @@ class ProblemBase(ABC):
             Currently not supported by ScalarMOProblem
 
         """
-        pass
 
 
 class ScalarMOProblem(ProblemBase):
@@ -443,15 +441,6 @@ class ScalarMOProblem(ProblemBase):
 
         # Calculate the objective values
         for (col_i, objective) in enumerate(self.objectives):
-            # Remove the following if the alternative works
-            """ results = list(map(objective.evaluate, decision_vectors))
-            
-            objective_vectors[:, col_i] = np.asarray(
-                [result.objectives for result in results]
-            )
-            uncertainity[:, col_i] = np.asarray(
-                [result.uncertainity for result in results]
-            )"""
             results = objective.evaluate(decision_vectors)
             objective_vectors[:, col_i] = results.objectives
             uncertainity[:, col_i] = results.uncertainity
@@ -912,15 +901,6 @@ class MOProblem(ProblemBase):
             elem_in_curr_obj = number_of_objectives(objective)
 
             if elem_in_curr_obj == 1:
-
-                """results = list(map(objective.evaluate, decision_vectors))
-                objective_vectors[:, obj_column] = np.asarray(
-                    [result.objectives for result in results]
-                )
-                uncertainity[:, obj_column] = np.asarray(
-                    [result.uncertainity for result in results]
-                )"""
-
                 results = objective.evaluate(decision_vectors)
                 objective_vectors[:, obj_column] = results.objectives
                 uncertainity[:, obj_column] = results.uncertainity

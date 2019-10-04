@@ -81,7 +81,6 @@ class ObjectiveBase(ABC):
             the evaluation of the objective.
 
         """
-        pass
 
 
 class VectorObjectiveBase(ABC):
@@ -110,7 +109,6 @@ class VectorObjectiveBase(ABC):
             the evaluation of the objective.
 
         """
-        return self.evaluate(decision_vector)
 
 
 class ScalarObjective(ObjectiveBase):
@@ -143,7 +141,7 @@ class ScalarObjective(ObjectiveBase):
         evaluator: Callable,
         lower_bound: float = -np.inf,
         upper_bound: float = np.inf,
-        maximize: List[bool] = [False],
+        maximize: List[bool] = None,
     ) -> None:
         # Check that the bounds make sense
         if not (lower_bound < upper_bound):
@@ -158,6 +156,8 @@ class ScalarObjective(ObjectiveBase):
         self.__value: float = 0.0
         self.__lower_bound: float = lower_bound
         self.__upper_bound: float = upper_bound
+        if maximize is None:
+            maximize = [False]
         self.maximize: bool = maximize  # TODO implement set/getters. Have validation.
 
     @property
@@ -335,7 +335,7 @@ class VectorObjective(VectorObjectiveBase):
         result = tuple(result)
 
         # Store the value of the objective
-        self.value = result
+        self.values = result
         uncertainity = np.full_like(result, np.nan, dtype=float)
         # Have to set dtype because if the tuple is of ints, then this array also
         # becomes dtype int. There's no nan value of int type
@@ -343,6 +343,34 @@ class VectorObjective(VectorObjectiveBase):
 
 
 class ScalarDataObjective(ScalarObjective):
+    """A simple Objective class for single valued objectives. Use when the an evaluator/
+    simulator returns a single objective value or when there is no evaluator/simulator.
+    
+    Parameters
+    ----------
+    name : List[str]
+        The name of the objective. Should be the same as a column name in the data.
+    data : pd.DataFrame
+        The data in a pandas dataframe. The columns should be named after variables/
+        objective.
+    evaluator : Union[None, Callable], optional
+        A python function that contains the analytical function or calls the simulator
+        to get the true objective value. By default None, as this is not required.
+    lower_bound : float, optional
+        Lower bound of the objective, by default -np.inf
+    upper_bound : float, optional
+        Upper bound of the objective, by default np.inf
+    maximize : List[bool], optional
+        Boolean describing whether the objective is to be maximized or not, by default
+        None, which defaults to [False], hence minimizes.
+
+    Raises
+    ------
+    ObjectiveError
+        When the name provided during initialization does not match any name in the
+        columns of the data provided during initilizaiton.
+    """
+
     def __init__(
         self,
         name: List[str],
@@ -350,7 +378,7 @@ class ScalarDataObjective(ScalarObjective):
         evaluator: Union[None, Callable] = None,
         lower_bound: float = -np.inf,
         upper_bound: float = np.inf,
-        maximize: List[bool] = [False],
+        maximize: List[bool] = None,
     ) -> None:
         if name in data.columns:
             super().__init__(name, evaluator, lower_bound, upper_bound, maximize)
@@ -365,6 +393,29 @@ class ScalarDataObjective(ScalarObjective):
     def train(
         self, model: BaseRegressor, index: List[int] = None, data: pd.DataFrame = None
     ):
+    """Train surrogate models for the objective.
+    
+    Parameters
+    ----------
+    model : BaseRegressor
+        An initialized regressor. The regressor should have a fit method and a predict
+        method. The predict method should return the predicted objective value, as well
+        as the uncertainity value, in a tuple. If the regressor does not support
+        calculating uncertainity, return a tuple of objective value and None.
+    index : List[int], optional
+        Indices of the samples (in self.X and self.y), to be used to train the surrogate
+        model. By default None, which trains the model on the entire dataset. This
+        behaviour may be changed in the future to support test-train split or cross
+        validation.
+    data : pd.DataFrame, optional
+        Extra data to be used for training only. This data is not saved. By default
+        None, which then uses self.X and self.y for training.
+    
+    Raises
+    ------
+    ObjectiveError
+        For unexpected errors
+    """
         self._model = model
         if index is None and data is None:
             self._model.fit(self.X, self.y)
