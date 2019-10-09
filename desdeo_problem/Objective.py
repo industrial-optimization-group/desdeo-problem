@@ -76,7 +76,6 @@ class ObjectiveBase(ABC):
         else:
             return self.__func_evaluate(decision_vector)
 
-    @abstractmethod
     def __func_evaluate(
         self, decision_vector: np.ndarray
     ) -> ObjectiveEvaluationResults:
@@ -89,8 +88,8 @@ class ObjectiveBase(ABC):
             the evaluation of the objective.
 
         """
+        pass
 
-    @abstractmethod
     def __surrogate_evaluate(
         self, decision_vector: np.ndarray
     ) -> ObjectiveEvaluationResults:
@@ -103,6 +102,7 @@ class ObjectiveBase(ABC):
             the evaluation of the objective.
 
         """
+        pass
 
 
 class VectorObjectiveBase(ABC):
@@ -130,7 +130,6 @@ class VectorObjectiveBase(ABC):
         else:
             return self.__func_evaluate(decision_vector)
 
-    @abstractmethod
     def __func_evaluate(
         self, decision_vector: np.ndarray
     ) -> ObjectiveEvaluationResults:
@@ -143,8 +142,8 @@ class VectorObjectiveBase(ABC):
             the evaluation of the objective.
 
         """
+        pass
 
-    @abstractmethod
     def __surrogate_evaluate(
         self, decision_vector: np.ndarray
     ) -> ObjectiveEvaluationResults:
@@ -157,6 +156,7 @@ class VectorObjectiveBase(ABC):
             the evaluation of the objective.
 
         """
+        pass
 
 
 class ScalarObjective(ObjectiveBase):
@@ -481,6 +481,8 @@ class ScalarDataObjective(ScalarObjective):
         ObjectiveError
             For unexpected errors
         """
+        if model_parameters is None:
+            model_parameters = {}
         self._model = model(**model_parameters)
         if index is None and data is None:
             self._model.fit(self.X, self.y)
@@ -546,6 +548,7 @@ class VectorDataObjective(VectorObjective):
     ObjectiveError
         When the names provided are not found in the columns of the dataframe provided.
     """
+
     def __init__(
         self,
         name: List[str],
@@ -570,7 +573,7 @@ class VectorDataObjective(VectorObjective):
     def train(
         self,
         models: Union[BaseRegressor, List[BaseRegressor]],
-        models_parameters: Union[Dict, List[Dict]],
+        models_parameters: Union[Dict, List[Dict]] = None,
         index: List[int] = None,
         data: pd.DataFrame = None,
     ):
@@ -612,26 +615,21 @@ class VectorDataObjective(VectorObjective):
             If the lengths of list of models and/or model parameter dictionaries are not
             equal to the number of objectives.
         """
+        if models_parameters is None:
+            models_parameters = {}
         if not isinstance(models, list):
-            if not (
-                isinstance(models_parameters, dict)
-                or isinstance(models_parameters, None)
-            ):
+            if not (isinstance(models_parameters, dict)):
                 msg = "If only one model is provided, model parameters should be a dict"
                 raise ObjectiveError(msg)
             models = [models] * len(self.name)
             models_parameters = [models_parameters]
-            models = [
-                model(**model_params)
-                for model, model_params in zip(models, models_parameters)
-            ]
         elif not (len(models) == len(models_parameters) == self.n_of_objectives):
             msg = (
                 "The length of lists of models and parameters should be the same as"
                 "the number of objectives in this objective class"
             )
-        for model, name in zip(models, self.name):
-            self._train_one_objective(name, model, index, data)
+        for model, model_params, name in zip(models, models_parameters, self.name):
+            self._train_one_objective(name, model, model_params,index, data)
 
     def _train_one_objective(
         self,
@@ -674,6 +672,8 @@ class VectorDataObjective(VectorObjective):
                 f'"{name}" not found in the list of'
                 f"original objective names: {self.name}"
             )
+        if model_parameters is None:
+            model_parameters = {}
         self._model[name] = model(**model_parameters)
         if index is None and data is None:
             self._model[name].fit(self.X, self.y[name])
