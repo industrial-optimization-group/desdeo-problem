@@ -133,9 +133,32 @@ class ProblemBase(ABC):
     def get_variable_bounds(self) -> Union[None, np.ndarray]:
         pass
 
-    @abstractmethod
     def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
-        """Evaluates the problem using an ensemble of input vectors.
+        """Evaluates the problem using an ensemble of input vectors. Uses surrogate
+        models if available. Otherwise, it uses the true evaluator.
+
+        Args:
+            decision_vectors (np.ndarray): An array of decision variable
+            input vectors.
+
+        Returns:
+            (Dict): Dict with the following keys:
+                'objectives' (np.ndarray): The objective function values for each input
+                    vector.
+                'constraints' (Union[np.ndarray, None]): The constraint values of the
+                    problem corresponding each input vector.
+                'fitness' (np.ndarray): Equal to objective values if objective is to be
+                    minimized. Multiplied by (-1) if objective to be maximized.
+                'uncertainity' (Union[np.ndarray, None]): The uncertainity in the
+                    objective values.
+
+        """
+        self.func_evaluate(decision_vectors)
+    
+    @abstractmethod
+    def func_evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
+        """Evaluates the problem using an ensemble of input vectors. Uses the true
+        (potentially expensive) evaluator.
 
         Args:
             decision_vectors (np.ndarray): An array of decision variable
@@ -164,7 +187,7 @@ class ProblemBase(ABC):
 
         """
 
-
+# TODO: Depreciate
 class ScalarMOProblem(ProblemBase):
     """A multiobjective optimization problem with user defined objective funcitons,
     constraints and variables. The objectives each return a single scalar.
@@ -392,7 +415,7 @@ class ScalarMOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
+    def func_evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
@@ -472,6 +495,7 @@ class ScalarMOProblem(ProblemBase):
         raise NotImplementedError("Not implemented for ScalarMOProblem")
 
 
+# TODO: Depreciate
 class ScalarDataProblem(ProblemBase):
     """Defines a problem with pre-computed data representing a multiobjective
     optimization problem with scalar valued objective functions.
