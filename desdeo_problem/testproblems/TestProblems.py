@@ -89,6 +89,21 @@ def test_problem_builder(
         lower_bounds=lower_limits,
         upper_bounds=upper_limits,
     )
-    objective = VectorObjective(name=obj_names, evaluator=obj_func)
+
+    # Because optproblems can only handle one objective at a time
+    def modified_obj_func(x):
+        if isinstance(x, list):
+            if len(x) == n_of_variables:
+                return [obj_func(x)]
+            elif len(x[0]) == n_of_variables:
+                return list(map(obj_func, x))
+        else:
+            if x.ndim == 1:
+                return [obj_func(x)]
+            elif x.ndim == 2:
+                return list(map(obj_func, x))
+        raise TypeError("Unforseen problem, contact developer")
+
+    objective = VectorObjective(name=obj_names, evaluator=modified_obj_func)
     problem = MOProblem([objective], variables, None)
     return problem
