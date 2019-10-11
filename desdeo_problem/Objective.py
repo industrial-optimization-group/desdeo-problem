@@ -4,7 +4,7 @@
 
 import logging
 import logging.config
-from abc import ABC, abstractmethod
+from abc import ABC
 from os import path
 from typing import Callable, Tuple, List, Union, NamedTuple, Dict
 
