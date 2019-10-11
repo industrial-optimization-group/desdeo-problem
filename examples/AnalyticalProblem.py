@@ -13,13 +13,13 @@ variables = variable_builder(var_names, initial_values, lower_bounds, upper_boun
 
 
 def obj1_2(x):
-    y1 = x[0] + x[1] + x[2]
-    y2 = x[0] * x[1] * x[2]
+    y1 = x[:, 0] + x[:, 1] + x[:, 2]
+    y2 = x[:, 0] * x[:, 1] * x[:, 2]
     return (y1, y2)
 
 
 def obj3(x):
-    y3 = x[0] * x[1] + x[2]
+    y3 = x[:, 0] * x[:, 1] + x[:, 2]
     return y3
 
 

@@ -133,36 +133,18 @@ class ProblemBase(ABC):
     def get_variable_bounds(self) -> Union[None, np.ndarray]:
         pass
 
-    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
+    @abstractmethod
+    def evaluate(
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+    ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors. Uses surrogate
         models if available. Otherwise, it uses the true evaluator.
 
         Args:
             decision_vectors (np.ndarray): An array of decision variable
             input vectors.
-
-        Returns:
-            (Dict): Dict with the following keys:
-                'objectives' (np.ndarray): The objective function values for each input
-                    vector.
-                'constraints' (Union[np.ndarray, None]): The constraint values of the
-                    problem corresponding each input vector.
-                'fitness' (np.ndarray): Equal to objective values if objective is to be
-                    minimized. Multiplied by (-1) if objective to be maximized.
-                'uncertainity' (Union[np.ndarray, None]): The uncertainity in the
-                    objective values.
-
-        """
-        self.func_evaluate(decision_vectors)
-    
-    @abstractmethod
-    def func_evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
-        """Evaluates the problem using an ensemble of input vectors. Uses the true
-        (potentially expensive) evaluator.
-
-        Args:
-            decision_vectors (np.ndarray): An array of decision variable
-            input vectors.
+            use_surrogate (bool): A bool to control whether to use the true, potentially
+            expensive function or a surrogate model to evaluate the objectives.
 
         Returns:
             (Dict): Dict with the following keys:
@@ -187,7 +169,8 @@ class ProblemBase(ABC):
 
         """
 
-# TODO: Depreciate
+
+# TODO: Depreciate. Use MO problem in the future
 class ScalarMOProblem(ProblemBase):
     """A multiobjective optimization problem with user defined objective funcitons,
     constraints and variables. The objectives each return a single scalar.
@@ -415,7 +398,9 @@ class ScalarMOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def func_evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
+    def evaluate(
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+    ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
@@ -434,6 +419,11 @@ class ScalarMOProblem(ProblemBase):
 
         """
         # Reshape decision_vectors with single row to work with the code
+        if use_surrogate is True:
+            raise NotImplementedError(
+                "Surrogates not yet supported in this class. "
+                "Use the '''DataProblem''' class instead."
+            )
         shape = np.shape(decision_vectors)
         if len(shape) == 1:
             decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
@@ -495,7 +485,7 @@ class ScalarMOProblem(ProblemBase):
         raise NotImplementedError("Not implemented for ScalarMOProblem")
 
 
-# TODO: Depreciate
+# TODO: Depreciate. Use data problem in the future
 class ScalarDataProblem(ProblemBase):
     """Defines a problem with pre-computed data representing a multiobjective
     optimization problem with scalar valued objective functions.
@@ -640,7 +630,7 @@ class ScalarDataProblem(ProblemBase):
             L2 distance) in the problem and returns the corresponsing objective
             vector.
 
-            """
+        """
         if not self.__model_exists:
             logger.warning(
                 "Warning: Approximating the closest known point in "
@@ -863,13 +853,17 @@ class MOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
+    def evaluate(
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+    ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
             decision_vectors (np.ndarray): An 2D array of decision variable
             input vectors. Each column represent the values of each decision
             variable.
+            use_surrogate (bool): A bool to control whether to use the true, potentially
+            expensive function or a surrogate model to evaluate the objectives.
 
         Returns:
             Tuple[np.ndarray, Union[None, np.ndarray]]: If constraint are
@@ -925,12 +919,12 @@ class MOProblem(ProblemBase):
             elem_in_curr_obj = number_of_objectives(objective)
 
             if elem_in_curr_obj == 1:
-                results = objective.evaluate(decision_vectors)
+                results = objective.evaluate(decision_vectors, use_surrogate)
                 objective_vectors[:, obj_column] = results.objectives
                 uncertainity[:, obj_column] = results.uncertainity
             elif elem_in_curr_obj > 1:
                 # results = list(map(objective.evaluate, decision_vectors))
-                results = objective.evaluate(decision_vectors)
+                results = objective.evaluate(decision_vectors, use_surrogate)
 
                 objective_vectors[
                     :, obj_column : obj_column + elem_in_curr_obj
@@ -970,6 +964,7 @@ class MOProblem(ProblemBase):
         raise NotImplementedError("Not implemented for ScalarMOProblem")
 
 
+# TODO: Put this in ProblemBase
 def number_of_objectives(obj_instance: Union[ScalarObjective, VectorObjective]) -> int:
     """Return the number of objectives in the given obj_instance.
 
@@ -993,6 +988,7 @@ def number_of_objectives(obj_instance: Union[ScalarObjective, VectorObjective]) 
         raise ProblemError(msg)
 
 
+# TODO: Make this the "main" Problem class?
 class DataProblem(MOProblem):
     def __init__(
         self,

@@ -4,7 +4,7 @@
 
 import logging
 import logging.config
-from abc import ABC
+from abc import ABC, abstractmethod
 from os import path
 from typing import Callable, Tuple, List, Union, NamedTuple, Dict
 
@@ -72,13 +72,12 @@ class ObjectiveBase(ABC):
 
         """
         if use_surrogate:
-            return self.__surrogate_evaluate(decision_vector)
+            return self._surrogate_evaluate(decision_vector)
         else:
-            return self.__func_evaluate(decision_vector)
+            return self._func_evaluate(decision_vector)
 
-    def __func_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
+    @abstractmethod
+    def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluates the true objective value according to a decision variable vector.
 
         Uses the true (potentially expensive) evaluator if available.
@@ -90,7 +89,8 @@ class ObjectiveBase(ABC):
         """
         pass
 
-    def __surrogate_evaluate(
+    @abstractmethod
+    def _surrogate_evaluate(
         self, decision_vector: np.ndarray
     ) -> ObjectiveEvaluationResults:
         """Evaluates the objective value according to a decision variable vector.
@@ -126,13 +126,12 @@ class VectorObjectiveBase(ABC):
 
         """
         if use_surrogate:
-            return self.__surrogate_evaluate(decision_vector)
+            return self._surrogate_evaluate(decision_vector)
         else:
-            return self.__func_evaluate(decision_vector)
+            return self._func_evaluate(decision_vector)
 
-    def __func_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
+    @abstractmethod
+    def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluates the true objective values according to a decision variable vector.
 
         Uses the true (potentially expensive) evaluator if available.
@@ -144,7 +143,8 @@ class VectorObjectiveBase(ABC):
         """
         pass
 
-    def __surrogate_evaluate(
+    @abstractmethod
+    def _surrogate_evaluate(
         self, decision_vector: np.ndarray
     ) -> ObjectiveEvaluationResults:
         """Evaluates the objective values according to a decision variable vector.
@@ -232,9 +232,7 @@ class ScalarObjective(ObjectiveBase):
     def upper_bound(self) -> float:
         return self.__upper_bound
 
-    def __func_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
+    def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluate the objective functions value.
 
         Args:
@@ -249,7 +247,7 @@ class ScalarObjective(ObjectiveBase):
 
         """
         try:
-            result = self.__evaluator(decision_vector)
+            result = self.evaluator(decision_vector)
         except (TypeError, IndexError) as e:
             msg = "Bad argument {} supplied to the evaluator: {}".format(
                 str(decision_vector), str(e)
@@ -264,7 +262,7 @@ class ScalarObjective(ObjectiveBase):
         # becomes dtype int. There's no nan value of int type
         return ObjectiveEvaluationResults(result, uncertainity)
 
-    def __surrogate_evaluate(self, decusuib_vector: np.ndarray):
+    def _surrogate_evaluate(self, decusuib_vector: np.ndarray):
         raise ObjectiveError("Surrogates not trained")
 
 
@@ -362,9 +360,7 @@ class VectorObjective(VectorObjectiveBase):
     def upper_bounds(self) -> np.ndarray:
         return self.__upper_bounds
 
-    def __func_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
+    def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluate the multiple objective functions value.
 
         Args:
@@ -380,7 +376,7 @@ class VectorObjective(VectorObjectiveBase):
 
         """
         try:
-            result = self.__evaluator(decision_vector)
+            result = self.evaluator(decision_vector)
         except (TypeError, IndexError) as e:
             msg = "Bad argument {} supplied to the evaluator: {}".format(
                 str(decision_vector), str(e)
@@ -396,14 +392,14 @@ class VectorObjective(VectorObjectiveBase):
         # becomes dtype int. There's no nan value of int type
         return ObjectiveEvaluationResults(result, uncertainity)
 
-    def __surrogate_evaluate(self, decusuib_vector: np.ndarray):
+    def _surrogate_evaluate(self, decusuib_vector: np.ndarray):
         raise ObjectiveError("Surrogates not trained")
 
 
 class ScalarDataObjective(ScalarObjective):
     """A simple Objective class for single valued objectives. Use when the an evaluator/
     simulator returns a single objective value or when there is no evaluator/simulator.
-    
+
     Parameters
     ----------
     name : List[str]
@@ -496,7 +492,7 @@ class ScalarDataObjective(ScalarObjective):
         msg = "I don't know how you got this error"
         raise ObjectiveError(msg)
 
-    def __surrogate_evaluate(
+    def _surrogate_evaluate(
         self, decision_vector: np.ndarray
     ) -> ObjectiveEvaluationResults:
         if self._model is None:
@@ -508,13 +504,11 @@ class ScalarDataObjective(ScalarObjective):
             raise ObjectiveError(msg)
         return ObjectiveEvaluationResults(result, uncertainity)
 
-    def __func_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
-        if self.__evaluator is None:
+    def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        if self.evaluator is None:
             msg = "No analytical function provided"
             raise ObjectiveError(msg)
-        results = super().__func_evaluate(decision_vector)
+        results = super()._func_evaluate(decision_vector)
         self.X = np.vstack((self.X, decision_vector))
         self.y = np.vstack((self.y, results.objectives))
         return results
@@ -524,7 +518,7 @@ class VectorDataObjective(VectorObjective):
     """A Objective class for multi/valued objectives. Use when the an evaluator/
     simulator returns a multiple objective values or when there is no evaluator/
     simulator.
-    
+
     Parameters
     ----------
     name : List[str]
@@ -622,14 +616,14 @@ class VectorDataObjective(VectorObjective):
                 msg = "If only one model is provided, model parameters should be a dict"
                 raise ObjectiveError(msg)
             models = [models] * len(self.name)
-            models_parameters = [models_parameters]
+            models_parameters = [models_parameters] * len(self.name)
         elif not (len(models) == len(models_parameters) == self.n_of_objectives):
             msg = (
                 "The length of lists of models and parameters should be the same as"
                 "the number of objectives in this objective class"
             )
         for model, model_params, name in zip(models, models_parameters, self.name):
-            self._train_one_objective(name, model, model_params,index, data)
+            self._train_one_objective(name, model, model_params, index, data)
 
     def _train_one_objective(
         self,
@@ -690,7 +684,7 @@ class VectorDataObjective(VectorObjective):
         msg = "I don't know how you got this error"
         raise ObjectiveError(msg)
 
-    def __surrogate_evaluate(
+    def _surrogate_evaluate(
         self, decision_vector: np.ndarray
     ) -> ObjectiveEvaluationResults:
         if not all(self._model_trained.values()):
@@ -712,13 +706,11 @@ class VectorDataObjective(VectorObjective):
                 raise ObjectiveError(msg)
         return ObjectiveEvaluationResults(result, uncertainity)
 
-    def __func_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
-        if self.__evaluator is None:
+    def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        if self.evaluator is None:
             msg = "No analytical function provided"
             raise ObjectiveError(msg)
-        results = super().__func_evaluate(decision_vector)
+        results = super()._func_evaluate(decision_vector)
         self.X = np.vstack((self.X, decision_vector))
         self.y = np.vstack((self.y, results.objectives))
         return results
