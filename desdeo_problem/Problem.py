@@ -6,17 +6,19 @@ problems.
 import logging
 import logging.config
 from abc import ABC, abstractmethod
-from os import path
-from typing import List, Optional, Union, NamedTuple
-
 # , TypedDict coming in py3.8
 from functools import reduce
 from operator import iadd
+from os import path
+from typing import Dict, List, NamedTuple, Optional, Union
 
 import numpy as np
+import pandas as pd
 
 from desdeo_problem.Constraint import ScalarConstraint
-from desdeo_problem.Objective import ScalarObjective, VectorObjective
+from desdeo_problem.Objective import (ScalarDataObjective, ScalarObjective,
+                                      VectorDataObjective, VectorObjective)
+from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
 from desdeo_problem.Variable import Variable
 
 log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
@@ -127,12 +129,17 @@ class ProblemBase(ABC):
         pass
 
     @abstractmethod
-    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
-        """Evaluates the problem using an ensemble of input vectors.
+    def evaluate(
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+    ) -> EvaluationResults:
+        """Evaluates the problem using an ensemble of input vectors. Uses surrogate
+        models if available. Otherwise, it uses the true evaluator.
 
         Args:
             decision_vectors (np.ndarray): An array of decision variable
             input vectors.
+            use_surrogate (bool): A bool to control whether to use the true, potentially
+            expensive function or a surrogate model to evaluate the objectives.
 
         Returns:
             (Dict): Dict with the following keys:
@@ -146,7 +153,6 @@ class ProblemBase(ABC):
                     objective values.
 
         """
-        pass
 
     @abstractmethod
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
@@ -157,9 +163,9 @@ class ProblemBase(ABC):
             Currently not supported by ScalarMOProblem
 
         """
-        pass
 
 
+# TODO: Depreciate. Use MO problem in the future
 class ScalarMOProblem(ProblemBase):
     """A multiobjective optimization problem with user defined objective funcitons,
     constraints and variables. The objectives each return a single scalar.
@@ -387,7 +393,9 @@ class ScalarMOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
+    def evaluate(
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+    ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
@@ -406,6 +414,11 @@ class ScalarMOProblem(ProblemBase):
 
         """
         # Reshape decision_vectors with single row to work with the code
+        if use_surrogate is True:
+            raise NotImplementedError(
+                "Surrogates not yet supported in this class. "
+                "Use the '''DataProblem''' class instead."
+            )
         shape = np.shape(decision_vectors)
         if len(shape) == 1:
             decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
@@ -436,15 +449,9 @@ class ScalarMOProblem(ProblemBase):
 
         # Calculate the objective values
         for (col_i, objective) in enumerate(self.objectives):
-            results = list(map(objective.evaluate, decision_vectors))
-
-            objective_vectors[:, col_i] = np.asarray(
-                [result.objectives for result in results]
-            )
-            uncertainity[:, col_i] = np.asarray(
-                [result.uncertainity for result in results]
-            )
-
+            results = objective.evaluate(decision_vectors)
+            objective_vectors[:, col_i] = results.objectives
+            uncertainity[:, col_i] = results.uncertainity
         # Calculate fitness, which is always to be minimized
         fitness = objective_vectors * self._max_multiplier
 
@@ -452,7 +459,7 @@ class ScalarMOProblem(ProblemBase):
         if constraint_values is not None:
             for (col_i, constraint) in enumerate(self.constraints):
                 constraint_values[:, col_i] = np.array(
-                    list(map(constraint.evaluate, decision_vectors, objective_vectors))
+                    constraint.evaluate(decision_vectors, objective_vectors)
                 )
 
         return EvaluationResults(
@@ -473,6 +480,7 @@ class ScalarMOProblem(ProblemBase):
         raise NotImplementedError("Not implemented for ScalarMOProblem")
 
 
+# TODO: Depreciate. Use data problem in the future
 class ScalarDataProblem(ProblemBase):
     """Defines a problem with pre-computed data representing a multiobjective
     optimization problem with scalar valued objective functions.
@@ -617,7 +625,7 @@ class ScalarDataProblem(ProblemBase):
             L2 distance) in the problem and returns the corresponsing objective
             vector.
 
-            """
+        """
         if not self.__model_exists:
             logger.warning(
                 "Warning: Approximating the closest known point in "
@@ -667,7 +675,7 @@ class MOProblem(ProblemBase):
         self,
         objectives: List[Union[ScalarObjective, VectorObjective]],
         variables: List[Variable],
-        constraints: List[ScalarConstraint],
+        constraints: List[ScalarConstraint] = None,
         nadir: Optional[np.ndarray] = None,
         ideal: Optional[np.ndarray] = None,
     ):
@@ -819,7 +827,7 @@ class MOProblem(ProblemBase):
             List[str]: Names of the objectives in the order they were added.
 
         """
-        obj_list = [list(obj.name) for obj in self.objectives]
+        obj_list = [[(obj.name)] for obj in self.objectives]
         return reduce(iadd, obj_list, [])
 
     def get_variable_lower_bounds(self) -> np.ndarray:
@@ -840,13 +848,17 @@ class MOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def evaluate(self, decision_vectors: np.ndarray) -> EvaluationResults:
+    def evaluate(
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+    ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
             decision_vectors (np.ndarray): An 2D array of decision variable
             input vectors. Each column represent the values of each decision
             variable.
+            use_surrogate (bool): A bool to control whether to use the true, potentially
+            expensive function or a surrogate model to evaluate the objectives.
 
         Returns:
             Tuple[np.ndarray, Union[None, np.ndarray]]: If constraint are
@@ -902,25 +914,20 @@ class MOProblem(ProblemBase):
             elem_in_curr_obj = number_of_objectives(objective)
 
             if elem_in_curr_obj == 1:
-                results = list(map(objective.evaluate, decision_vectors))
-
-                objective_vectors[:, obj_column] = np.asarray(
-                    [result.objectives for result in results]
-                )
-                uncertainity[:, obj_column] = np.asarray(
-                    [result.uncertainity for result in results]
-                )
-
+                results = objective.evaluate(decision_vectors, use_surrogate)
+                objective_vectors[:, obj_column] = results.objectives
+                uncertainity[:, obj_column] = results.uncertainity
             elif elem_in_curr_obj > 1:
-                results = list(map(objective.evaluate, decision_vectors))
+                # results = list(map(objective.evaluate, decision_vectors))
+                results = objective.evaluate(decision_vectors, use_surrogate)
 
                 objective_vectors[
                     :, obj_column : obj_column + elem_in_curr_obj
-                ] = np.asarray([result.objectives for result in results])
+                ] = results.objectives
 
                 uncertainity[
                     :, obj_column : obj_column + elem_in_curr_obj
-                ] = np.asarray([result.uncertainity for result in results])
+                ] = results.uncertainity
 
             obj_column = obj_column + elem_in_curr_obj
 
@@ -931,7 +938,7 @@ class MOProblem(ProblemBase):
         if constraint_values is not None:
             for (col_i, constraint) in enumerate(self.constraints):
                 constraint_values[:, col_i] = np.array(
-                    list(map(constraint.evaluate, decision_vectors, objective_vectors))
+                    constraint.evaluate(decision_vectors, objective_vectors)
                 )
 
         return EvaluationResults(
@@ -952,6 +959,7 @@ class MOProblem(ProblemBase):
         raise NotImplementedError("Not implemented for ScalarMOProblem")
 
 
+# TODO: Put this in ProblemBase
 def number_of_objectives(obj_instance: Union[ScalarObjective, VectorObjective]) -> int:
     """Return the number of objectives in the given obj_instance.
 
@@ -973,3 +981,154 @@ def number_of_objectives(obj_instance: Union[ScalarObjective, VectorObjective]) 
     else:
         msg = "Supported objective types: ScalarObjective and VectorObjective"
         raise ProblemError(msg)
+
+
+# TODO: Make this the "main" Problem class?
+class DataProblem(MOProblem):
+    """A problem class for data-based problem. This supports surrogate modelling.
+    Data should be given in the form of a pandas dataframe.
+    
+    Args:
+        data (pd.DataFrame): The input data. This will be used for training the model.
+        variable_names (List[str]): Names of the variables in the dataframe provided.
+        objective_names (List[str]): Names of the objectices in the dataframe provided.
+        objectives (List[Union[ScalarDataObjective,VectorDataObjective,]], optional):
+        Objective instances, currently not supported. Defaults to None.
+        variables (List[Variable], optional): Variable instances. Defaults to None.
+        Currently not supported.
+        constraints (List[ScalarConstraint], optional): Constraint instances.
+        Defaults to None, which means that there are no constraints.
+        nadir (Optional[np.ndarray], optional): Nadir of the problem. Defaults to None.
+        ideal (Optional[np.ndarray], optional): Ideal of the problem. Defaults to None.
+    
+    Raises:
+        ProblemError: When input data is not a dataframe.
+        ProblemError: When given objective or variable names are not in dataframe column
+        NotImplementedError: When objective instances are passed
+        NotImplementedError: When variable instances are passed
+    """
+
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        variable_names: List[str],
+        objective_names: List[str],
+        objectives: List[Union[ScalarDataObjective, VectorDataObjective]] = None,
+        variables: List[Variable] = None,
+        constraints: List[ScalarConstraint] = None,
+        nadir: Optional[np.ndarray] = None,
+        ideal: Optional[np.ndarray] = None,
+    ):
+        if not isinstance(data, pd.DataFrame):
+            msg = "Please provide data in the pandas dataframe format"
+            raise ProblemError(msg)
+        if not all(obj in data.columns for obj in objective_names):
+            msg = "Provided objective names not found in provided dataframe columns"
+            raise ProblemError(msg)
+        if not all(var in data.columns for var in variable_names):
+            msg = "Provided variable names not found in provided dataframe columns"
+            raise ProblemError(msg)
+        # TODO: Implement the rest
+        if objectives is not None:
+            msg = "Support for custom objectives objects not implemented yet"
+            raise NotImplementedError(msg)
+        if variables is not None:
+            msg = "Support for custom variables objects not implemented yet"
+            raise NotImplementedError(msg)
+        if objectives is None:
+            objectives = []
+            for obj in objective_names:
+                objectives.append(
+                    ScalarDataObjective(data=data[variable_names + [obj]], name=obj)
+                )
+        if variables is None:
+            variables = []
+            for var in variable_names:
+                initial_value = data[var].mean(axis=0)
+                lower_bound = data[var].min(axis=0)
+                upper_bound = data[var].max(axis=0)
+                variables.append(
+                    Variable(
+                        name=var,
+                        initial_value=initial_value,
+                        lower_bound=lower_bound,
+                        upper_bound=upper_bound,
+                    )
+                )
+        super().__init__(objectives, variables, constraints)
+
+    def train(
+        self,
+        models: Union[BaseRegressor, List[BaseRegressor]],
+        model_parameters: Union[Dict, List[Dict]] = None,
+        index: List[int] = None,
+        data: pd.DataFrame = None,
+    ):
+        """Train surrogate models for all the objectives. The models should have a fit
+        method and a predict method. The predict method should return predicted values
+        as well as uncertainity value (even if they are none.)
+
+        Args:
+            models (Union[BaseRegressor, List[BaseRegressor]]): The class for the
+            surrogate modelling algorithm.
+            models_parameters: Dict or List[Dict]
+            The parameters for the regressors. Should be a dict if a single regressor is
+            provided. If a list of regressors is provided, the parameters should be in a
+            list of dicts, same length as the list of regressors(= number of objs).
+            index (List[int], optional): The indices of the samples to be used for
+            training the surrogate model. If no values are proveded, all samples are
+            used.
+            data (pd.DataFrame, optional): Use this argument if some external data is
+            to be used for training. Defaults to None.
+
+        Raises:
+            ProblemError: If VectorDataObjective is used as one of the objective
+            instances. They are not supported yet.
+        """
+        if not isinstance(models, list):
+            models = [models] * len(self.get_objective_names())
+            model_parameters = [model_parameters] * len(self.get_objective_names())
+        elif len(models) == 1:
+            models = models * len(self.get_objective_names())
+        for model, model_params, name in zip(
+            models, model_parameters, self.get_objective_names()
+        ):
+            self.train_one_objective(name, model, model_params, index, data)
+
+    def train_one_objective(
+        self,
+        name: str,
+        model: BaseRegressor,
+        model_parameters: Dict,
+        index: List[int] = None,
+        data: pd.DataFrame = None,
+    ):
+        """Train one objective at a time, otherwise same is the train method.
+
+        Args:
+            name (str): Name of the objective to be trained.
+            model (BaseRegressor): The class for the surrogate modelling algorithm.
+            model_parameters (Dict): **model_parameters is passed to the model when
+            initialized.
+            index (List[int], optional): The indices of the samples to be used for
+            training the surrogate model. If no values are proveded, all samples are
+            used.
+            data (pd.DataFrame, optional): Use this argument if some external data is
+            to be used for training. Defaults to None.
+
+        Raises:
+            ProblemError: If name is not in the list of objective names.
+            ProblemError: If VectorDataObjective is used as one of the objective
+            instances. They are not supported yet.
+        """
+        if name not in self.get_objective_names():
+            raise ProblemError(
+                f'"{name}" not found in the list of'
+                f"original objective names: {self.get_objective_names()}"
+            )
+        obj_index = self.get_objective_names().index(name)
+        if isinstance(self.objectives[obj_index], ScalarDataObjective):
+            self.objectives[obj_index].train(model, model_parameters, index, data)
+        else:
+            msg = "Support for VectorDataObjective not supported yet"
+            raise ProblemError(msg)
