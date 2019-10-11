@@ -11,33 +11,32 @@ except:
 #%%
 import pandas as pd
 import numpy as np
-#from sklearn.gaussian_process import GaussianProcessRegressor as GPR
 
 
 #%%
-from desdeo_problem.Objective import ScalarDataObjective as sdo
-from desdeo_problem.Objective import VectorDataObjective as vdo
+from desdeo_problem.Objective import VectorDataObjective as VDO
 from desdeo_problem.surrogatemodels.SurrogateModels import GaussianProcessRegressor
-from desdeo_problem.Problem import DataProblem
+from sklearn.gaussian_process.kernels import Matern, RBF
 
 
 #%%
 data = np.random.rand(100,4)
-x = ['a','b']
+X = ['a','b']
 y = ['f1','f2']
-datapd = pd.DataFrame(data, columns=x+y)
+datapd = pd.DataFrame(data, columns=X+y)
+datapd.head()
 
 
 #%%
-obj = vdo(data=datapd, name=y)
+obj = VDO(data=datapd, name=y)
 
 
 #%%
-obj.train(models=GaussianProcessRegressor)
+obj.train(models=GaussianProcessRegressor, model_parameters={'kernel': RBF()})
 
 
 #%%
-print(obj.evaluate(np.asarray([[10,1]]), use_surrogate=True))
+print(obj.evaluate(np.asarray([[0.5,0.3]]), use_surrogate=True))
 
 
 #%%
@@ -49,15 +48,19 @@ obj._model_trained.values()
 
 
 #%%
+from desdeo_problem.Problem import DataProblem
+
+
+#%%
 prob = DataProblem(data=datapd, objective_names=y, variable_names=x)
 
 
 #%%
-prob.train(GaussianProcessRegressor())
+prob.train(GaussianProcessRegressor)
 
 
 #%%
-print(prob.evaluate(np.asarray([[0.1,0.8], [0.5,0.3]])))
+print(prob.evaluate(np.asarray([[0.1,0.8], [0.5,0.3]]), use_surrogate=True))
 
 
 #%%

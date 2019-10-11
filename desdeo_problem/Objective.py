@@ -6,12 +6,13 @@ import logging
 import logging.config
 from abc import ABC, abstractmethod
 from os import path
-from typing import Callable, Tuple, List, Union, NamedTuple, Dict
+from typing import Callable, Dict, List, NamedTuple, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
-from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor, ModelError
+from desdeo_problem.surrogatemodels.SurrogateModels import (BaseRegressor,
+                                                            ModelError)
 
 log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
@@ -567,7 +568,7 @@ class VectorDataObjective(VectorObjective):
     def train(
         self,
         models: Union[BaseRegressor, List[BaseRegressor]],
-        models_parameters: Union[Dict, List[Dict]] = None,
+        model_parameters: Union[Dict, List[Dict]] = None,
         index: List[int] = None,
         data: pd.DataFrame = None,
     ):
@@ -588,7 +589,7 @@ class VectorDataObjective(VectorObjective):
             for each objective, then those individual regressors are used to model the
             objectives. If the number of regressors is not equal to the number of
             objectives, an error is raised.
-        models_parameters: Dict or List[Dict]
+        model_parameters: Dict or List[Dict]
             The parameters for the regressors. Should be a dict if a single regressor is
             provided. If a list of regressors is provided, the parameters should be in a
             list of dicts, same length as the list of regressors(= number of objs).
@@ -609,20 +610,20 @@ class VectorDataObjective(VectorObjective):
             If the lengths of list of models and/or model parameter dictionaries are not
             equal to the number of objectives.
         """
-        if models_parameters is None:
-            models_parameters = {}
+        if model_parameters is None:
+            model_parameters = {}
         if not isinstance(models, list):
-            if not (isinstance(models_parameters, dict)):
+            if not (isinstance(model_parameters, dict)):
                 msg = "If only one model is provided, model parameters should be a dict"
                 raise ObjectiveError(msg)
             models = [models] * len(self.name)
-            models_parameters = [models_parameters] * len(self.name)
-        elif not (len(models) == len(models_parameters) == self.n_of_objectives):
+            model_parameters = [model_parameters] * len(self.name)
+        elif not (len(models) == len(model_parameters) == self.n_of_objectives):
             msg = (
                 "The length of lists of models and parameters should be the same as"
                 "the number of objectives in this objective class"
             )
-        for model, model_params, name in zip(models, models_parameters, self.name):
+        for model, model_params, name in zip(models, model_parameters, self.name):
             self._train_one_objective(name, model, model_params, index, data)
 
     def _train_one_objective(

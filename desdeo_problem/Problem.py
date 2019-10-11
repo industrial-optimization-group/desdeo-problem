@@ -6,25 +6,20 @@ problems.
 import logging
 import logging.config
 from abc import ABC, abstractmethod
-from os import path
-from typing import List, Optional, Union, NamedTuple
-
 # , TypedDict coming in py3.8
 from functools import reduce
 from operator import iadd
+from os import path
+from typing import Dict, List, NamedTuple, Optional, Union
 
 import numpy as np
 import pandas as pd
 
 from desdeo_problem.Constraint import ScalarConstraint
-from desdeo_problem.Objective import (
-    ScalarObjective,
-    VectorObjective,
-    ScalarDataObjective,
-    VectorDataObjective,
-)
-from desdeo_problem.Variable import Variable
+from desdeo_problem.Objective import (ScalarDataObjective, ScalarObjective,
+                                      VectorDataObjective, VectorObjective)
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
+from desdeo_problem.Variable import Variable
 
 log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
@@ -990,19 +985,35 @@ def number_of_objectives(obj_instance: Union[ScalarObjective, VectorObjective]) 
 
 # TODO: Make this the "main" Problem class?
 class DataProblem(MOProblem):
+    """A problem class for data-based problem. This supports surrogate modelling.
+    Data should be given in the form of a pandas dataframe.
+    
+    Args:
+        data (pd.DataFrame): The input data. This will be used for training the model.
+        variable_names (List[str]): Names of the variables in the dataframe provided.
+        objective_names (List[str]): Names of the objectices in the dataframe provided.
+        objectives (List[Union[ScalarDataObjective,VectorDataObjective,]], optional):
+        Objective instances, currently not supported. Defaults to None.
+        variables (List[Variable], optional): Variable instances. Defaults to None.
+        Currently not supported.
+        constraints (List[ScalarConstraint], optional): Constraint instances.
+        Defaults to None, which means that there are no constraints.
+        nadir (Optional[np.ndarray], optional): Nadir of the problem. Defaults to None.
+        ideal (Optional[np.ndarray], optional): Ideal of the problem. Defaults to None.
+    
+    Raises:
+        ProblemError: When input data is not a dataframe.
+        ProblemError: When given objective or variable names are not in dataframe column
+        NotImplementedError: When objective instances are passed
+        NotImplementedError: When variable instances are passed
+    """
+
     def __init__(
         self,
         data: pd.DataFrame,
         variable_names: List[str],
         objective_names: List[str],
-        objectives: List[
-            Union[
-                ScalarDataObjective,
-                VectorObjective,
-                ScalarDataObjective,
-                VectorDataObjective,
-            ]
-        ] = None,
+        objectives: List[Union[ScalarDataObjective, VectorDataObjective]] = None,
         variables: List[Variable] = None,
         constraints: List[ScalarConstraint] = None,
         nadir: Optional[np.ndarray] = None,
@@ -1014,6 +1025,10 @@ class DataProblem(MOProblem):
         if not all(obj in data.columns for obj in objective_names):
             msg = "Provided objective names not found in provided dataframe columns"
             raise ProblemError(msg)
+        if not all(var in data.columns for var in variable_names):
+            msg = "Provided variable names not found in provided dataframe columns"
+            raise ProblemError(msg)
+        # TODO: Implement the rest
         if objectives is not None:
             msg = "Support for custom objectives objects not implemented yet"
             raise NotImplementedError(msg)
@@ -1045,23 +1060,67 @@ class DataProblem(MOProblem):
     def train(
         self,
         models: Union[BaseRegressor, List[BaseRegressor]],
+        model_parameters: Union[Dict, List[Dict]] = None,
         index: List[int] = None,
         data: pd.DataFrame = None,
     ):
+        """Train surrogate models for all the objectives. The models should have a fit
+        method and a predict method. The predict method should return predicted values
+        as well as uncertainity value (even if they are none.)
+
+        Args:
+            models (Union[BaseRegressor, List[BaseRegressor]]): The class for the
+            surrogate modelling algorithm.
+            models_parameters: Dict or List[Dict]
+            The parameters for the regressors. Should be a dict if a single regressor is
+            provided. If a list of regressors is provided, the parameters should be in a
+            list of dicts, same length as the list of regressors(= number of objs).
+            index (List[int], optional): The indices of the samples to be used for
+            training the surrogate model. If no values are proveded, all samples are
+            used.
+            data (pd.DataFrame, optional): Use this argument if some external data is
+            to be used for training. Defaults to None.
+
+        Raises:
+            ProblemError: If VectorDataObjective is used as one of the objective
+            instances. They are not supported yet.
+        """
         if not isinstance(models, list):
             models = [models] * len(self.get_objective_names())
+            model_parameters = [model_parameters] * len(self.get_objective_names())
         elif len(models) == 1:
             models = models * len(self.get_objective_names())
-        for model, name in zip(models, self.get_objective_names()):
-            self.train_one_objective(name, model, index, data)
+        for model, model_params, name in zip(
+            models, model_parameters, self.get_objective_names()
+        ):
+            self.train_one_objective(name, model, model_params, index, data)
 
     def train_one_objective(
         self,
         name: str,
         model: BaseRegressor,
+        model_parameters: Dict,
         index: List[int] = None,
         data: pd.DataFrame = None,
     ):
+        """Train one objective at a time, otherwise same is the train method.
+
+        Args:
+            name (str): Name of the objective to be trained.
+            model (BaseRegressor): The class for the surrogate modelling algorithm.
+            model_parameters (Dict): **model_parameters is passed to the model when
+            initialized.
+            index (List[int], optional): The indices of the samples to be used for
+            training the surrogate model. If no values are proveded, all samples are
+            used.
+            data (pd.DataFrame, optional): Use this argument if some external data is
+            to be used for training. Defaults to None.
+
+        Raises:
+            ProblemError: If name is not in the list of objective names.
+            ProblemError: If VectorDataObjective is used as one of the objective
+            instances. They are not supported yet.
+        """
         if name not in self.get_objective_names():
             raise ProblemError(
                 f'"{name}" not found in the list of'
@@ -1069,7 +1128,7 @@ class DataProblem(MOProblem):
             )
         obj_index = self.get_objective_names().index(name)
         if isinstance(self.objectives[obj_index], ScalarDataObjective):
-            self.objectives[obj_index].train(model, index, data)
+            self.objectives[obj_index].train(model, model_parameters, index, data)
         else:
             msg = "Support for VectorDataObjective not supported yet"
             raise ProblemError(msg)
