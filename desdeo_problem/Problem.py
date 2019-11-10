@@ -722,6 +722,10 @@ class MOProblem(ProblemBase):
         to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
         self._max_multiplier = max_multiplier[to_maximize]
 
+        # Objective and variable names
+        self.objective_names = self.get_objective_names()
+        self.variable_names = self.get_variable_names()
+
     @property
     def n_of_constraints(self) -> int:
         return self.__n_of_constraints

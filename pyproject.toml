@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "desdeo_problem"
-version = "0.1.0"
+version = "0.1.1"
 description = "This package contains the problem classes for desdeo framework."
 authors = ["Your Name <you@example.com>"]
 license = "MIT"
