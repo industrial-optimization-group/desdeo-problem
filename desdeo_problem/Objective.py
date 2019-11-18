@@ -160,7 +160,8 @@ class VectorObjectiveBase(ABC):
         pass
 
 
-class ScalarObjective(ObjectiveBase):
+# TODO: Depreciate
+class _ScalarObjective(ObjectiveBase):
     """A simple objective function that returns a scalar.
 
     Args:
