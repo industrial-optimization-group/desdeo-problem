@@ -268,6 +268,7 @@ class _ScalarObjective(ObjectiveBase):
         raise ObjectiveError("Surrogates not trained")
 
 
+# TODO: Rename to "Objective"
 class VectorObjective(VectorObjectiveBase):
     """An objective object that calculated one or more objective functions.
 
@@ -398,7 +399,8 @@ class VectorObjective(VectorObjectiveBase):
         raise ObjectiveError("Surrogates not trained")
 
 
-class ScalarDataObjective(ScalarObjective):
+# TODO: Depreciate
+class _ScalarDataObjective(_ScalarObjective):
     """A simple Objective class for single valued objectives. Use when the an evaluator/
     simulator returns a single objective value or when there is no evaluator/simulator.
 
