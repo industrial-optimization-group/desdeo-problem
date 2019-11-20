@@ -6,18 +6,23 @@ problems.
 import logging
 import logging.config
 from abc import ABC, abstractmethod
+
 # , TypedDict coming in py3.8
 from functools import reduce
 from operator import iadd
 from os import path
-from typing import Dict, List, NamedTuple, Optional, Union, Tuple, Callable
+from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 from desdeo_problem.Constraint import ScalarConstraint
-from desdeo_problem.Objective import (_ScalarDataObjective, _ScalarObjective,
-                                      VectorDataObjective, VectorObjective)
+from desdeo_problem.Objective import (
+    VectorDataObjective,
+    VectorObjective,
+    _ScalarDataObjective,
+    _ScalarObjective,
+)
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
 from desdeo_problem.Variable import Variable
 
@@ -1136,7 +1141,6 @@ class DataProblem(MOProblem):
         else:
             msg = "Support for VectorDataObjective not supported yet"
             raise ProblemError(msg)
-
 
 
 class ExperimentalProblem(MOProblem):

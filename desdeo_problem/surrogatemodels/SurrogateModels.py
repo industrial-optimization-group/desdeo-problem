@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 import numpy as np
-from typing import Tuple
 from sklearn.gaussian_process import GaussianProcessRegressor as GPR
 
 

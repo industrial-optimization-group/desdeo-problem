@@ -11,8 +11,7 @@ from typing import Callable, Dict, List, NamedTuple, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from desdeo_problem.surrogatemodels.SurrogateModels import (BaseRegressor,
-                                                            ModelError)
+from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor, ModelError
 
 log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
 logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)

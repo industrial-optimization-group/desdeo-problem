@@ -1,6 +1,7 @@
-from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor, ModelError
 import numpy as np
 import pandas as pd
+
+from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor, ModelError
 
 
 class LipschitzianRegressor(BaseRegressor):
