@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor as GPR
@@ -15,11 +16,11 @@ class ModelError(Exception):
 
 class BaseRegressor(ABC):
     @abstractmethod
-    def fit(X: np.ndarray, y: np.ndarray):
+    def fit(self, X: np.ndarray, y: np.ndarray):
         pass
 
     @abstractmethod
-    def predict(X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         pass
 
 

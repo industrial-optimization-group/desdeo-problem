@@ -7,7 +7,7 @@ necessary class to be used.
 import logging
 import logging.config
 from os import path
-from typing import Tuple, List, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 
