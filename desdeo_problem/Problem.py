@@ -993,6 +993,9 @@ class DataProblem(MOProblem):
         data (pd.DataFrame): The input data. This will be used for training the model.
         variable_names (List[str]): Names of the variables in the dataframe provided.
         objective_names (List[str]): Names of the objectices in the dataframe provided.
+        bounds (pd.DataFrame, optional): A pandas DataFrame containing the upper and
+        lower bounds of the decision variables. Column names have to be same as
+        variable_names. Row names have to be "lower_bound" and "upper_bound".
         objectives (List[Union[_ScalarDataObjective,VectorDataObjective,]], optional):
         Objective instances, currently not supported. Defaults to None.
         variables (List[Variable], optional): Variable instances. Defaults to None.
@@ -1014,6 +1017,7 @@ class DataProblem(MOProblem):
         data: pd.DataFrame,
         variable_names: List[str],
         objective_names: List[str],
+        bounds: pd.DataFrame = None,
         objectives: List[Union[_ScalarDataObjective, VectorDataObjective]] = None,
         variables: List[Variable] = None,
         constraints: List[ScalarConstraint] = None,
@@ -1028,6 +1032,13 @@ class DataProblem(MOProblem):
             raise ProblemError(msg)
         if not all(var in data.columns for var in variable_names):
             msg = "Provided variable names not found in provided dataframe columns"
+            raise ProblemError(msg)
+        if not all(var in variable_names for var in bounds.columns):
+            msg = "A mismatch in the variable names in the bounds dataframe"
+            raise ProblemError(msg)
+        bounds_row_names = ["lower_bound","upper_bound"]
+        if not all(row_name in bounds_row_names for row_name in bounds.index):
+            msg = f"'bounds' should contain the following indices: {bounds_row_names}"
             raise ProblemError(msg)
         # TODO: Implement the rest
         if objectives is not None:
@@ -1046,8 +1057,12 @@ class DataProblem(MOProblem):
             variables = []
             for var in variable_names:
                 initial_value = data[var].mean(axis=0)
-                lower_bound = data[var].min(axis=0)
-                upper_bound = data[var].max(axis=0)
+                if bounds is None:
+                    lower_bound = data[var].min(axis=0)
+                    upper_bound = data[var].max(axis=0)
+                else:
+                    lower_bound = bounds[var]["lower_bound"]
+                    upper_bound = bounds[var]["upper_bound"]
                 variables.append(
                     Variable(
                         name=var,
