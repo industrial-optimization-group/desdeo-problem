@@ -1033,13 +1033,16 @@ class DataProblem(MOProblem):
         if not all(var in data.columns for var in variable_names):
             msg = "Provided variable names not found in provided dataframe columns"
             raise ProblemError(msg)
-        if not all(var in variable_names for var in bounds.columns):
-            msg = "A mismatch in the variable names in the bounds dataframe"
-            raise ProblemError(msg)
-        bounds_row_names = ["lower_bound","upper_bound"]
-        if not all(row_name in bounds_row_names for row_name in bounds.index):
-            msg = f"'bounds' should contain the following indices: {bounds_row_names}"
-            raise ProblemError(msg)
+        if bounds is not None:
+            if not all(var in variable_names for var in bounds.columns):
+                msg = "A mismatch in the variable names in the bounds dataframe"
+                raise ProblemError(msg)
+            bounds_row_names = ["lower_bound", "upper_bound"]
+            if not all(row_name in bounds_row_names for row_name in bounds.index):
+                msg = (
+                    f"'bounds' should contain the following indices: {bounds_row_names}"
+                )
+                raise ProblemError(msg)
         # TODO: Implement the rest
         if objectives is not None:
             msg = "Support for custom objectives objects not implemented yet"
