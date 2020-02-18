@@ -15,6 +15,12 @@ class LipschitzianRegressor(BaseRegressor):
             X = X.values
         if isinstance(y, (pd.DataFrame, pd.Series)):
             y = y.values.reshape(-1, 1)
+
+        # Make a 2-D array if needed
+        y = np.atleast_1d(y)
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
+
         self_dist_x = self.self_distance(X)
         self_dist_y = self.self_distance(y)
         with np.errstate(divide="ignore", invalid="ignore"):
