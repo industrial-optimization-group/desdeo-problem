@@ -715,8 +715,10 @@ class MOProblem(ProblemBase):
         # Multiplier to convert maximization to minimization
         max_multiplier = np.asarray([1, -1])
         to_maximize = [objective.maximize for objective in objectives]
-        to_maximize = sum(to_maximize, [])  # To flatten the list
-        to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
+        # Does not work
+        # to_maximize = sum(to_maximize, [])  # To flatten the list
+        to_maximize = np.hstack(to_maximize) * 1  # To flatten list and convert to zeros and ones
+        # to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
         self._max_multiplier = max_multiplier[to_maximize]
 
         # Objective and variable names
