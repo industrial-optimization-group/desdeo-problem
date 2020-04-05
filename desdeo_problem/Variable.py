@@ -4,21 +4,10 @@ necessary class to be used.
 
 """
 
-import logging
-import logging.config
 from os import path
 from typing import List, Tuple, Union
 
 import numpy as np
-
-log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
-logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
-logger = logging.getLogger(__file__)
-# To prevent unexpected outputs in ipython console
-logging.getLogger("parso.python.diff").disabled = True
-logging.getLogger("parso.cache").disabled = True
-logging.getLogger("parso.cache.pickle").disabled = True
-
 
 class VariableError(Exception):
     """Raised when an error is encountered during the handling of the
@@ -79,7 +68,6 @@ class Variable:
             msg = ("Lower bound {} should be less than the upper bound " "{}.").format(
                 lower_bound, upper_bound
             )
-            logger.error(msg)
             raise VariableError(msg)
 
         # Check that the initial value is between the bounds
@@ -90,7 +78,6 @@ class Variable:
                     initial_value, lower_bound, upper_bound
                 )
             )
-            logger.error(msg)
             raise VariableError(msg)
 
         self.__lower_bound = lower_bound
@@ -156,7 +143,6 @@ def variable_builder(
             "The length of the list of names and the number of elements in the "
             "initial_values array should be the same"
         )
-        logger.error(msg)
         raise VariableBuilderError(msg)
     if lower_bounds is None:
         lower_bounds = [-np.inf] * num_of_variables
@@ -165,7 +151,6 @@ def variable_builder(
             "The length of the list of names and the number of elements in the "
             "lower_bounds array should be the same"
         )
-        logger.error(msg)
         raise VariableBuilderError(msg)
     if upper_bounds is None:
         upper_bounds = [np.inf] * num_of_variables
@@ -174,7 +159,6 @@ def variable_builder(
             "The length of the list of names and the number of elements in the "
             "upper_bounds array should be the same"
         )
-        logger.error(msg)
         raise VariableBuilderError(msg)
     # if most checks passed
     variables = [
