@@ -3,8 +3,6 @@ problems.
 
 """
 
-import logging
-import logging.config
 from abc import ABC, abstractmethod
 
 # , TypedDict coming in py3.8
@@ -25,14 +23,6 @@ from desdeo_problem.Objective import (
 )
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
 from desdeo_problem.Variable import Variable
-
-log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
-logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
-logger = logging.getLogger(__file__)
-# To prevent unexpected outputs in ipython console
-logging.getLogger("parso.python.diff").disabled = True
-logging.getLogger("parso.cache").disabled = True
-logging.getLogger("parso.cache.pickle").disabled = True
 
 
 class ProblemError(Exception):
@@ -231,7 +221,6 @@ class ScalarMOProblem(ProblemBase):
                     "number of objectives: Length nadir {}, number of "
                     "objectives {}."
                 ).format(len(nadir), self.n_of_objectives)
-                logger.error(msg)
                 raise ProblemError(msg)
 
         # Ideal vector must be the same size as the number of objectives
@@ -242,7 +231,6 @@ class ScalarMOProblem(ProblemBase):
                     "number of objectives: Length ideal {}, number of "
                     "objectives {}."
                 ).format(len(ideal), self.n_of_objectives)
-                logger.error(msg)
                 raise ProblemError(msg)
 
         # Nadir and ideal vectors must match in size
@@ -252,7 +240,6 @@ class ScalarMOProblem(ProblemBase):
                     "The length of the nadir and ideal point don't match:"
                     " length of nadir {}, length of ideal {}."
                 ).format(len(nadir), len(ideal))
-                logger.error(msg)
                 raise ProblemError(msg)
 
         self.__nadir = nadir
@@ -346,10 +333,6 @@ class ScalarMOProblem(ProblemBase):
                 bounds[ind] = np.array(var.get_bounds())
             return bounds
         else:
-            logger.info(
-                "Attempted to get variable bounds for a "
-                "ScalarMOProblem with no defined variables."
-            )
             return None
 
     def get_variable_names(self) -> List[str]:
@@ -428,7 +411,6 @@ class ScalarMOProblem(ProblemBase):
                 "of variables in the problem: Input vector length {}, "
                 "number of variables {}."
             ).format(n_cols, self.n_of_variables)
-            logger.error(msg)
             raise ProblemError(msg)
 
         objective_vectors: np.ndarray = np.ndarray(
@@ -529,7 +511,6 @@ class ScalarDataProblem(ProblemBase):
                 "Check the variable dimensions. Is it a 2D array? "
                 "Encountered '{}'".format(str(e))
             )
-            logger.error(msg)
             raise ProblemError(msg)
 
         try:
@@ -539,7 +520,6 @@ class ScalarDataProblem(ProblemBase):
                 "Check the objective dimensions. Is it a 2D array? "
                 "Encountered '{}'".format(str(e))
             )
-            logger.error(msg)
             raise ProblemError(msg)
 
         self.nadir = np.max(self.objective_vectors, axis=0)
@@ -624,11 +604,6 @@ class ScalarDataProblem(ProblemBase):
 
         """
         if not self.__model_exists:
-            logger.warning(
-                "Warning: Approximating the closest known point in "
-                "a data based problem. Consider building a model "
-                "first (NOT IMPLEMENTED)"
-            )
             idx = np.unravel_index(
                 np.linalg.norm(
                     self.decision_vectors - decision_vectors, axis=1
@@ -639,7 +614,6 @@ class ScalarDataProblem(ProblemBase):
 
         else:
             msg = "Models not implemented yet for data based problems."
-            logger.error(msg)
             raise NotImplementedError(msg)
 
         return (self.objective_vectors[idx],)
@@ -695,7 +669,6 @@ class MOProblem(ProblemBase):
                     "number of objectives: Length nadir {}, number of "
                     "objectives {}."
                 ).format(len(nadir), self.n_of_objectives)
-                logger.error(msg)
                 raise ProblemError(msg)
 
         # Ideal vector must be the same size as the number of objectives
@@ -706,7 +679,6 @@ class MOProblem(ProblemBase):
                     "number of objectives: Length ideal {}, number of "
                     "objectives {}."
                 ).format(len(ideal), self.n_of_objectives)
-                logger.error(msg)
                 raise ProblemError(msg)
 
         self.__nadir = nadir
@@ -804,10 +776,6 @@ class MOProblem(ProblemBase):
                 bounds[ind] = np.array(var.get_bounds())
             return bounds
         else:
-            logger.info(
-                "Attempted to get variable bounds for a "
-                "MOProblem with no defined variables."
-            )
             return None
 
     def get_variable_names(self) -> List[str]:
@@ -891,7 +859,6 @@ class MOProblem(ProblemBase):
                 "of variables in the problem: Input vector length {}, "
                 "number of variables {}."
             ).format(n_cols, self.n_of_variables)
-            logger.error(msg)
             raise ProblemError(msg)
 
         objective_vectors: np.ndarray = np.ndarray(
