@@ -2,21 +2,11 @@
 
 """
 
-import logging
-import logging.config
 from abc import ABC, abstractmethod
 from os import path
 from typing import Callable, List
 
 import numpy as np
-
-log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
-logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
-logger = logging.getLogger(__file__)
-# To prevent unexpected outputs in ipython console
-logging.getLogger("parso.python.diff").disabled = True
-logging.getLogger("parso.cache").disabled = True
-logging.getLogger("parso.cache.pickle").disabled = True
 
 
 class ConstraintError(Exception):
@@ -136,7 +126,6 @@ class ScalarConstraint(ConstraintBase):
                 "Decision decision_vector {} is of wrong lenght: "
                 "Should be {}, but is {}"
             ).format(decision_vector, self.__n_decision_vars, decision_l)
-            logger.error(msg)
             raise ConstraintError(msg)
 
         objective_l = (
@@ -149,7 +138,6 @@ class ScalarConstraint(ConstraintBase):
                 "Objective decision_vector {} is of wrong lenght:"
                 " Should be {}, but is {}"
             ).format(objective_vector, self.__n_objective_funs, objective_l)
-            logger.error(msg)
             raise ConstraintError(msg)
         try:
             result = self.__evaluator(decision_vector, objective_vector)
@@ -157,7 +145,6 @@ class ScalarConstraint(ConstraintBase):
             msg = ("Bad arguments {} and {} supplied to the evaluator:" " {}").format(
                 str(decision_vector), objective_vector, str(e)
             )
-            logger.error(msg)
             raise ConstraintError(msg)
 
         return result
@@ -194,7 +181,6 @@ def constraint_function_factory(lhs: Callable, rhs: float, operator: str) -> Cal
     """
     if operator not in supported_operators:
         msg = "The operator {} supplied is not supported.".format(operator)
-        logger.error(msg)
         raise ValueError(msg)
 
     if operator == "==":
@@ -221,5 +207,4 @@ def constraint_function_factory(lhs: Callable, rhs: float, operator: str) -> Cal
     else:
         # if for some reason a bad operator falls through
         msg = "Bad operator argument supplied: {}".format(operator)
-        logger.error(msg)
         raise ValueError(msg)

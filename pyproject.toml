@@ -2,7 +2,7 @@
 name = "desdeo_problem"
 version = "0.14.0"
 description = "This package contains the problem classes for desdeo framework."
-authors = ["Bhupinder Saini <bhupinder.s.saini@jyu.fi>"]
+authors = ["Bhupinder Saini <bhupinder.s.saini@jyu.fi>", "Giovanni Misitano <giovanni.a.misitano@jyu.fi>"]
 license = "MIT"
 
 [tool.poetry.dependencies]

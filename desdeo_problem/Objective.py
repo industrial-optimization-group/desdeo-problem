@@ -2,8 +2,6 @@
 
 """
 
-import logging
-import logging.config
 from abc import ABC, abstractmethod
 from os import path
 from typing import Callable, Dict, List, NamedTuple, Tuple, Union
@@ -12,14 +10,6 @@ import numpy as np
 import pandas as pd
 
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor, ModelError
-
-log_conf_path = path.join(path.dirname(path.abspath(__file__)), "./logger.cfg")
-logging.config.fileConfig(fname=log_conf_path, disable_existing_loggers=False)
-logger = logging.getLogger(__file__)
-# To prevent unexpected outputs in ipython console
-logging.getLogger("parso.python.diff").disabled = True
-logging.getLogger("parso.cache").disabled = True
-logging.getLogger("parso.cache.pickle").disabled = True
 
 
 class ObjectiveError(Exception):
@@ -197,7 +187,6 @@ class _ScalarObjective(ObjectiveBase):
             msg = ("Lower bound {} should be less than the upper bound " "{}.").format(
                 lower_bound, upper_bound
             )
-            logger.error(msg)
             raise ObjectiveError(msg)
 
         self.__name: str = name
@@ -253,7 +242,6 @@ class _ScalarObjective(ObjectiveBase):
             msg = "Bad argument {} supplied to the evaluator: {}".format(
                 str(decision_vector), str(e)
             )
-            logger.error(msg)
             raise ObjectiveError(msg)
 
         # Store the value of the objective
@@ -309,19 +297,16 @@ class VectorObjective(VectorObjectiveBase):
                 "The length of the list of names and the number of elements in the "
                 "lower_bounds array should be the same"
             )
-            logger.error(msg)
             raise ObjectiveError(msg)
         if not (n_of_objectives == len(upper_bounds)):
             msg = (
                 "The length of the list of names and the number of elements in the "
                 "upper_bounds array should be the same"
             )
-            logger.error(msg)
             raise ObjectiveError(msg)
         # Check if all lower bounds are smaller than the corresponding upper bounds
         if not (np.all(lower_bounds < upper_bounds)):
             msg = "Lower bounds should be less than the upper bound "
-            logger.error(msg)
             raise ObjectiveError(msg)
         self.__name: List[str] = name
         self.__n_of_objectives: int = n_of_objectives
@@ -383,7 +368,6 @@ class VectorObjective(VectorObjectiveBase):
             msg = "Bad argument {} supplied to the evaluator: {}".format(
                 str(decision_vector), str(e)
             )
-            logger.error(msg)
             raise ObjectiveError(msg)
         result = tuple(result)
 
