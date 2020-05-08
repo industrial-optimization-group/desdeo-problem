@@ -717,7 +717,9 @@ class MOProblem(ProblemBase):
         to_maximize = [objective.maximize for objective in objectives]
         # Does not work
         # to_maximize = sum(to_maximize, [])  # To flatten the list
-        to_maximize = np.hstack(to_maximize) * 1  # To flatten list and convert to zeros and ones
+        to_maximize = (
+            np.hstack(to_maximize) * 1
+        )  # To flatten list and convert to zeros and ones
         # to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
         self._max_multiplier = max_multiplier[to_maximize]
 
@@ -1020,6 +1022,7 @@ class DataProblem(MOProblem):
         variable_names: List[str],
         objective_names: List[str],
         bounds: pd.DataFrame = None,
+        maximize: pd.DataFrame = None,
         objectives: List[Union[_ScalarDataObjective, VectorDataObjective]] = None,
         variables: List[Variable] = None,
         constraints: List[ScalarConstraint] = None,
@@ -1045,6 +1048,17 @@ class DataProblem(MOProblem):
                     f"'bounds' should contain the following indices: {bounds_row_names}"
                 )
                 raise ProblemError(msg)
+        if maximize is not None:
+            if not all(obj in objective_names for obj in maximize.columns):
+                msg = "maximize DataFrame should only contain objectives"
+                raise ProblemError(msg)
+            if not all(obj in maximize.columns for obj in objective_names):
+                msg = "All objectives should be in the maximize DataFrame"
+                raise ProblemError(msg)
+        if maximize is None:
+            # Default to minimize
+            maximize = pd.DataFrame(columns=objective_names, index=[0])
+            maximize[:]=False
         # TODO: Implement the rest
         if objectives is not None:
             msg = "Support for custom objectives objects not implemented yet"
@@ -1056,7 +1070,11 @@ class DataProblem(MOProblem):
             objectives = []
             for obj in objective_names:
                 objectives.append(
-                    _ScalarDataObjective(data=data[variable_names + [obj]], name=obj)
+                    _ScalarDataObjective(
+                        data=data[variable_names + [obj]],
+                        name=obj,
+                        maximize=maximize[obj],
+                    )
                 )
         if variables is None:
             variables = []
