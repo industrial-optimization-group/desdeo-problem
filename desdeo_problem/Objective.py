@@ -46,9 +46,7 @@ class ObjectiveBase(ABC):
 
     """
 
-    def evaluate(
-        self, decision_vector: np.ndarray, use_surrogate: bool = False
-    ) -> ObjectiveEvaluationResults:
+    def evaluate(self, decision_vector: np.ndarray, use_surrogate: bool = False) -> ObjectiveEvaluationResults:
         """Evaluates the objective according to a decision variable vector.
 
         Uses surrogate model if use_surrogates is true. If use_surrogates is False, uses
@@ -56,9 +54,9 @@ class ObjectiveBase(ABC):
 
         Args:
             variables (np.ndarray): A vector of Variables to be used in
-            the evaluation of the objective.
+                the evaluation of the objective.
             use_surrogate (bool) : A boolean which determines whether to use surrogates
-            or true function evaluator. False by default.
+                or true function evaluator. False by default.
 
         """
         if use_surrogate:
@@ -74,22 +72,20 @@ class ObjectiveBase(ABC):
 
         Args:
             variables (np.ndarray): A vector of Variables to be used in
-            the evaluation of the objective.
+                the evaluation of the objective.
 
         """
         pass
 
     @abstractmethod
-    def _surrogate_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
+    def _surrogate_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluates the objective value according to a decision variable vector.
 
         Uses the surrogartes if available.
 
         Args:
             variables (np.ndarray): A vector of Variables to be used in
-            the evaluation of the objective.
+                the evaluation of the objective.
 
         """
         pass
@@ -100,9 +96,7 @@ class VectorObjectiveBase(ABC):
 
     """
 
-    def evaluate(
-        self, decision_vector: np.ndarray, use_surrogate: bool = False
-    ) -> ObjectiveEvaluationResults:
+    def evaluate(self, decision_vector: np.ndarray, use_surrogate: bool = False) -> ObjectiveEvaluationResults:
         """Evaluates the objective according to a decision variable vector.
 
         Uses surrogate model if use_surrogates is true. If use_surrogates is False, uses
@@ -110,9 +104,9 @@ class VectorObjectiveBase(ABC):
 
         Args:
             variables (np.ndarray): A vector of Variables to be used in
-            the evaluation of the objective.
+                the evaluation of the objective.
             use_surrogate (bool) : A boolean which determines whether to use surrogates
-            or true function evaluator. False by default.
+                or true function evaluator. False by default.
 
         """
         if use_surrogate:
@@ -128,22 +122,20 @@ class VectorObjectiveBase(ABC):
 
         Args:
             variables (np.ndarray): A vector of Variables to be used in
-            the evaluation of the objective.
+                the evaluation of the objective.
 
         """
         pass
 
     @abstractmethod
-    def _surrogate_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
+    def _surrogate_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluates the objective values according to a decision variable vector.
 
         Uses the surrogartes if available.
 
         Args:
             variables (np.ndarray): A vector of Variables to be used in
-            the evaluation of the objective.
+                the evaluation of the objective.
 
         """
         pass
@@ -184,9 +176,7 @@ class _ScalarObjective(ObjectiveBase):
     ) -> None:
         # Check that the bounds make sense
         if not (lower_bound < upper_bound):
-            msg = ("Lower bound {} should be less than the upper bound " "{}.").format(
-                lower_bound, upper_bound
-            )
+            msg = ("Lower bound {} should be less than the upper bound " "{}.").format(lower_bound, upper_bound)
             raise ObjectiveError(msg)
 
         self.__name: str = name
@@ -239,9 +229,7 @@ class _ScalarObjective(ObjectiveBase):
         try:
             result = self.evaluator(decision_vector)
         except (TypeError, IndexError) as e:
-            msg = "Bad argument {} supplied to the evaluator: {}".format(
-                str(decision_vector), str(e)
-            )
+            msg = "Bad argument {} supplied to the evaluator: {}".format(str(decision_vector), str(e))
             raise ObjectiveError(msg)
 
         # Store the value of the objective
@@ -263,16 +251,16 @@ class VectorObjective(VectorObjectiveBase):
         name (List[str]): Names of the various objectives in a list
         evaluator (Callable): The function that evaluates the objective values
         lower_bounds (Union[List[float], np.ndarray), optional): Lower bounds of the
-        objective values. Defaults to None.
+            objective values. Defaults to None.
         upper_bounds (Union[List[float], np.ndarray), optional): Upper bounds of the
-        objective values. Defaults to None.
+            objective values. Defaults to None.
         maximize (List[bool]): *List* of boolean to determine whether the objectives are
             to be maximized. All false by default
 
     Raises:
         ObjectiveError: When lengths the input arrays are different.
         ObjectiveError: When any of the lower bounds is not smaller than the
-        corresponding upper bound.
+            corresponding upper bound.
 
     """
 
@@ -352,7 +340,7 @@ class VectorObjective(VectorObjectiveBase):
 
         Args:
             decision_vector (np.ndarray): A vector of variables to evaluate the
-            objective function with.
+                objective function with.
         Returns:
             ObjectiveEvaluationResults: A named tuple containing the evaluated value,
                 and uncertainity of evaluation of the objective function.
@@ -365,9 +353,7 @@ class VectorObjective(VectorObjectiveBase):
         try:
             result = self.evaluator(decision_vector)
         except (TypeError, IndexError) as e:
-            msg = "Bad argument {} supplied to the evaluator: {}".format(
-                str(decision_vector), str(e)
-            )
+            msg = "Bad argument {} supplied to the evaluator: {}".format(str(decision_vector), str(e))
             raise ObjectiveError(msg)
         result = tuple(result)
 
@@ -432,11 +418,7 @@ class _ScalarDataObjective(_ScalarObjective):
         self._model = None
 
     def train(
-        self,
-        model: BaseRegressor,
-        model_parameters: Dict = None,
-        index: List[int] = None,
-        data: pd.DataFrame = None,
+        self, model: BaseRegressor, model_parameters: Dict = None, index: List[int] = None, data: pd.DataFrame = None
     ):
         """Train surrogate model for the objective.
 
@@ -479,9 +461,7 @@ class _ScalarDataObjective(_ScalarObjective):
         msg = "I don't know how you got this error"
         raise ObjectiveError(msg)
 
-    def _surrogate_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
+    def _surrogate_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         if self._model is None:
             raise ObjectiveError("Model not trained yet")
         try:
@@ -649,10 +629,7 @@ class VectorDataObjective(VectorObjective):
             For unexpected errors
         """
         if name not in self.name:
-            raise ObjectiveError(
-                f'"{name}" not found in the list of'
-                f"original objective names: {self.name}"
-            )
+            raise ObjectiveError(f'"{name}" not found in the list of' f"original objective names: {self.name}")
         if model_parameters is None:
             model_parameters = {}
         self._model[name] = model(**model_parameters)
@@ -671,9 +648,7 @@ class VectorDataObjective(VectorObjective):
         msg = "I don't know how you got this error"
         raise ObjectiveError(msg)
 
-    def _surrogate_evaluate(
-        self, decision_vector: np.ndarray
-    ) -> ObjectiveEvaluationResults:
+    def _surrogate_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         if not all(self._model_trained.values()):
             msg = (
                 f"Some or all models have not been trained.\n"
@@ -682,9 +657,7 @@ class VectorDataObjective(VectorObjective):
             )
             raise ObjectiveError(msg)
         result = pd.DataFrame(index=range(decision_vector.shape[0]), columns=self.name)
-        uncertainity = pd.DataFrame(
-            index=range(decision_vector.shape[0]), columns=self.name
-        )
+        uncertainity = pd.DataFrame(index=range(decision_vector.shape[0]), columns=self.name)
         for name, model in self._model.items():
             try:
                 result[name], uncertainity[name] = model.predict(decision_vector)

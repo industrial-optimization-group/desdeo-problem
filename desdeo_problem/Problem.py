@@ -1,8 +1,3 @@
-"""Here various classes are defined that represent multiobjective optimization
-problems.
-
-"""
-
 from abc import ABC, abstractmethod
 
 # , TypedDict coming in py3.8
@@ -15,12 +10,7 @@ import numpy as np
 import pandas as pd
 
 from desdeo_problem.Constraint import ScalarConstraint
-from desdeo_problem.Objective import (
-    VectorDataObjective,
-    VectorObjective,
-    _ScalarDataObjective,
-    _ScalarObjective,
-)
+from desdeo_problem.Objective import VectorDataObjective, VectorObjective, _ScalarDataObjective, _ScalarObjective
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
 from desdeo_problem.Variable import Variable
 
@@ -124,9 +114,7 @@ class ProblemBase(ABC):
         pass
 
     @abstractmethod
-    def evaluate(
-        self, decision_vectors: np.ndarray, use_surrogate: bool = False
-    ) -> EvaluationResults:
+    def evaluate(self, decision_vectors: np.ndarray, use_surrogate: bool = False) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors. Uses surrogate
         models if available. Otherwise, it uses the true evaluator.
 
@@ -167,12 +155,12 @@ class ScalarMOProblem(ProblemBase):
 
     Args:
         objectives (List[_ScalarObjective]): A list containing the objectives of
-        the problem.
+            the problem.
         variables (List[Variable]): A list containing the variables of the
-        problem.
+            problem.
         constraints (List[ScalarConstraint]): A list containing the
-        constraints of the problem. If no constraints exist, None may
-        be supllied as the value.
+            constraints of the problem. If no constraints exist, None may
+            be supllied as the value.
         nadir (Optional[np.ndarray]): The nadir point of the problem.
         ideal (Optional[np.ndarray]): The ideal point of the problem.
 
@@ -183,9 +171,9 @@ class ScalarMOProblem(ProblemBase):
         nadir (np.ndarray): The nadir point of the problem.
         ideal (np.ndarray): The ideal point of the problem.
         objectives (List[_ScalarObjective]): A list containing the objectives of
-        the problem.
+            the problem.
         constraints (List[ScalarConstraint]): A list conatining the constraints
-        of the problem.
+            of the problem.
 
     Raises:
         ProblemError: Ill formed nadir and/or ideal vectors are supplied.
@@ -237,8 +225,7 @@ class ScalarMOProblem(ProblemBase):
         if nadir is not None and ideal is not None:
             if len(nadir) != len(ideal):
                 msg = (
-                    "The length of the nadir and ideal point don't match:"
-                    " length of nadir {}, length of ideal {}."
+                    "The length of the nadir and ideal point don't match:" " length of nadir {}, length of ideal {}."
                 ).format(len(nadir), len(ideal))
                 raise ProblemError(msg)
 
@@ -323,8 +310,8 @@ class ScalarMOProblem(ProblemBase):
         bound.
 
         Returns:
-           np.ndarray: Lower and upper bounds of each variable
-           as a 2D numpy array. If undefined variables, return None instead.
+            np.ndarray: Lower and upper bounds of each variable
+                as a 2D numpy array. If undefined variables, return None instead.
 
         """
         if self.variables is not None:
@@ -373,21 +360,19 @@ class ScalarMOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def evaluate(
-        self, decision_vectors: np.ndarray, use_surrogate: bool = False
-    ) -> EvaluationResults:
+    def evaluate(self, decision_vectors: np.ndarray, use_surrogate: bool = False) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
             decision_vectors (np.ndarray): An 2D array of decision variable
-            input vectors. Each column represent the values of each decision
-            variable.
+                input vectors. Each column represent the values of each decision
+                variable.
 
         Returns:
             Tuple[np.ndarray, Union[None, np.ndarray]]: If constraint are
-            defined, returns the objective vector values and corresponding
-            constraint values. Or, if no constraints are defined, returns just
-            the objective vector values with None as the constraint values.
+                defined, returns the objective vector values and corresponding
+                constraint values. Or, if no constraints are defined, returns just
+                the objective vector values with None as the constraint values.
 
         Raises:
             ProblemError: The decision_vectors have wrong dimensions.
@@ -396,8 +381,7 @@ class ScalarMOProblem(ProblemBase):
         # Reshape decision_vectors with single row to work with the code
         if use_surrogate is True:
             raise NotImplementedError(
-                "Surrogates not yet supported in this class. "
-                "Use the '''DataProblem''' class instead."
+                "Surrogates not yet supported in this class. " "Use the '''DataProblem''' class instead."
             )
         shape = np.shape(decision_vectors)
         if len(shape) == 1:
@@ -420,9 +404,7 @@ class ScalarMOProblem(ProblemBase):
             (n_rows, self.n_of_objectives), dtype=float
         )  # ??? Use np.zeros instead of this?
         if self.n_of_constraints > 0:
-            constraint_values: np.ndarray = np.ndarray(
-                (n_rows, self.n_of_constraints), dtype=float
-            )
+            constraint_values: np.ndarray = np.ndarray((n_rows, self.n_of_constraints), dtype=float)
         else:
             constraint_values = None
 
@@ -437,13 +419,9 @@ class ScalarMOProblem(ProblemBase):
         # Calculate the constraint values
         if constraint_values is not None:
             for (col_i, constraint) in enumerate(self.constraints):
-                constraint_values[:, col_i] = np.array(
-                    constraint.evaluate(decision_vectors, objective_vectors)
-                )
+                constraint_values[:, col_i] = np.array(constraint.evaluate(decision_vectors, objective_vectors))
 
-        return EvaluationResults(
-            objective_vectors, fitness, constraint_values, uncertainity
-        )
+        return EvaluationResults(objective_vectors, fitness, constraint_values, uncertainity)
 
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
         """Evaluate just the constraint function values using the attributes
@@ -466,18 +444,18 @@ class ScalarDataProblem(ProblemBase):
 
     Args:
         decision_vectors (np.ndarray): A 2D vector of decision_vectors. Each
-        row represents a solution with the value for each decision_vectors
-        defined on the columns.
+            row represents a solution with the value for each decision_vectors
+            defined on the columns.
         objective_vectors (np.ndarray): A 2D vector of
-        objective function values. Each row represents one objective vector
-        with the values for the invidual objective functions defined on the
-        columns.
+            objective function values. Each row represents one objective vector
+            with the values for the invidual objective functions defined on the
+            columns.
 
     Attributes:
         decision_vectors (np.ndarray): See args
         objective_vectors (np.ndarray): See args
         epsilon (float): A small floating point number to shift the bounds of
-        the variables. See, get_variable_bounds
+            the variables. See, get_variable_bounds
         constraints (List[ScalarConstraint]): A list of defined constraints.
         nadir (np.ndarray): The nadir point of the problem.
         ideal (np.ndarray): The ideal point of the problem.
@@ -507,19 +485,13 @@ class ScalarDataProblem(ProblemBase):
         try:
             self.n_of_variables = self.decision_vectors.shape[1]
         except IndexError as e:
-            msg = (
-                "Check the variable dimensions. Is it a 2D array? "
-                "Encountered '{}'".format(str(e))
-            )
+            msg = "Check the variable dimensions. Is it a 2D array? " "Encountered '{}'".format(str(e))
             raise ProblemError(msg)
 
         try:
             self.n_of_objectives = self.objective_vectors.shape[1]
         except IndexError as e:
-            msg = (
-                "Check the objective dimensions. Is it a 2D array? "
-                "Encountered '{}'".format(str(e))
-            )
+            msg = "Check the objective dimensions. Is it a 2D array? " "Encountered '{}'".format(str(e))
             raise ProblemError(msg)
 
         self.nadir = np.max(self.objective_vectors, axis=0)
@@ -565,22 +537,18 @@ class ScalarDataProblem(ProblemBase):
 
         Returns:
             Optional[np.ndarray]: A 2D array with each row representing the
-            constraint values for different objective vectors. One column for
-            each constraint. If no constraint function are defined, returns
-            None.
+                constraint values for different objective vectors. One column for
+                each constraint. If no constraint function are defined, returns
+                None.
 
         """
         if len(self.constraints) == 0:
             return None
 
-        constraint_values = np.zeros(
-            (len(self.objective_vectors), len(self.constraints))
-        )
+        constraint_values = np.zeros((len(self.objective_vectors), len(self.constraints)))
 
         for ind, con in enumerate(self.constraints):
-            constraint_values[:, ind] = con.evaluate(
-                self.decision_vectors, self.objective_vectors
-            )
+            constraint_values[:, ind] = con.evaluate(self.decision_vectors, self.objective_vectors)
 
         return constraint_values
 
@@ -590,11 +558,11 @@ class ScalarDataProblem(ProblemBase):
 
         Args:
             decision_vectors (np.ndarray): A 2D array with the decision
-            decision_vectors to be evaluated on each row.
+                decision_vectors to be evaluated on each row.
 
         Returns:
             nd.ndarray: A 2D array with the objective values corresponding to
-            each decision vectors on the rows.
+                each decision vectors on the rows.
 
         Note:
             At the moment, this function just maps the given decision
@@ -605,9 +573,7 @@ class ScalarDataProblem(ProblemBase):
         """
         if not self.__model_exists:
             idx = np.unravel_index(
-                np.linalg.norm(
-                    self.decision_vectors - decision_vectors, axis=1
-                ).argmin(),
+                np.linalg.norm(self.decision_vectors - decision_vectors, axis=1).argmin(),
                 self.objective_vectors.shape,
                 order="F",
             )[0]
@@ -689,9 +655,7 @@ class MOProblem(ProblemBase):
         to_maximize = [objective.maximize for objective in objectives]
         # Does not work
         # to_maximize = sum(to_maximize, [])  # To flatten the list
-        to_maximize = (
-            np.hstack(to_maximize) * 1
-        )  # To flatten list and convert to zeros and ones
+        to_maximize = np.hstack(to_maximize) * 1  # To flatten list and convert to zeros and ones
         # to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
         self._max_multiplier = max_multiplier[to_maximize]
 
@@ -821,23 +785,21 @@ class MOProblem(ProblemBase):
         """
         return np.array([var.get_bounds()[1] for var in self.variables])
 
-    def evaluate(
-        self, decision_vectors: np.ndarray, use_surrogate: bool = False
-    ) -> EvaluationResults:
+    def evaluate(self, decision_vectors: np.ndarray, use_surrogate: bool = False) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
         Args:
             decision_vectors (np.ndarray): An 2D array of decision variable
-            input vectors. Each column represent the values of each decision
-            variable.
+                input vectors. Each column represent the values of each decision
+                variable.
             use_surrogate (bool): A bool to control whether to use the true, potentially
-            expensive function or a surrogate model to evaluate the objectives.
+                expensive function or a surrogate model to evaluate the objectives.
 
         Returns:
             Tuple[np.ndarray, Union[None, np.ndarray]]: If constraint are
-            defined, returns the objective vector values and corresponding
-            constraint values. Or, if no constraints are defined, returns just
-            the objective vector values with None as the constraint values.
+                defined, returns the objective vector values and corresponding
+                constraint values. Or, if no constraints are defined, returns just
+                the objective vector values with None as the constraint values.
 
         Raises:
             ProblemError: The decision_vectors have wrong dimensions.
@@ -865,18 +827,12 @@ class MOProblem(ProblemBase):
             ).format(n_cols, self.n_of_variables)
             raise ProblemError(msg)
 
-        objective_vectors: np.ndarray = np.ndarray(
-            (n_rows, self.n_of_objectives), dtype=float
-        )
+        objective_vectors: np.ndarray = np.ndarray((n_rows, self.n_of_objectives), dtype=float)
 
-        uncertainity: np.ndarray = np.ndarray(
-            (n_rows, self.n_of_objectives), dtype=float
-        )
+        uncertainity: np.ndarray = np.ndarray((n_rows, self.n_of_objectives), dtype=float)
 
         if self.n_of_constraints > 0:
-            constraint_values: np.ndarray = np.ndarray(
-                (n_rows, self.n_of_constraints), dtype=float
-            )
+            constraint_values: np.ndarray = np.ndarray((n_rows, self.n_of_constraints), dtype=float)
         else:
             constraint_values = None
 
@@ -893,13 +849,9 @@ class MOProblem(ProblemBase):
                 # results = list(map(objective.evaluate, decision_vectors))
                 results = objective.evaluate(decision_vectors, use_surrogate)
 
-                objective_vectors[
-                    :, obj_column : obj_column + elem_in_curr_obj
-                ] = results.objectives
+                objective_vectors[:, obj_column : obj_column + elem_in_curr_obj] = results.objectives
 
-                uncertainity[
-                    :, obj_column : obj_column + elem_in_curr_obj
-                ] = results.uncertainity
+                uncertainity[:, obj_column : obj_column + elem_in_curr_obj] = results.uncertainity
 
             obj_column = obj_column + elem_in_curr_obj
 
@@ -909,13 +861,9 @@ class MOProblem(ProblemBase):
         # Calculate the constraint values
         if constraint_values is not None:
             for (col_i, constraint) in enumerate(self.constraints):
-                constraint_values[:, col_i] = np.array(
-                    constraint.evaluate(decision_vectors, objective_vectors)
-                )
+                constraint_values[:, col_i] = np.array(constraint.evaluate(decision_vectors, objective_vectors))
 
-        return EvaluationResults(
-            objective_vectors, fitness, constraint_values, uncertainity
-        )
+        return EvaluationResults(objective_vectors, fitness, constraint_values, uncertainity)
 
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
         """Evaluate just the constraint function values using the attributes
@@ -965,14 +913,14 @@ class DataProblem(MOProblem):
         variable_names (List[str]): Names of the variables in the dataframe provided.
         objective_names (List[str]): Names of the objectices in the dataframe provided.
         bounds (pd.DataFrame, optional): A pandas DataFrame containing the upper and
-        lower bounds of the decision variables. Column names have to be same as
-        variable_names. Row names have to be "lower_bound" and "upper_bound".
+            lower bounds of the decision variables. Column names have to be same as
+            variable_names. Row names have to be "lower_bound" and "upper_bound".
         objectives (List[Union[_ScalarDataObjective,VectorDataObjective,]], optional):
-        Objective instances, currently not supported. Defaults to None.
+            Objective instances, currently not supported. Defaults to None.
         variables (List[Variable], optional): Variable instances. Defaults to None.
-        Currently not supported.
+            Currently not supported.
         constraints (List[ScalarConstraint], optional): Constraint instances.
-        Defaults to None, which means that there are no constraints.
+            Defaults to None, which means that there are no constraints.
         nadir (Optional[np.ndarray], optional): Nadir of the problem. Defaults to None.
         ideal (Optional[np.ndarray], optional): Ideal of the problem. Defaults to None.
     
@@ -1011,9 +959,7 @@ class DataProblem(MOProblem):
                 raise ProblemError(msg)
             bounds_row_names = ["lower_bound", "upper_bound"]
             if not all(row_name in bounds_row_names for row_name in bounds.index):
-                msg = (
-                    f"'bounds' should contain the following indices: {bounds_row_names}"
-                )
+                msg = f"'bounds' should contain the following indices: {bounds_row_names}"
                 raise ProblemError(msg)
         if maximize is not None:
             if not all(obj in objective_names for obj in maximize.columns):
@@ -1025,7 +971,7 @@ class DataProblem(MOProblem):
         if maximize is None:
             # Default to minimize
             maximize = pd.DataFrame(columns=objective_names, index=[0])
-            maximize[:]=False
+            maximize[:] = False
         # TODO: Implement the rest
         if objectives is not None:
             msg = "Support for custom objectives objects not implemented yet"
@@ -1037,11 +983,7 @@ class DataProblem(MOProblem):
             objectives = []
             for obj in objective_names:
                 objectives.append(
-                    _ScalarDataObjective(
-                        data=data[variable_names + [obj]],
-                        name=obj,
-                        maximize=maximize[obj],
-                    )
+                    _ScalarDataObjective(data=data[variable_names + [obj]], name=obj, maximize=maximize[obj])
                 )
         if variables is None:
             variables = []
@@ -1054,12 +996,7 @@ class DataProblem(MOProblem):
                     lower_bound = bounds[var]["lower_bound"]
                     upper_bound = bounds[var]["upper_bound"]
                 variables.append(
-                    Variable(
-                        name=var,
-                        initial_value=initial_value,
-                        lower_bound=lower_bound,
-                        upper_bound=upper_bound,
-                    )
+                    Variable(name=var, initial_value=initial_value, lower_bound=lower_bound, upper_bound=upper_bound)
                 )
         super().__init__(objectives, variables, constraints)
 
@@ -1076,16 +1013,16 @@ class DataProblem(MOProblem):
 
         Args:
             models (Union[BaseRegressor, List[BaseRegressor]]): The class for the
-            surrogate modelling algorithm.
+                surrogate modelling algorithm.
             models_parameters: Dict or List[Dict]
-            The parameters for the regressors. Should be a dict if a single regressor is
-            provided. If a list of regressors is provided, the parameters should be in a
-            list of dicts, same length as the list of regressors(= number of objs).
+                The parameters for the regressors. Should be a dict if a single regressor is
+                provided. If a list of regressors is provided, the parameters should be in a
+                list of dicts, same length as the list of regressors(= number of objs).
             index (List[int], optional): The indices of the samples to be used for
-            training the surrogate model. If no values are proveded, all samples are
-            used.
+                training the surrogate model. If no values are proveded, all samples are
+                used.
             data (pd.DataFrame, optional): Use this argument if some external data is
-            to be used for training. Defaults to None.
+                to be used for training. Defaults to None.
 
         Raises:
             ProblemError: If VectorDataObjective is used as one of the objective
@@ -1096,9 +1033,7 @@ class DataProblem(MOProblem):
             model_parameters = [model_parameters] * len(self.get_objective_names())
         elif len(models) == 1:
             models = models * len(self.get_objective_names())
-        for model, model_params, name in zip(
-            models, model_parameters, self.get_objective_names()
-        ):
+        for model, model_params, name in zip(models, model_parameters, self.get_objective_names()):
             self.train_one_objective(name, model, model_params, index, data)
 
     def train_one_objective(
@@ -1115,22 +1050,21 @@ class DataProblem(MOProblem):
             name (str): Name of the objective to be trained.
             model (BaseRegressor): The class for the surrogate modelling algorithm.
             model_parameters (Dict): **model_parameters is passed to the model when
-            initialized.
+                initialized.
             index (List[int], optional): The indices of the samples to be used for
-            training the surrogate model. If no values are proveded, all samples are
-            used.
+                training the surrogate model. If no values are proveded, all samples are
+                used.
             data (pd.DataFrame, optional): Use this argument if some external data is
-            to be used for training. Defaults to None.
+                to be used for training. Defaults to None.
 
         Raises:
             ProblemError: If name is not in the list of objective names.
             ProblemError: If VectorDataObjective is used as one of the objective
-            instances. They are not supported yet.
+                instances. They are not supported yet.
         """
         if name not in self.get_objective_names():
             raise ProblemError(
-                f'"{name}" not found in the list of'
-                f"original objective names: {self.get_objective_names()}"
+                f'"{name}" not found in the list of' f"original objective names: {self.get_objective_names()}"
             )
         obj_index = self.get_objective_names().index(name)
         if isinstance(self.objectives[obj_index], _ScalarDataObjective):
@@ -1149,11 +1083,11 @@ class ExperimentalProblem(MOProblem):
         variable_names (List[str]): Names of the variables in the dataframe provided.
         objective_names (List[str]): Names of the objectices in the dataframe provided.
         objectives (List[Union[_ScalarDataObjective,VectorDataObjective,]], optional):
-        Objective instances, currently not supported. Defaults to None.
+            Objective instances, currently not supported. Defaults to None.
         variables (List[Variable], optional): Variable instances. Defaults to None.
-        Currently not supported.
+            Currently not supported.
         constraints (List[ScalarConstraint], optional): Constraint instances.
-        Defaults to None, which means that there are no constraints.
+            Defaults to None, which means that there are no constraints.
         nadir (Optional[np.ndarray], optional): Nadir of the problem. Defaults to None.
         ideal (Optional[np.ndarray], optional): Ideal of the problem. Defaults to None.
     
@@ -1185,9 +1119,7 @@ class ExperimentalProblem(MOProblem):
         # TODO: Implement the rest
         objectives = []
         for obj in objective_names:
-            objectives.append(
-                _ScalarDataObjective(data=data[variable_names + [obj]], name=obj)
-            )
+            objectives.append(_ScalarDataObjective(data=data[variable_names + [obj]], name=obj))
 
         variables = []
         for var in variable_names:
@@ -1195,12 +1127,7 @@ class ExperimentalProblem(MOProblem):
             lower_bound = data[var].min(axis=0)
             upper_bound = data[var].max(axis=0)
             variables.append(
-                Variable(
-                    name=var,
-                    initial_value=initial_value,
-                    lower_bound=lower_bound,
-                    upper_bound=upper_bound,
-                )
+                Variable(name=var, initial_value=initial_value, lower_bound=lower_bound, upper_bound=upper_bound)
             )
         super().__init__(objectives, variables, constraints)
 
@@ -1217,29 +1144,27 @@ class ExperimentalProblem(MOProblem):
 
         Args:
             models (Union[BaseRegressor, List[BaseRegressor]]): The class for the
-            surrogate modelling algorithm.
+                surrogate modelling algorithm.
             models_parameters: Dict or List[Dict]
-            The parameters for the regressors. Should be a dict if a single regressor is
-            provided. If a list of regressors is provided, the parameters should be in a
-            list of dicts, same length as the list of regressors(= number of objs).
+                The parameters for the regressors. Should be a dict if a single regressor is
+                provided. If a list of regressors is provided, the parameters should be in a
+                list of dicts, same length as the list of regressors(= number of objs).
             index (List[int], optional): The indices of the samples to be used for
-            training the surrogate model. If no values are proveded, all samples are
-            used.
+                training the surrogate model. If no values are proveded, all samples are
+                used.
             data (pd.DataFrame, optional): Use this argument if some external data is
-            to be used for training. Defaults to None.
+                to be used for training. Defaults to None.
 
         Raises:
             ProblemError: If VectorDataObjective is used as one of the objective
-            instances. They are not supported yet.
+                instances. They are not supported yet.
         """
         if not isinstance(models, list):
             models = [models] * len(self.get_objective_names())
             model_parameters = [model_parameters] * len(self.get_objective_names())
         elif len(models) == 1:
             models = models * len(self.get_objective_names())
-        for model, model_params, name in zip(
-            models, model_parameters, self.get_objective_names()
-        ):
+        for model, model_params, name in zip(models, model_parameters, self.get_objective_names()):
             self.train_one_objective(name, model, model_params, index, data)
 
     def train_one_objective(
@@ -1256,22 +1181,21 @@ class ExperimentalProblem(MOProblem):
             name (str): Name of the objective to be trained.
             model (BaseRegressor): The class for the surrogate modelling algorithm.
             model_parameters (Dict): **model_parameters is passed to the model when
-            initialized.
+                initialized.
             index (List[int], optional): The indices of the samples to be used for
-            training the surrogate model. If no values are proveded, all samples are
-            used.
+                training the surrogate model. If no values are proveded, all samples are
+                used.
             data (pd.DataFrame, optional): Use this argument if some external data is
-            to be used for training. Defaults to None.
+                to be used for training. Defaults to None.
 
         Raises:
             ProblemError: If name is not in the list of objective names.
             ProblemError: If VectorDataObjective is used as one of the objective
-            instances. They are not supported yet.
+                instances. They are not supported yet.
         """
         if name not in self.get_objective_names():
             raise ProblemError(
-                f'"{name}" not found in the list of'
-                f"original objective names: {self.get_objective_names()}"
+                f'"{name}" not found in the list of' f"original objective names: {self.get_objective_names()}"
             )
         obj_index = self.get_objective_names().index(name)
         if isinstance(self.objectives[obj_index], _ScalarDataObjective):

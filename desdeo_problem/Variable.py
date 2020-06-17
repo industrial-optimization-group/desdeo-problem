@@ -1,13 +1,8 @@
-"""Contains classes representing variables to be used with the Problem
-classes. This class may be used for demonstrative problems. It is not a
-necessary class to be used.
-
-"""
-
 from os import path
 from typing import List, Tuple, Union
 
 import numpy as np
+
 
 class VariableError(Exception):
     """Raised when an error is encountered during the handling of the
@@ -51,11 +46,7 @@ class Variable:
     """
 
     def __init__(
-        self,
-        name: str,
-        initial_value: float,
-        lower_bound: float = -np.inf,
-        upper_bound: float = np.inf,
+        self, name: str, initial_value: float, lower_bound: float = -np.inf, upper_bound: float = np.inf
     ) -> None:
 
         self.__name: str = name
@@ -65,18 +56,13 @@ class Variable:
         self.__current_value: float  # NOTE: This is probably a useless attr
         # Check that the bounds make sense
         if not (lower_bound < upper_bound):
-            msg = ("Lower bound {} should be less than the upper bound " "{}.").format(
-                lower_bound, upper_bound
-            )
+            msg = ("Lower bound {} should be less than the upper bound " "{}.").format(lower_bound, upper_bound)
             raise VariableError(msg)
 
         # Check that the initial value is between the bounds
         if not (lower_bound <= initial_value <= upper_bound):
-            msg = (
-                "The initial value {} should be between the "
-                "upper ({}) and lower ({}) bounds.".format(
-                    initial_value, lower_bound, upper_bound
-                )
+            msg = "The initial value {} should be between the " "upper ({}) and lower ({}) bounds.".format(
+                initial_value, lower_bound, upper_bound
             )
             raise VariableError(msg)
 
@@ -106,7 +92,7 @@ class Variable:
 
         Returns:
             tuple(float, float): A tuple consisting of (lower_bound,
-            upper_bound)
+                upper_bound)
 
         """
         return (self.__lower_bound, self.__upper_bound)
@@ -148,21 +134,16 @@ def variable_builder(
         lower_bounds = [-np.inf] * num_of_variables
     if not (num_of_variables == len(lower_bounds)):
         msg = (
-            "The length of the list of names and the number of elements in the "
-            "lower_bounds array should be the same"
+            "The length of the list of names and the number of elements in the " "lower_bounds array should be the same"
         )
         raise VariableBuilderError(msg)
     if upper_bounds is None:
         upper_bounds = [np.inf] * num_of_variables
     if not (num_of_variables == len(upper_bounds)):
         msg = (
-            "The length of the list of names and the number of elements in the "
-            "upper_bounds array should be the same"
+            "The length of the list of names and the number of elements in the " "upper_bounds array should be the same"
         )
         raise VariableBuilderError(msg)
     # if most checks passed
-    variables = [
-        Variable(*var_data)
-        for var_data in zip(names, initial_values, lower_bounds, upper_bounds)
-    ]
+    variables = [Variable(*var_data) for var_data in zip(names, initial_values, lower_bounds, upper_bounds)]
     return variables
