@@ -24,6 +24,10 @@ __all__ = [
     "VariableBuilderError",
     "Variable",
     "variable_builder",
+    "BaseRegressor",
+    "GaussianProcessRegressor",
+    "LipschitzianRegressor",
+    "ModelError",
 ]
 
 from desdeo_problem.Constraint import (
@@ -53,4 +57,6 @@ from desdeo_problem.Problem import (
     ScalarDataProblem,
     ScalarMOProblem,
 )
+from desdeo_problem.surrogatemodels import BaseRegressor, GaussianProcessRegressor, LipschitzianRegressor, ModelError
+from desdeo_problem.testproblems import TestProblems
 from desdeo_problem.Variable import Variable, VariableBuilderError, VariableError, variable_builder
