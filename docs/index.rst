@@ -12,6 +12,7 @@ desdeo-problem's documentation
 
    README <README>
    api
+   examples
 
 
 Indices and tables
