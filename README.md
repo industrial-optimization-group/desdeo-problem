@@ -1,13 +1,17 @@
 # desdeo-problem
 
-This repository contains the packages that build the problem objects for the desdeo 
-framework.
+Contains modelling tools to model and define multiobjective optimization problems to be used in the DESDEO framework.
+This package is part of the DESDEO framework.
 
-For developers:
+## Installation
 
-1. Install [poetry](https://github.com/sdispater/poetry) for dependency management.
-2. Clone this repository.
-3. Create and activate a virtual environment.
-4. Use `poetry install` to automatically install all relevant packages.
+Requires [poetry](https://python-poetry.org/). See `pyproject.toml` for Python package requirements. To install and use the this package with poetry, issue the following command:
 
-The usage instructions are in the notebooks in the examples folder.
+1. `git clone https://github.com/industrial-optimization-group/desdeo-problem`
+2. `cd desdeo-problem`
+3. `poetry init`
+4. `poetry install`
+
+## Documentation
+
+Documentation for this package can be found [here](https://desdeo-problem.readthedocs.io/en/latest/)
