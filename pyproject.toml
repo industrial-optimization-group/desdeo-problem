@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "desdeo_problem"
-version = "1.1.1"
+version = "1.2.0"
 description = "This package contains the problem classes for desdeo framework."
 authors = ["Bhupinder Saini <bhupinder.s.saini@jyu.fi>", "Giovanni Misitano <giovanni.a.misitano@jyu.fi>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.7, <3.10"
 numpy = "^1.17"
 optproblems = "^1.2"
 diversipy = "^0.8.0"
