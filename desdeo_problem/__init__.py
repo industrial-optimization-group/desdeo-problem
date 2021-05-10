@@ -28,6 +28,7 @@ __all__ = [
     "GaussianProcessRegressor",
     "LipschitzianRegressor",
     "ModelError",
+    "DiscreteDataProblem"
 ]
 
 from desdeo_problem.Constraint import (
@@ -56,6 +57,7 @@ from desdeo_problem.Problem import (
     ProblemError,
     ScalarDataProblem,
     ScalarMOProblem,
+    DiscreteDataProblem,
 )
 from desdeo_problem.surrogatemodels import BaseRegressor, GaussianProcessRegressor, LipschitzianRegressor, ModelError
 from desdeo_problem.testproblems import TestProblems
