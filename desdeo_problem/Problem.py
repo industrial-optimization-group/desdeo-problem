@@ -1219,6 +1219,7 @@ class DiscreteDataProblem:
     """
     def __init__(self, data: pd.DataFrame, variable_names: List[str], objective_names: List[str], ideal: np.ndarray, nadir: np.ndarray):
         self.decision_variables = data[variable_names].values
+        self.variable_names = variable_names
         self.objectives = data[objective_names].values
         self.objective_names = objective_names
         self.ideal = ideal
