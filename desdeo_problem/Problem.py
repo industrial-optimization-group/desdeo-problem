@@ -1236,4 +1236,4 @@ class DiscreteDataProblem:
         Returns:
             int: The index of the closest point in the data computed for x.
         """
-        return np.argmin(np.linalg.norm(x - self.decision_variables))
+        return np.argmin(np.linalg.norm(x - self.decision_variables, axis=1))
