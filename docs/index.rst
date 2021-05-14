@@ -8,6 +8,15 @@ Welcome to desdeo-problem's documentation
 
 Contains tools to model and define multiobjective optimization problems to be used in the DESDEO framework.
 
+Requirements
+============
+
+* Python 3.7 (3.8 is **NOT** supported at the moment).
+* `Poetry dependency manager <https://python-poetry.org/>`__ : Only for developers.
+
+See `pyproject.toml` for Python package requirements.
+
+
 Installation
 ============
 
@@ -29,7 +38,7 @@ First, create a new virtual environment for the project. Then install the packag
 
 For developers
 --------------
-It requires `poetry <https://python-poetry.org/>`__  to be installed. See `pyproject.toml` for Python package requirements.
+
 
 Download the code or clone it with the following command:
 
