@@ -1277,6 +1277,18 @@ class ExperimentalProblem(MOProblem):
 
 
 class classificationPISProblem(MOProblem):
+    """[summary]
+
+    Args:
+        objectives (List[Union[_ScalarObjective, VectorObjective]]): A list containing
+            the objectives of the problem.
+        variables (List[Variable]): A list containing the variables of the problem.
+        nadir (np.ndarray): Nadir point of the problem.
+        ideal (np.ndarray): Ideal point of the problem.
+        PIS: An instantiated classificationPIS class from desdeo-tools.
+        constraints (List[ScalarConstraint], optional): A list of the constraints of the problem. Defaults to None.
+    """
+
     def __init__(
         self,
         objectives: List[Union[_ScalarObjective, VectorObjective]],
@@ -1308,6 +1320,7 @@ class classificationPISProblem(MOProblem):
     def update_preference(self, preference: Dict):
         self.PIS.update_preference(preference)
 
+
 class DiscreteDataProblem:
     """A problem class for data-based problems with discrete values computed representing a set
     of non-dominated points.
@@ -1320,7 +1333,15 @@ class DiscreteDataProblem:
         ideal (np.ndarray): Ideal of the problem.
     
     """
-    def __init__(self, data: pd.DataFrame, variable_names: List[str], objective_names: List[str], ideal: np.ndarray, nadir: np.ndarray):
+
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        variable_names: List[str],
+        objective_names: List[str],
+        ideal: np.ndarray,
+        nadir: np.ndarray,
+    ):
         self.decision_variables = data[variable_names].values
         self.variable_names = variable_names
         self.objectives = data[objective_names].values
