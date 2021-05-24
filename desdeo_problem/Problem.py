@@ -1308,3 +1308,35 @@ class classificationPISProblem(MOProblem):
     def update_preference(self, preference: Dict):
         self.PIS.update_preference(preference)
 
+class DiscreteDataProblem:
+    """A problem class for data-based problems with discrete values computed representing a set
+    of non-dominated points.
+    
+    Args:
+        data (pd.DataFrame): The input data.
+        variable_names (List[str]): Names of the variables in the dataframe provided.
+        objective_names (List[str]): Names of the objectices in the dataframe provided.
+        nadir (np.ndarray): Nadir of the problem.
+        ideal (np.ndarray): Ideal of the problem.
+    
+    """
+    def __init__(self, data: pd.DataFrame, variable_names: List[str], objective_names: List[str], ideal: np.ndarray, nadir: np.ndarray):
+        self.decision_variables = data[variable_names].values
+        self.variable_names = variable_names
+        self.objectives = data[objective_names].values
+        self.objective_names = objective_names
+        self.ideal = ideal
+        self.nadir = nadir
+        self.n_of_objectives = len(objective_names)
+
+    def find_closest(self, x: np.ndarray) -> int:
+        """Given a vector of decision variables, finds the closest point in the given data and returns its index.
+        A simple euclidean distance is used.
+
+        Args:
+            x (np.ndarray): A 1D vector containing decision variables.
+        
+        Returns:
+            int: The index of the closest point in the data computed for x.
+        """
+        return np.argmin(np.linalg.norm(x - self.decision_variables, axis=1))
