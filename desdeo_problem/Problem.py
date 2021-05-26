@@ -67,28 +67,14 @@ class ProblemBase(ABC):
     """
 
     def __init__(self):
-        self.__nadir: np.ndarray = None
-        self.__ideal: np.ndarray = None
+        self.nadir: np.ndarray = None
+        self.ideal: np.ndarray = None
+        self.nadir_fitness: np.ndarray = None
+        self.ideal_fitness: np.ndarray = None
         self.__n_of_objectives: int = 0
         self.__n_of_variables: int = 0
         self.__decision_vectors: np.ndarray = None
         self.__objective_vectors: np.ndarray = None
-
-    @property
-    def nadir(self) -> np.ndarray:
-        return self.__nadir
-
-    @nadir.setter
-    def nadir(self, val: np.ndarray):
-        self.__nadir = val
-
-    @property
-    def ideal(self) -> np.ndarray:
-        return self.__ideal
-
-    @ideal.setter
-    def ideal(self, val: np.ndarray):
-        self.__ideal = val
 
     @property
     def n_of_objectives(self) -> int:
@@ -650,34 +636,13 @@ class MOProblem(ProblemBase):
         self.__variables: List[Variable] = variables
         self.__constraints: List[ScalarConstraint] = constraints
         self.__n_of_variables: int = len(self.variables)
-        self.__n_of_objectives: int = sum(map(number_of_objectives, self.__objectives))
+        self.__n_of_objectives: int = sum(
+            map(self.number_of_objectives, self.__objectives)
+        )
         if self.constraints is not None:
             self.__n_of_constraints: int = len(self.constraints)
         else:
             self.__n_of_constraints = 0
-
-        # Nadir vector must be the same size as the number of objectives
-        if nadir is not None:
-            if len(nadir) != self.n_of_objectives:
-                msg = (
-                    "The length of the nadir vector does not match the"
-                    "number of objectives: Length nadir {}, number of "
-                    "objectives {}."
-                ).format(len(nadir), self.n_of_objectives)
-                raise ProblemError(msg)
-
-        # Ideal vector must be the same size as the number of objectives
-        if ideal is not None:
-            if len(ideal) != self.n_of_objectives:
-                msg = (
-                    "The length of the ideal vector does not match the"
-                    "number of objectives: Length ideal {}, number of "
-                    "objectives {}."
-                ).format(len(ideal), self.n_of_objectives)
-                raise ProblemError(msg)
-
-        self.__nadir = nadir
-        self.__ideal = ideal
 
         # Multiplier to convert maximization to minimization
         max_multiplier = np.asarray([1, -1])
@@ -689,6 +654,36 @@ class MOProblem(ProblemBase):
         )  # To flatten list and convert to zeros and ones
         # to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
         self._max_multiplier = max_multiplier[to_maximize]
+
+        self.nadir_fitness = np.full(self.__n_of_objectives, np.inf, dtype=float)
+        self.nadir = self.nadir_fitness * self._max_multiplier
+        self.ideal_fitness = np.full(self.__n_of_objectives, np.inf, dtype=float)
+        self.ideal = self.ideal_fitness * self._max_multiplier
+
+        # Nadir vector must be the same size as the number of objectives
+        if nadir is not None:
+            if len(nadir) != self.n_of_objectives:
+                msg = (
+                    "The length of the nadir vector does not match the"
+                    "number of objectives: Length nadir {}, number of "
+                    "objectives {}."
+                ).format(len(nadir), self.n_of_objectives)
+                raise ProblemError(msg)
+            self.nadir = nadir
+
+        # Ideal vector must be the same size as the number of objectives
+        if ideal is not None:
+            if len(ideal) != self.n_of_objectives:
+                msg = (
+                    "The length of the ideal vector does not match the"
+                    "number of objectives: Length ideal {}, number of "
+                    "objectives {}."
+                ).format(len(ideal), self.n_of_objectives)
+                raise ProblemError(msg)
+            self.ideal = ideal
+
+        self.nadir_fitness = self.nadir * self._max_multiplier
+        self.ideal_fitness = self.ideal * self._max_multiplier
 
         # Objective and variable names
         self.objective_names = self.get_objective_names()
@@ -742,21 +737,30 @@ class MOProblem(ProblemBase):
     def n_of_variables(self, val: int):
         self.__n_of_variables = val
 
-    @property
-    def nadir(self) -> np.ndarray:
-        return self.__nadir
+    @staticmethod
+    def number_of_objectives(
+        obj_instance: Union[_ScalarObjective, VectorObjective]
+    ) -> int:
+        """Return the number of objectives in the given obj_instance.
 
-    @nadir.setter
-    def nadir(self, val: np.ndarray):
-        self.__nadir = val
+        Args:
+            obj_instance (Union[_ScalarObjective, VectorObjective]): An instance of one of
+                the objective classes
 
-    @property
-    def ideal(self) -> np.ndarray:
-        return self.__ideal
+        Raises:
+            ProblemError: Raised when obj_instance is not an instance of the supported
+                classes
 
-    @ideal.setter
-    def ideal(self, val: np.ndarray):
-        self.__ideal = val
+        Returns:
+            int: Number of objectives in obj_instance
+        """
+        if isinstance(obj_instance, _ScalarObjective):
+            return 1
+        elif isinstance(obj_instance, VectorObjective):
+            return obj_instance.n_of_objectives
+        else:
+            msg = "Supported objective types: _ScalarObjective and VectorObjective"
+            raise ProblemError(msg)
 
     def get_variable_bounds(self) -> Union[np.ndarray, None]:
         """Return the upper and lower bounds of each decision variable present
@@ -860,6 +864,28 @@ class MOProblem(ProblemBase):
             ).format(n_cols, self.n_of_variables)
             raise ProblemError(msg)
 
+        objective_vectors, uncertainity = self.evaluate_objectives(
+            decision_vectors, use_surrogate=use_surrogate
+        )
+
+        constraint_values = self.evaluate_constraint_values(
+            decision_vectors, objective_vectors
+        )
+
+        # Calculate fitness, which is always to be minimized
+        fitness = self.evaluate_fitness(objective_vectors)
+
+        # Update ideal values
+        self.update_ideal(objective_vectors, fitness)
+
+        return EvaluationResults(
+            objective_vectors, fitness, constraint_values, uncertainity
+        )
+
+    def evaluate_objectives(
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+    ) -> Tuple[np.ndarray]:
+        (n_rows, n_cols) = np.shape(decision_vectors)
         objective_vectors: np.ndarray = np.ndarray(
             (n_rows, self.n_of_objectives), dtype=float
         )
@@ -868,17 +894,9 @@ class MOProblem(ProblemBase):
             (n_rows, self.n_of_objectives), dtype=float
         )
 
-        if self.n_of_constraints > 0:
-            constraint_values: np.ndarray = np.ndarray(
-                (n_rows, self.n_of_constraints), dtype=float
-            )
-        else:
-            constraint_values = None
-
-        # Calculate the objective values
         obj_column = 0
         for objective in self.objectives:
-            elem_in_curr_obj = number_of_objectives(objective)
+            elem_in_curr_obj = self.number_of_objectives(objective)
 
             if elem_in_curr_obj == 1:
                 results = objective.evaluate(decision_vectors, use_surrogate)
@@ -897,22 +915,11 @@ class MOProblem(ProblemBase):
                 ] = results.uncertainity
 
             obj_column = obj_column + elem_in_curr_obj
+        return (objective_vectors, uncertainity)
 
-        # Calculate fitness, which is always to be minimized
-        fitness = objective_vectors * self._max_multiplier
-
-        # Calculate the constraint values
-        if constraint_values is not None:
-            for (col_i, constraint) in enumerate(self.constraints):
-                constraint_values[:, col_i] = np.array(
-                    constraint.evaluate(decision_vectors, objective_vectors)
-                )
-
-        return EvaluationResults(
-            objective_vectors, fitness, constraint_values, uncertainity
-        )
-
-    def evaluate_constraint_values(self) -> Optional[np.ndarray]:
+    def evaluate_constraint_values(
+        self, decision_vectors: np.ndarray, objective_vectors: np.ndarray
+    ) -> Optional[np.ndarray]:
         """Evaluate just the constraint function values using the attributes
         decision_vectors and objective_vectors
 
@@ -923,31 +930,25 @@ class MOProblem(ProblemBase):
             Currently not supported by ScalarMOProblem
 
         """
-        raise NotImplementedError("Not implemented for ScalarMOProblem")
+        if self.n_of_constraints == 0:
+            return None
+        (n_rows, n_cols) = np.shape(decision_vectors)
+        constraint_values: np.ndarray = np.ndarray(
+            (n_rows, self.n_of_constraints), dtype=float
+        )
 
+        for (col_i, constraint) in enumerate(self.constraints):
+            constraint_values[:, col_i] = np.array(
+                constraint.evaluate(decision_vectors, objective_vectors)
+            )
+        return constraint_values
 
-# TODO: Put this in ProblemBase
-def number_of_objectives(obj_instance: Union[_ScalarObjective, VectorObjective]) -> int:
-    """Return the number of objectives in the given obj_instance.
+    def evaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
+        return objective_vectors * self._max_multiplier
 
-    Args:
-        obj_instance (Union[_ScalarObjective, VectorObjective]): An instance of one of
-            the objective classes
-
-    Raises:
-        ProblemError: Raised when obj_instance is not an instance of the supported
-            classes
-
-    Returns:
-        int: Number of objectives in obj_instance
-    """
-    if isinstance(obj_instance, _ScalarObjective):
-        return 1
-    elif isinstance(obj_instance, VectorObjective):
-        return obj_instance.n_of_objectives
-    else:
-        msg = "Supported objective types: _ScalarObjective and VectorObjective"
-        raise ProblemError(msg)
+    def update_ideal(self, objective_vectors: np.ndarray, fitness: np.ndarray):
+        self.ideal_fitness = np.amin(np.vstack((self.ideal_fitness, fitness)), axis=0)
+        self.ideal = self.ideal_fitness * self._max_multiplier
 
 
 # TODO: Make this the "main" Problem class?
@@ -1277,7 +1278,8 @@ class ExperimentalProblem(MOProblem):
 
 
 class classificationPISProblem(MOProblem):
-    """[summary]
+    """A problem class for the IOPIS formulation for interactive optimization. This variant uses the classification
+    kind of preference information for the creation of the Preference incorporated space (PIS).
 
     Args:
         objectives (List[Union[_ScalarObjective, VectorObjective]]): A list containing
@@ -1305,20 +1307,28 @@ class classificationPISProblem(MOProblem):
             nadir=nadir,
             ideal=ideal,
         )
-        self.ideal_fitness = self.ideal * self._max_multiplier
-        self.nadir_fitness = self.nadir_fitness * self._max_multiplier
+        self.ideal_fitness = PIS(self.ideal * self._max_multiplier)
+        self.nadir_fitness = PIS(self.nadir * self._max_multiplier)
         self.PIS = PIS
+
         self.num_dim_fitness = len(PIS.scalarizers) + 1
 
-    def evaluate(
-        self, decision_vectors: np.ndarray, use_surrogate: bool
-    ) -> EvaluationResults:
-        evaluated = super().evaluate(decision_vectors, use_surrogate=use_surrogate)
-        evaluated.fitness = self.PIS(evaluated.fitness)
-        return evaluated
+    def evaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
+        return self.PIS(objective_vectors * self._max_multiplier)
 
     def update_preference(self, preference: Dict):
         self.PIS.update_preference(preference)
+
+    def update_ideal(self, objective_vectors: np.ndarray, fitness: np.ndarray):
+        self.ideal_fitness = np.amin(np.vstack((self.ideal_fitness, fitness)), axis=0)
+
+        self.ideal = (
+            np.amin(
+                np.vstack((self.ideal, objective_vectors)) * self._max_multiplier,
+                axis=0,
+            )
+            * self._max_multiplier
+        )
 
 
 class DiscreteDataProblem:
