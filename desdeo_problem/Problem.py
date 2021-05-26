@@ -1036,7 +1036,7 @@ class DataProblem(MOProblem):
                     _ScalarDataObjective(
                         data=data[variable_names + [obj]],
                         name=obj,
-                        maximize=maximize[obj],
+                        maximize=maximize[obj].tolist(),
                     )
                 )
         if variables is None:
