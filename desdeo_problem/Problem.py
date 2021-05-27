@@ -1316,6 +1316,12 @@ class classificationPISProblem(MOProblem):
     def evaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
         return self.PIS(objective_vectors * self._max_multiplier)
 
+    def reevaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
+        fitness = self.PIS(objective_vectors * self._max_multiplier)
+        self.ideal_fitness = self.PIS(self.ideal * self._max_multiplier)
+        self.update_ideal(objective_vectors, fitness)
+        return fitness
+
     def update_preference(self, preference: Dict):
         self.PIS.update_preference(preference)
 
