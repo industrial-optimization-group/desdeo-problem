@@ -5,6 +5,10 @@ This package is part of the DESDEO framework.
 
 ## Installation
 
+### For regular users
+You can install the `desdeo-problem` package from the Python package index using `pip` by issuing the command `pip install desdeo-problem`.
+
+### For developers
 Requires [poetry](https://python-poetry.org/). See `pyproject.toml` for Python package requirements. To install and use the this package with poetry, issue the following command:
 
 1. `git clone https://github.com/industrial-optimization-group/desdeo-problem`
