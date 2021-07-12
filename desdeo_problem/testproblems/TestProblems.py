@@ -1,3 +1,9 @@
+"""A module for getting zdt and dtlz problems.
+
+Uses optproblems package for importing them.
+"""
+
+
 from optproblems import zdt, dtlz
 from desdeo_problem.Variable import variable_builder
 from desdeo_problem.Objective import VectorObjective
@@ -10,16 +16,19 @@ def test_problem_builder(
 ) -> MOProblem:
     """Build test problems. Currently supported: ZDT1-4, ZDT6, and DTLZ1-7.
 
-    Args:
-        name (str): Name of the problem in all caps. For example: "ZDT1", "DTLZ4", etc.
-        n_of_variables (int, optional): Number of variables. Required for DTLZ problems,
-            but can be skipped for ZDT problems as they only support one variable value.
+    Arguments:
+        name (str): Name of the problem in all caps. 
+                    For example: "ZDT1", "DTLZ4", etc.
+        n_of_variables (int, optional): Number of variables. Required for
+                    DTLZ problems, but can be skipped for ZDT problems as 
+                    they only support one variable value.
         n_of_objectives (int, optional): Required for DTLZ problems,
-            but can be skipped for ZDT problems as they only support one variable value.
+                    but can be skipped for ZDT problems as they only support
+                    one variable value.
 
     Raises:
-        ProblemError: When one of many issues occur while building the MOProblem
-            instance.
+        ProblemError: When one of many issues occur while building the
+            MOProblem instance.
 
     Returns:
         MOProblem: The test problem object

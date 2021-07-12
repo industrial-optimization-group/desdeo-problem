@@ -1,3 +1,13 @@
+"""Desdeo-problem package
+
+This package is for creating a problem for desdeo to solve.
+It includes modules for Variables, Objectives, Constraints, and actual Problem.
+It also has subpackage for surrogate models for creating computationally
+simpler surrogate models for problems.
+Package also includes a sub package with test problems.
+"""
+
+
 __all__ = [
     "ScalarConstraint",
     "ConstraintError",

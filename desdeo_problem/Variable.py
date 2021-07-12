@@ -1,3 +1,11 @@
+"""Desdeo-problem variable related definitions.
+
+This file includes definition of Variable class (with initial and current
+values and value bounds), variable_builder, and error classes for Variable
+and VariableBuilder.
+"""
+
+
 from os import path
 from typing import List, Tuple, Union
 
@@ -73,18 +81,39 @@ class Variable:
 
     @property
     def name(self) -> str:
+        """Property: name
+
+        Returns:
+            str: The name of the variable.
+        """
         return self.__name
 
     @property
     def initial_value(self) -> float:
+        """Property: initial_value
+
+        Returns:
+            float: The initial value of the variable.
+        """
         return self.__initial_value
 
     @property
     def current_value(self) -> float:
+        """Property: current_value
+
+        Returns:
+            float: The current value of the variable
+        """
         return self.__current_value
 
     @current_value.setter
     def current_value(self, value: float):
+        """Setter: current_value
+
+        Args:
+            float: The updated value for the current_value variable.
+
+        """
         self.__current_value = value
 
     def get_bounds(self) -> Tuple[float, float]:
