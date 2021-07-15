@@ -35,7 +35,7 @@ class ConstraintBase(ABC):
                 violation (or how well the constraint holds, if the returned value
                 of positive).
 
-d        """
+        """
         pass
 
 

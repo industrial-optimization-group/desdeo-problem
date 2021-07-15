@@ -9,15 +9,17 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from desdeo_problem.Constraint import ScalarConstraint
-from desdeo_problem.Objective import (
+from desdeo_problem.problem.Constraint import ScalarConstraint
+from desdeo_problem.problem.Objective import (
     VectorDataObjective,
     VectorObjective,
     _ScalarDataObjective,
     _ScalarObjective,
+    ScalarObjective,
+    ScalarDataObjective,
 )
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
-from desdeo_problem.Variable import Variable
+from desdeo_problem.problem.Variable import Variable
 
 
 class ProblemError(Exception):
@@ -147,7 +149,7 @@ class ScalarMOProblem(ProblemBase):
     constraints and variables. The objectives each return a single scalar.
 
     Args:
-        objectives (List[_ScalarObjective]): A list containing the objectives of
+        objectives (List[ScalarObjective]): A list containing the objectives of
             the problem.
         variables (List[Variable]): A list containing the variables of the
             problem.
@@ -163,7 +165,7 @@ class ScalarMOProblem(ProblemBase):
         n_of_constraints (int): The number of constraints in the problem.
         nadir (np.ndarray): The nadir point of the problem.
         ideal (np.ndarray): The ideal point of the problem.
-        objectives (List[_ScalarObjective]): A list containing the objectives of
+        objectives (List[ScalarObjective]): A list containing the objectives of
             the problem.
         constraints (List[ScalarConstraint]): A list conatining the constraints
             of the problem.
@@ -175,14 +177,14 @@ class ScalarMOProblem(ProblemBase):
 
     def __init__(
         self,
-        objectives: List[_ScalarObjective],
+        objectives: List[ScalarObjective],
         variables: List[Variable],
         constraints: List[ScalarConstraint],
         nadir: Optional[np.ndarray] = None,
         ideal: Optional[np.ndarray] = None,
     ) -> None:
         super().__init__()
-        self.__objectives: List[_ScalarObjective] = objectives
+        self.__objectives: List[ScalarObjective] = objectives
         self.__variables: List[Variable] = variables
         self.__constraints: List[ScalarConstraint] = constraints
 
@@ -242,11 +244,11 @@ class ScalarMOProblem(ProblemBase):
         self.__n_of_constraints = val
 
     @property
-    def objectives(self) -> List[_ScalarObjective]:
+    def objectives(self) -> List[ScalarObjective]:
         return self.__objectives
 
     @objectives.setter
-    def objectives(self, val: List[_ScalarObjective]):
+    def objectives(self, val: List[ScalarObjective]):
         self.__objectives = val
 
     @property
@@ -606,7 +608,7 @@ class MOProblem(ProblemBase):
 
 
     Args:
-        objectives (List[Union[_ScalarObjective, VectorObjective]]): A list containing
+        objectives (List[Union[ScalarObjective, VectorObjective]]): A list containing
             the objectives of the problem.
         variables (List[Variable]): A list containing the variables of the problem.
         constraints (List[ScalarConstraint]): A list of the constraints of the problem.
@@ -625,14 +627,14 @@ class MOProblem(ProblemBase):
 
     def __init__(
         self,
-        objectives: List[Union[_ScalarObjective, VectorObjective]],
+        objectives: List[Union[ScalarObjective, VectorObjective]],
         variables: List[Variable],
         constraints: List[ScalarConstraint] = None,
         nadir: Optional[np.ndarray] = None,
         ideal: Optional[np.ndarray] = None,
     ):
         super().__init__()
-        self.__objectives: List[Union[_ScalarObjective, VectorObjective]] = objectives
+        self.__objectives: List[Union[ScalarObjective, VectorObjective]] = objectives
         self.__variables: List[Variable] = variables
         self.__constraints: List[ScalarConstraint] = constraints
         self.__n_of_variables: int = len(self.variables)
@@ -698,11 +700,11 @@ class MOProblem(ProblemBase):
         self.__n_of_constraints = val
 
     @property
-    def objectives(self) -> List[_ScalarObjective]:
+    def objectives(self) -> List[ScalarObjective]:
         return self.__objectives
 
     @objectives.setter
-    def objectives(self, val: List[_ScalarObjective]):
+    def objectives(self, val: List[ScalarObjective]):
         self.__objectives = val
 
     @property
@@ -739,12 +741,12 @@ class MOProblem(ProblemBase):
 
     @staticmethod
     def number_of_objectives(
-        obj_instance: Union[_ScalarObjective, VectorObjective]
+        obj_instance: Union[ScalarObjective, VectorObjective]
     ) -> int:
         """Return the number of objectives in the given obj_instance.
 
         Args:
-            obj_instance (Union[_ScalarObjective, VectorObjective]): An instance of one of
+            obj_instance (Union[ScalarObjective, VectorObjective]): An instance of one of
                 the objective classes
 
         Raises:
@@ -756,10 +758,12 @@ class MOProblem(ProblemBase):
         """
         if isinstance(obj_instance, _ScalarObjective):
             return 1
+        elif isinstance(obj_instance, ScalarObjective):
+            return 1
         elif isinstance(obj_instance, VectorObjective):
             return obj_instance.n_of_objectives
         else:
-            msg = "Supported objective types: _ScalarObjective and VectorObjective"
+            msg = "Supported objective types: ScalarObjective and VectorObjective"
             raise ProblemError(msg)
 
     def get_variable_bounds(self) -> Union[np.ndarray, None]:
@@ -963,7 +967,7 @@ class DataProblem(MOProblem):
         bounds (pd.DataFrame, optional): A pandas DataFrame containing the upper and
             lower bounds of the decision variables. Column names have to be same as
             variable_names. Row names have to be "lower_bound" and "upper_bound".
-        objectives (List[Union[_ScalarDataObjective,VectorDataObjective,]], optional):
+        objectives (List[Union[ScalarDataObjective,VectorDataObjective,]], optional):
             Objective instances, currently not supported. Defaults to None.
         variables (List[Variable], optional): Variable instances. Defaults to None.
             Currently not supported.
@@ -986,7 +990,7 @@ class DataProblem(MOProblem):
         objective_names: List[str],
         bounds: pd.DataFrame = None,
         maximize: pd.DataFrame = None,
-        objectives: List[Union[_ScalarDataObjective, VectorDataObjective]] = None,
+        objectives: List[Union[ScalarDataObjective, VectorDataObjective]] = None,
         variables: List[Variable] = None,
         constraints: List[ScalarConstraint] = None,
         nadir: Optional[np.ndarray] = None,
@@ -1033,7 +1037,7 @@ class DataProblem(MOProblem):
             objectives = []
             for obj in objective_names:
                 objectives.append(
-                    _ScalarDataObjective(
+                    ScalarDataObjective(
                         data=data[variable_names + [obj]],
                         name=obj,
                         maximize=maximize[obj].tolist(),
@@ -1131,6 +1135,8 @@ class DataProblem(MOProblem):
         obj_index = self.get_objective_names().index(name)
         if isinstance(self.objectives[obj_index], _ScalarDataObjective):
             self.objectives[obj_index].train(model, model_parameters, index, data)
+        if isinstance(self.objectives[obj_index], ScalarDataObjective):
+            self.objectives[obj_index].train(model, model_parameters, index, data)
         else:
             msg = "Support for VectorDataObjective not supported yet"
             raise ProblemError(msg)
@@ -1144,7 +1150,7 @@ class ExperimentalProblem(MOProblem):
         data (pd.DataFrame): The input data. This will be used for training the model.
         variable_names (List[str]): Names of the variables in the dataframe provided.
         objective_names (List[str]): Names of the objectices in the dataframe provided.
-        objectives (List[Union[_ScalarDataObjective,VectorDataObjective,]], optional):
+        objectives (List[Union[ScalarDataObjective,VectorDataObjective,]], optional):
             Objective instances, currently not supported. Defaults to None.
         variables (List[Variable], optional): Variable instances. Defaults to None.
             Currently not supported.
@@ -1182,7 +1188,7 @@ class ExperimentalProblem(MOProblem):
         objectives = []
         for obj in objective_names:
             objectives.append(
-                _ScalarDataObjective(data=data[variable_names + [obj]], name=obj)
+                ScalarDataObjective(data=data[variable_names + [obj]], name=obj)
             )
 
         variables = []
@@ -1272,6 +1278,8 @@ class ExperimentalProblem(MOProblem):
         obj_index = self.get_objective_names().index(name)
         if isinstance(self.objectives[obj_index], _ScalarDataObjective):
             self.objectives[obj_index].train(model, model_parameters, index, data)
+        elif isinstance(self.objectives[obj_index], ScalarDataObjective):
+            self.objectives[obj_index].train(model, model_parameters, index, data)
         else:
             msg = "Support for VectorDataObjective not supported yet"
             raise ProblemError(msg)
@@ -1282,7 +1290,7 @@ class classificationPISProblem(MOProblem):
     kind of preference information for the creation of the Preference incorporated space (PIS).
 
     Args:
-        objectives (List[Union[_ScalarObjective, VectorObjective]]): A list containing
+        objectives (List[Union[ScalarObjective, VectorObjective]]): A list containing
             the objectives of the problem.
         variables (List[Variable]): A list containing the variables of the problem.
         nadir (np.ndarray): Nadir point of the problem.
@@ -1293,7 +1301,7 @@ class classificationPISProblem(MOProblem):
 
     def __init__(
         self,
-        objectives: List[Union[_ScalarObjective, VectorObjective]],
+        objectives: List[Union[ScalarObjective, VectorObjective]],
         variables: List[Variable],
         nadir: np.ndarray,
         ideal: np.ndarray,

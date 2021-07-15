@@ -1,8 +1,8 @@
 from optproblems import zdt, dtlz
-from desdeo_problem.Variable import variable_builder
-from desdeo_problem.Objective import VectorObjective
-from desdeo_problem.Problem import MOProblem
-from desdeo_problem.Problem import ProblemError
+from desdeo_problem.problem.Variable import variable_builder
+from desdeo_problem.problem.Objective import VectorObjective
+from desdeo_problem.problem.Problem import MOProblem
+from desdeo_problem.problem.Problem import ProblemError
 
 
 def test_problem_builder(

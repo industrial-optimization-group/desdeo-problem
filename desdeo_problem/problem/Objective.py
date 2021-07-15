@@ -142,7 +142,7 @@ class VectorObjectiveBase(ABC):
 
 
 # TODO: Depreciate
-class _ScalarObjective(ObjectiveBase):
+class ScalarObjective(ObjectiveBase):
     """A simple objective function that returns a scalar.
 
     Args:
@@ -242,6 +242,8 @@ class _ScalarObjective(ObjectiveBase):
     def _surrogate_evaluate(self, decusuib_vector: np.ndarray):
         raise ObjectiveError("Surrogates not trained")
 
+class _ScalarObjective(ScalarObjective):
+    pass
 
 # TODO: Rename to "Objective"
 class VectorObjective(VectorObjectiveBase):
@@ -369,7 +371,7 @@ class VectorObjective(VectorObjectiveBase):
 
 
 # TODO: Depreciate
-class _ScalarDataObjective(_ScalarObjective):
+class ScalarDataObjective(ScalarObjective):
     """A simple Objective class for single valued objectives. Use when the an evaluator/
     simulator returns a single objective value or when there is no evaluator/simulator.
 
@@ -480,6 +482,8 @@ class _ScalarDataObjective(_ScalarObjective):
         self.y = np.vstack((self.y, results.objectives))
         return results
 
+class _ScalarDataObjective(ScalarDataObjective):
+    pass
 
 class VectorDataObjective(VectorObjective):
     """A Objective class for multi/valued objectives. Use when the an evaluator/
