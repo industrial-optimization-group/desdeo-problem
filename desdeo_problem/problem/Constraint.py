@@ -1,3 +1,6 @@
+"""Module for problem constraint definition related classes and functions.
+
+"""
 from abc import ABC, abstractmethod
 from os import path
 from typing import Callable, List
@@ -18,10 +21,12 @@ class ConstraintBase(ABC):
 
     @abstractmethod
     def evaluate(self, decision_vector: np.ndarray, objective_vector: np.ndarray) -> float:
-        """Evaluate the constraint functions and return a float
+        """Evaluate the constraint functions.
+
+        This function will evaluate constraints and return a float
         indicating how severely the constraint has been broken.
 
-        Args:
+        Arguments:
             decision_vector (np.ndarray): A decision_vector containing
                 the decision variable values.
             objective_vector (np.ndarray): A decision_vector containing the
@@ -42,7 +47,7 @@ class ConstraintBase(ABC):
 class ScalarConstraint(ConstraintBase):
     """A simple scalar constraint that evaluates to a single scalar.
 
-    Args:
+    Arguments:
         name (str): Name of the constraint.
         n_decision_vars (int): Number of decision variables present in the
             constraint.
@@ -51,12 +56,12 @@ class ScalarConstraint(ConstraintBase):
         evaluator (Callable): A callable to evaluate the constraint.
 
     Attributes:
-        name (str): Name of the constraint.
-        n_decision_vars (int): Number of decision variables present in the
+        __name (str): Name of the constraint.
+        __n_decision_vars (int): Number of decision variables present in the
             constraint.
-        n_objective_funs (int): Number of objective functions present in
+        __n_objective_funs (int): Number of objective functions present in
             the constraint.
-        evaluator (Callable): A callable to evaluate the constraint.
+        __evaluator (Callable): A callable to evaluate the constraint.
 
     """
 
@@ -68,26 +73,48 @@ class ScalarConstraint(ConstraintBase):
 
     @property
     def name(self) -> str:
+        """Property: name
+
+        Returns:
+            str: Name of the constraint
+        """
         return self.__name
 
     @property
     def n_decision_vars(self) -> int:
+        """Property: number of decision variables
+
+        Returns:
+            int: Number of decision variables
+        """
         return self.__n_decision_vars
 
     @property
     def n_objective_funs(self) -> int:
+        """Property: number of objective functions
+
+        Returns:
+            int: Number of objective functions
+        """
         return self.__n_objective_funs
 
     @property
     def evaluator(self) -> Callable:
+        """Property: constraint evaluator callable
+
+        Returns:
+            Callable: A callable to evaluate the constraint.
+        """
         return self.__evaluator
 
     def evaluate(self, decision_vector: np.ndarray, objective_vector: np.ndarray) -> float:
-        """Evaluate the constraint and return a float indicating how and if the
+        """Evaluate the constraint.
+
+        This evaluates the constraint and return a float indicating how and if the
         constraint was violated. A negative value indicates a violation and
         a positive value indicates a non-violation.
 
-        Args:
+        Arguments:
             decision_vector (np.ndarray): A decision_vector containing the
                 values of the decision variables.
             objective_vector (np.ndarray): A decision_vector containing the
@@ -127,17 +154,19 @@ class ScalarConstraint(ConstraintBase):
 
 
 supported_operators: List[str] = ["==", "<", ">"]
-"""List[str]: Shows the operators supportted in the
+"""List[str]: Shows the operators supported in the
 constraint_function_factory."""
 
 
 def constraint_function_factory(lhs: Callable, rhs: float, operator: str) -> Callable:
-    """A function that creates an evaluator to be used with the ScalarConstraint
+    """A function that creates an evaluator.
+
+    This function creates an evaluator to be used with the ScalarConstraint
     class. Constraints should be formulated in a way where all the mathematical
     expression are on the left hand side, and the constants on the right hand
     side.
 
-    Args:
+    Arguments:
         lhs (Callable): The left hand side of the constraint. Should be a
             callable function representing a mathematical expression.
         rhs (float): The right hand side of a constraint. Represents the right

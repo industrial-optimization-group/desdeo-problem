@@ -33,6 +33,11 @@ class ObjectiveEvaluationResults(NamedTuple):
     uncertainity: Union[None, float, np.ndarray] = None
 
     def __str__(self):
+        """Stringify the result.
+
+        Returns:
+            str: result in string form
+        """
         prnt_msg = (
             "Objective Evaluation Results Object \n"
             f"Objective values are: \n{self.objectives}\n"
@@ -51,9 +56,9 @@ class ObjectiveBase(ABC):
 
         Uses surrogate model if use_surrogates is true. If use_surrogates is False, uses
         func_evaluate which evaluates using the true objective function.
-
-        Args:
-            variables (np.ndarray): A vector of Variables to be used in
+        
+        Arguments:
+            decision_vector (np.ndarray): A vector of Variables to be used in
                 the evaluation of the objective.
             use_surrogate (bool) : A boolean which determines whether to use surrogates
                 or true function evaluator. False by default.
@@ -66,12 +71,13 @@ class ObjectiveBase(ABC):
 
     @abstractmethod
     def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
-        """Evaluates the true objective value according to a decision variable vector.
+        """Evaluates the true objective value. 
 
+        Value is evaluated with the decision variable vector as the input.
         Uses the true (potentially expensive) evaluator if available.
 
-        Args:
-            variables (np.ndarray): A vector of Variables to be used in
+        Arguments:
+            decision_vector (np.ndarray): A vector of Variables to be used in
                 the evaluation of the objective.
 
         """
@@ -79,12 +85,13 @@ class ObjectiveBase(ABC):
 
     @abstractmethod
     def _surrogate_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
-        """Evaluates the objective value according to a decision variable vector.
+        """Evaluates the objective value. 
 
+        Value is evaluated with the decision variable vector as the input.
         Uses the surrogartes if available.
 
-        Args:
-            variables (np.ndarray): A vector of Variables to be used in
+        Arguments:
+            decision_vector(np.ndarray): A vector of Variables to be used in
                 the evaluation of the objective.
 
         """
@@ -102,8 +109,8 @@ class VectorObjectiveBase(ABC):
         Uses surrogate model if use_surrogates is true. If use_surrogates is False, uses
         func_evaluate which evaluates using the true objective function.
 
-        Args:
-            variables (np.ndarray): A vector of Variables to be used in
+        Arguments:
+            decision_vector (np.ndarray): A vector of Variables to be used in
                 the evaluation of the objective.
             use_surrogate (bool) : A boolean which determines whether to use surrogates
                 or true function evaluator. False by default.
@@ -120,8 +127,8 @@ class VectorObjectiveBase(ABC):
 
         Uses the true (potentially expensive) evaluator if available.
 
-        Args:
-            variables (np.ndarray): A vector of Variables to be used in
+        Arguments:
+            decision_vector (np.ndarray): A vector of Variables to be used in
                 the evaluation of the objective.
 
         """
@@ -133,8 +140,8 @@ class VectorObjectiveBase(ABC):
 
         Uses the surrogartes if available.
 
-        Args:
-            variables (np.ndarray): A vector of Variables to be used in
+        Arguments:
+            decision_vector (np.ndarray): A vector of Variables to be used in
                 the evaluation of the objective.
 
         """
@@ -145,19 +152,22 @@ class VectorObjectiveBase(ABC):
 class ScalarObjective(ObjectiveBase):
     """A simple objective function that returns a scalar.
 
-    Args:
+    To be depreciated
+
+    Arguments:
         name (str): Name of the objective.
         evaluator (Callable): The function to evaluate the objective's value.
         lower_bound (float): The lower bound of the objective.
         upper_bound (float): The upper bound of the objective.
-        maximize (bool): Boolean to determine whether the objective is to be maximized.
+        maximize (bool): Boolean to determine whether the objective is to be 
+                        maximized.                     
 
     Attributes:
-        name (str): Name of the objective.
-        value (float): The current value of the objective function.
-        evaluator (Callable): The function to evaluate the objective's value.
-        lower_bound (float): The lower bound of the objective.
-        upper_bound (float): The upper bound of the objective.
+        __name (str): Name of the objective.
+        __value (float): The current value of the objective function.
+        __evaluator (Callable): The function to evaluate the objective's value.
+        __lower_bound (float): The lower bound of the objective.
+        __upper_bound (float): The upper bound of the objective.
         maximize (List[bool]): List of boolean to determine whether the objectives are
             to be maximized. All false by default
 
@@ -190,33 +200,63 @@ class ScalarObjective(ObjectiveBase):
 
     @property
     def name(self) -> str:
+        """Property: name
+
+        Returns:
+            str: name
+        """
         return self.__name
 
     @property
     def value(self) -> float:
+        """Property: value
+
+        Returns:
+            float: value
+        """
         return self.__value
 
     @value.setter
     def value(self, value: float):
+        """Setter: value
+
+        Arguments:
+            value (float): value to be set
+        """
         self.__value = value
 
     @property
     def evaluator(self) -> Callable:
+        """Property: evaluator for the objective
+
+        Returns:
+            callable: evaluator
+        """
         return self.__evaluator
 
     @property
     def lower_bound(self) -> float:
+        """Property: lower bound of the objective.
+
+        Returns:
+            float: lower bound of the objective
+        """
         return self.__lower_bound
 
     @property
     def upper_bound(self) -> float:
+        """Property: upper bound of the objective.
+
+        Returns:
+            float: upper bound of the objective
+        """
         return self.__upper_bound
 
     def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluate the objective functions value.
 
-        Args:
-            variables (np.ndarray): A vector of variables to evaluate the
+        Arguments:
+            decision_vector (np.ndarray): A vector of variables to evaluate the
                 objective function with.
         Returns:
             ObjectiveEvaluationResults: A named tuple containing the evaluated value,
@@ -240,6 +280,17 @@ class ScalarObjective(ObjectiveBase):
         return ObjectiveEvaluationResults(result, uncertainity)
 
     def _surrogate_evaluate(self, decusuib_vector: np.ndarray):
+        """Evaluate the objective function value with surrogate.
+
+        Not implemented, raises only error
+
+        Arguments:
+            decusuib_vector (np.ndarray): A vector of Variables to be used in
+                the evaluation of the objective
+
+        Raises:
+            ObjectiveError: Surrogate is not trained
+        """
         raise ObjectiveError("Surrogates not trained")
 
 class _ScalarObjective(ScalarObjective):
@@ -249,7 +300,20 @@ class _ScalarObjective(ScalarObjective):
 class VectorObjective(VectorObjectiveBase):
     """An objective object that calculated one or more objective functions.
 
-    Args:
+    To be renamed to Objective
+
+    Attributes:
+        __name (List[str]): Names of the various objectives in a list
+        __evaluator (Callable): The function that evaluates the objective values
+        __lower_bounds (Union[List[float], np.ndarray), optional): Lower bounds
+            of the objective values. Defaults to None.
+        __upper_bounds (Union[List[float], np.ndarray), optional): Upper bounds
+            of the objective values. Defaults to None.
+        __maximize (List[bool]): *List* of boolean to determine whether the
+            objectives are to be maximized. All false by default
+        __n_of_objects (int): The number of objectives
+
+   Arguments:
         name (List[str]): Names of the various objectives in a list
         evaluator (Callable): The function that evaluates the objective values
         lower_bounds (Union[List[float], np.ndarray), optional): Lower bounds of the
@@ -311,36 +375,71 @@ class VectorObjective(VectorObjectiveBase):
 
     @property
     def name(self) -> str:
+        """Property: name
+
+        Returns:
+            str: name of the objective
+        """
         return self.__name
 
     @property
     def n_of_objectives(self) -> int:
+        """Property: number of objectives
+
+        Returns:
+            int: the number of objectives
+        """
         return self.__n_of_objectives
 
     @property
     def values(self) -> Tuple[float]:
+        """Property: values
+
+        Returns:
+            Tuple[float]: Evaluated value and uncertainty of evaluation
+        """
         return self.__values
 
     @values.setter
     def values(self, values: Tuple[float]):
+        """Setter: values
+
+        Arguments:
+            values (Tuple[float]): Value of the objective and its uncertainty.
+        """
         self.__values = values
 
     @property
     def evaluator(self) -> Callable:
+        """Property: evaluator
+
+        Returns:
+            Callable: Evaluator of the objective
+        """
         return self.__evaluator
 
     @property
     def lower_bounds(self) -> np.ndarray:
+        """Property: lower bounds
+
+        Returns:
+            np.ndarray: lower bounds for vector valued objective.
+        """
         return self.__lower_bounds
 
     @property
     def upper_bounds(self) -> np.ndarray:
+        """Property: upper bounds
+
+        Returns:
+            np.ndarray: upper bounds for vector valued objective.
+        """
         return self.__upper_bounds
 
     def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
         """Evaluate the multiple objective functions value.
 
-        Args:
+        Arguments:
             decision_vector (np.ndarray): A vector of variables to evaluate the
                 objective function with.
         Returns:
@@ -372,34 +471,42 @@ class VectorObjective(VectorObjectiveBase):
 
 # TODO: Depreciate
 class ScalarDataObjective(ScalarObjective):
-    """A simple Objective class for single valued objectives. Use when the an evaluator/
-    simulator returns a single objective value or when there is no evaluator/simulator.
+    """A simple Objective class for single valued objectives.
 
-    Parameters
-    ----------
-    name : List[str]
-        The name of the objective. Should be the same as a column name in the data.
-    data : pd.DataFrame
-        The data in a pandas dataframe. The columns should be named after variables/
-        objective.
-    evaluator : Union[None, Callable], optional
-        A python function that contains the analytical function or calls the simulator
-        to get the true objective value. By default None, as this is not required.
-    lower_bound : float, optional
-        Lower bound of the objective, by default -np.inf
-    upper_bound : float, optional
-        Upper bound of the objective, by default np.inf
-    maximize : List[bool], optional
-        Boolean describing whether the objective is to be maximized or not, by default
-        None, which defaults to [False], hence minimizes.
+    To be depreciated.
 
-    Raises
-    ------
-    ObjectiveError
-        When the name provided during initialization does not match any name in the
-        columns of the data provided during initilizaiton.
+    Use when the an evaluator/simulator returns a single objective value or
+    when there is no evaluator/simulator
+
+    Attributes:
+        X (pd.DataFrame): Dataframe with corresponds the points where the
+                            objective value is known.
+        y (pd.Series): The objective values corresponding the points.
+        variable_names (pd.Index): The names of the variables in X
+        _model(BaseRegressor): Model of the data
+
+    Arguments:
+        name (List[str]): The name of the objective. Should be the same as a
+                            column name in the data.
+        data (pd.DataFrame): The data in a pandas dataframe. The columns
+                            should be named after variables/objective.
+        evaluator (Union[None, Callable], optional): A python function that
+            contains the analytical function or calls the simulator to get the
+            true objective value. By default None, as this is not required.
+        lower_bound (float, optional): Lower bound of the objective,
+                                        by default -np.inf
+        upper_bound (float, optional): Upper bound of the objective,
+                                        by default np.inf
+        maximize (List[bool], optional): Boolean describing whether the
+            objective is to be maximized or not, by default None, which
+            defaults to [False], hence minimizes.
+
+
+    Raises:
+        ObjectiveError:  When the name provided during initialization does not
+            match any name in the columns of the data provided during
+            initilizaiton.
     """
-
     def __init__(
         self,
         name: List[str],
@@ -424,29 +531,26 @@ class ScalarDataObjective(ScalarObjective):
     ):
         """Train surrogate model for the objective.
 
-        Parameters
-        ----------
-        model : BaseRegressor
-            A regressor. The regressor, when initialized, should have a fit method and a
-            predict method. The predict method should return the predicted objective
-            value, as well as the uncertainity value, in a tuple. If the regressor does
-            not support calculating uncertainity, return a tuple of objective value and
-            None.
-        model_parameters : Dict
-            **model_parameters is passed to the model when initialized.
-        index : List[int], optional
-            Indices of the samples (in self.X and self.y), to be used to train the
-            surrogate model. By default None, which trains the model on the entire
-            dataset. This behaviour may be changed in the future to support test-train
-            split or cross validation.
-        data : pd.DataFrame, optional
-            Extra data to be used for training only. This data is not saved. By default
-            None, which then uses self.X and self.y for training.
+        Arguments:
+            model (BaseRegressor): A regressor. The regressor, when
+                initialized, should have a fit method and a predict method.
+                The predict method should return the predicted objective value,
+                as well as the uncertainity value, in a tuple. If the
+                regressor does not support calculating uncertainity, return a
+                tuple of objective value and None.
+            model_parameters (Dict): **model_parameters is passed to the model
+                                        when initialized.
+            index (List[int], optional): Indices of the samples (in self.X and
+                self.y), to be used to train the surrogate model. By default
+                None, which trains the model on the entire dataset. This
+                behaviour may be changed in the future to support test-train
+                split or cross validation.
+            data (pd.DataFrame, optional): Extra data to be used for training
+                only. This data is not saved. By default None, which then uses
+                self.X and self.y for training.
 
-        Raises
-        ------
-        ObjectiveError
-            For unexpected errors
+        Raises:
+            ObjectiveError: For unexpected errors
         """
         if model_parameters is None:
             model_parameters = {}
@@ -464,6 +568,20 @@ class ScalarDataObjective(ScalarObjective):
         raise ObjectiveError(msg)
 
     def _surrogate_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        """Evaluate the values with surrogate function.
+
+        Arguments:
+            decision_vector (np.ndarray): Variable values where evaluation is
+                                            done
+
+        Returns:
+            ObjectiveEvaluationResults: Result and uncertainty
+
+        Raises:
+            ObjectiveError: If model has not been trained yet or a bad argument
+                            supplied to the model
+
+        """
         if self._model is None:
             raise ObjectiveError("Model not trained yet")
         try:
@@ -474,6 +592,19 @@ class ScalarDataObjective(ScalarObjective):
         return ObjectiveEvaluationResults(result, uncertainity)
 
     def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        """Evaluate the values with analytical function.
+
+        Arguments:
+            decision_vector (np.ndarray): Variable values where evaluation is
+                                            done
+
+        Returns:
+            ObjectiveEvaluationResults: Result and uncertainty
+
+        Raises:
+            ObjectiveError: If the analytical function is not provided
+
+        """
         if self.evaluator is None:
             msg = "No analytical function provided"
             raise ObjectiveError(msg)
@@ -486,32 +617,43 @@ class _ScalarDataObjective(ScalarDataObjective):
     pass
 
 class VectorDataObjective(VectorObjective):
-    """A Objective class for multi/valued objectives. Use when the an evaluator/
-    simulator returns a multiple objective values or when there is no evaluator/
-    simulator.
+    """A Objective class for multi/valued objectives.      
 
-    Parameters
-    ----------
-    name : List[str]
-        The names of the objectives. Should be the same as a column names in the data.
-    data : pd.DataFrame
-        The data in a pandas dataframe. The columns should be named after variables/
-        objectives.
-    evaluator : Union[None, Callable], optional
-        A python function that contains the analytical function or calls the simulator
-        to get the true objective values. By default None, as this is not required.
-    lower_bound : float, optional
-        Lower bound of the objectives, by default -np.inf
-    upper_bound : float, optional
-        Upper bound of the objectives, by default np.inf
-    maximize : List[bool], optional
-        Boolean describing whether the objective is to be maximized or not, by default
-        None, which defaults to [False], hence minimizes.
+    Use when the an evaluator/simulator returns a multiple objective values or
+    when there is no evaluator/simulator.
 
-    Raises
-    ------
-    ObjectiveError
-        When the names provided are not found in the columns of the dataframe provided.
+    Attributes:
+        X (pd.DataFrame): Dataframe with corresponds the points where the
+                            objective value is known.
+        y (pd.Series): The objective values corresponding the points.
+        variable_names (pd.Index): The names of the variables in X
+        _model(Dict): BaseRegressor (or None if not trained) models for each
+                        objective, keys are the names of objectives.
+        _model_trained(Dict): boolean if model is trained for each objective,
+                            keys are the names of objectives. Default false.
+
+    Arguments:
+        name (List[str]): The name of the objective. Should be the same as a
+                            column name in the data.
+        data (pd.DataFrame): The data in a pandas dataframe. The columns
+                            should be named after variables/objective.
+        evaluator (Union[None, Callable], optional): A python function that
+            contains the analytical function or calls the simulator to get the
+            true objective value. By default None, as this is not required.
+        lower_bound (float, optional): Lower bound of the objective,
+                                        by default -np.inf
+        upper_bound (float, optional): Upper bound of the objective,
+                                        by default np.inf
+        maximize (List[bool], optional): Boolean describing whether the
+            objective is to be maximized or not, by default None, which
+            defaults to [False], hence minimizes.
+
+
+    Raises:
+        ObjectiveError:  When the name provided during initialization does not
+            match any name in the columns of the data provided during
+            initilizaiton.
+
     """
 
     def __init__(
@@ -544,41 +686,39 @@ class VectorDataObjective(VectorObjective):
     ):
         """Train surrogate models for the objective.
 
-        Parameters
-        ----------
-        model : BaseRegressor or List[BaseRegressors]
-            A regressor or a list of regressors. The regressor/s, when initialized,
-            should have a fit method and a predict method.
-            The predict method should return the predicted objective
-            value, as well as the uncertainity value, in a tuple. If the regressor does
-            not support calculating uncertainity, return a tuple of objective value and
-            None.
-            If a single regressor is provided, that regressor is used for all the
-            objectives.
-            If a list of regressors is provided, and if the list contains one regressor
-            for each objective, then those individual regressors are used to model the
-            objectives. If the number of regressors is not equal to the number of
-            objectives, an error is raised.
-        model_parameters: Dict or List[Dict]
-            The parameters for the regressors. Should be a dict if a single regressor is
-            provided. If a list of regressors is provided, the parameters should be in a
-            list of dicts, same length as the list of regressors(= number of objs).
-        index : List[int], optional
-            Indices of the samples (in self.X and self.y), to be used to train the
-            surrogate model. By default None, which trains the model on the entire
-            dataset. This behaviour may be changed in the future to support test-train
-            split or cross validation.
-        data : pd.DataFrame, optional
-            Extra data to be used for training only. This data is not saved. By default
-            None, which then uses self.X and self.y for training.
+        Arguments:
+            model (BaseRegressor or List[BaseRegressors]):
+                A regressor or a list of regressors. The regressor/s, when initialized,
+                should have a fit method and a predict method.
+                The predict method should return the predicted objective
+                value, as well as the uncertainity value, in a tuple. If the regressor does
+                not support calculating uncertainity, return a tuple of objective value and
+                None.
+                If a single regressor is provided, that regressor is used for all the
+                objectives.
+                If a list of regressors is provided, and if the list contains one regressor
+                for each objective, then those individual regressors are used to model the
+                objectives. If the number of regressors is not equal to the number of
+                objectives, an error is raised.
+            model_parameters (Dict or List[Dict]):
+                The parameters for the regressors. Should be a dict if a single regressor is
+                provided. If a list of regressors is provided, the parameters should be in a
+                list of dicts, same length as the list of regressors(= number of objs).
+            index (List[int], optional):
+                Indices of the samples (in self.X and self.y), to be used to train the
+                surrogate model. By default None, which trains the model on the entire
+                dataset. This behaviour may be changed in the future to support test-train
+                split or cross validation.
+            data (pd.DataFrame, optional):
+                Extra data to be used for training only. This data is not saved. By default
+                None, which then uses self.X and self.y for training.
 
-        Raises
-        ------
-        ObjectiveError
-            If the formats of the model and model parameters do not match
-        ObjectiveError
-            If the lengths of list of models and/or model parameter dictionaries are not
-            equal to the number of objectives.
+        Raises:
+            ObjectiveError: If the formats of the model and model parameters
+                            do not match
+            ObjectiveError: If the lengths of list of models and/or model
+                            parameter dictionaries are not equal to the number
+                            of objectives.
         """
         if model_parameters is None:
             model_parameters = {}
@@ -606,31 +746,27 @@ class VectorDataObjective(VectorObjective):
     ):
         """Train surrogate model for the objective.
 
-        Parameters
-        ----------
-        name : str
-            Name of the objective for which you want to train the surrogate model
-        model : BaseRegressor
-            A regressor. The regressor, when initialized, should have a fit method and a
-            predict method. The predict method should return the predicted objective
-            value, as well as the uncertainity value, in a tuple. If the regressor does
-            not support calculating uncertainity, return a tuple of objective value and
-            None.
-        model_parameters : Dict
-            **model_parameters is passed to the model when initialized.
-        index : List[int], optional
-            Indices of the samples (in self.X and self.y), to be used to train the
-            surrogate model. By default None, which trains the model on the entire
-            dataset. This behaviour may be changed in the future to support test-train
-            split or cross validation.
-        data : pd.DataFrame, optional
-            Extra data to be used for training only. This data is not saved. By default
-            None, which then uses self.X and self.y for training.
-
-        Raises
-        ------
-        ObjectiveError
-            For unexpected errors
+        Arguments:
+            name (str): Name of the objective for which you want to train the
+                        surrogate model
+            model (BaseRegressor): A regressor. The regressor, when
+                    initialized, should have a fit method and a predict method.
+                    The predict method should return the predicted objective
+                    value, as well as the uncertainity value, in a tuple. If
+                    the regressor does not support calculating uncertainity,
+                    return a tuple of objective value and None.
+            model_parameters (Dict): **model_parameters is passed to the model
+                                    when initialized.
+            index (List[int], optional): Indices of the samples (in self.X and
+                    self.y), to be used to train the surrogate model. By
+                    default None, which trains the model on the entire dataset.
+                    This behaviour may be changed in the future to support
+                    test-train split or cross validation.
+            data (pd.DataFrame, optional): Extra data to be used for training
+                    only. This data is not saved. By default None, which then
+                    uses self.X and self.y for training.
+        Raises:
+            ObjectiveError: For unexpected errors
         """
         if name not in self.name:
             raise ObjectiveError(f'"{name}" not found in the list of' f"original objective names: {self.name}")
@@ -653,6 +789,20 @@ class VectorDataObjective(VectorObjective):
         raise ObjectiveError(msg)
 
     def _surrogate_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        """Evaluate the values with surrogate function.
+
+        Arguments:
+            decision_vector (np.ndarray): Variable values where evaluation is
+                                            done
+
+        Returns:
+            ObjectiveEvaluationResults: Result and uncertainty
+
+        Raises:
+            ObjectiveError: If all models have not been trained yet or a bad
+                            argument is supplied to the model
+
+        """
         if not all(self._model_trained.values()):
             msg = (
                 f"Some or all models have not been trained.\n"
@@ -671,6 +821,19 @@ class VectorDataObjective(VectorObjective):
         return ObjectiveEvaluationResults(result, uncertainity)
 
     def _func_evaluate(self, decision_vector: np.ndarray) -> ObjectiveEvaluationResults:
+        """Evaluate the values with analytical function.
+
+        Arguments:
+            decision_vector (np.ndarray): Variable values where evaluation is
+                                            done
+
+        Returns:
+            ObjectiveEvaluationResults: Result and uncertainty
+
+        Raises:
+            ObjectiveError: If the analytical function is not provided
+
+        """
         if self.evaluator is None:
             msg = "No analytical function provided"
             raise ObjectiveError(msg)
