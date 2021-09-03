@@ -21,7 +21,7 @@ from desdeo_problem.problem.Objective import (
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
 from desdeo_problem.problem.Variable import Variable
 
-import copy
+import copy # To prevent python from coping the pointer
 
 class ProblemError(Exception):
     """Raised when an error related to the Problem class is encountered.

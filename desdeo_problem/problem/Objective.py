@@ -479,9 +479,9 @@ class ScalarDataObjective(ScalarObjective):
             msg = "No analytical function provided"
             raise ObjectiveError(msg)
         results = super()._func_evaluate(decision_vector)
-        #self.X = np.vstack((self.X, decision_vector))
-        #self.y = np.vstack((self.y, results.objectives))
-        
+        #self.X = np.vstack((self.X, decision_vector))    #changes bhupinder and pouya made
+        #self.y = np.vstack((self.y, results.objectives)) #changes bhupinder and pouya made
+         
         return results
 
 class _ScalarDataObjective(ScalarDataObjective):
