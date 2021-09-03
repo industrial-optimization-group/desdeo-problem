@@ -21,6 +21,7 @@ from desdeo_problem.problem.Objective import (
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
 from desdeo_problem.problem.Variable import Variable
 
+import copy
 
 class ProblemError(Exception):
     """Raised when an error related to the Problem class is encountered.
@@ -624,7 +625,7 @@ class MOProblem(ProblemBase):
     Returns:
         [type]: [description]
     """
-
+    #TODO: use_surrogate : Union[bool, List[bool]]
     def __init__(
         self,
         objectives: List[Union[ScalarObjective, VectorObjective]],
@@ -887,7 +888,7 @@ class MOProblem(ProblemBase):
         )
 
     def evaluate_objectives(
-        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False 
     ) -> Tuple[np.ndarray]:
         (n_rows, n_cols) = np.shape(decision_vectors)
         objective_vectors: np.ndarray = np.ndarray(
@@ -1170,11 +1171,13 @@ class ExperimentalProblem(MOProblem):
         self,
         variable_names: List[str],
         objective_names: List[str],
+        evaluators : Union[None, List[Callable]] = None,
         dimensions_data: pd.DataFrame = None,
         data: pd.DataFrame = None,
         objective_functions: List[Tuple[List[str], Callable]] = None,
         constraints: List[Tuple[List[str], Callable]] = None,
     ):
+        # TODO: add the archiving here for true evaluations.
         if not isinstance(data, pd.DataFrame):
             msg = "Please provide data in the pandas dataframe format"
             raise ProblemError(msg)
@@ -1186,9 +1189,12 @@ class ExperimentalProblem(MOProblem):
             raise ProblemError(msg)
         # TODO: Implement the rest
         objectives = []
-        for obj in objective_names:
+        self.archive = copy.deepcopy(data) # this is for model management to archive the solutions and decision variables
+        #check if evaluator is NOne in that case make a list of nones and the lenght of the list is the same as obj_names
+        #check if evaluator is the same lenght as obj_names if not rais a problem error
+        for obj, evaluator in zip(objective_names, evaluators):
             objectives.append(
-                ScalarDataObjective(data=data[variable_names + [obj]], name=obj)
+                ScalarDataObjective(data=data[variable_names + [obj]], name=obj, evaluator = evaluator)
             )
 
         variables = []
@@ -1234,6 +1240,7 @@ class ExperimentalProblem(MOProblem):
             ProblemError: If VectorDataObjective is used as one of the objective
                 instances. They are not supported yet.
         """
+        data = self.archive #for updating the data after updating the surrogates
         if not isinstance(models, list):
             models = [models] * len(self.get_objective_names())
             model_parameters = [model_parameters] * len(self.get_objective_names())

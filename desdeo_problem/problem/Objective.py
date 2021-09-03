@@ -418,6 +418,7 @@ class ScalarDataObjective(ScalarObjective):
         self.y = data[name]
         self.variable_names = self.X.columns
         self._model = None
+        self.__evaluator = evaluator #this is how we added analatycal function
 
     def train(
         self, model: BaseRegressor, model_parameters: Dict = None, index: List[int] = None, data: pd.DataFrame = None
@@ -478,8 +479,9 @@ class ScalarDataObjective(ScalarObjective):
             msg = "No analytical function provided"
             raise ObjectiveError(msg)
         results = super()._func_evaluate(decision_vector)
-        self.X = np.vstack((self.X, decision_vector))
-        self.y = np.vstack((self.y, results.objectives))
+        #self.X = np.vstack((self.X, decision_vector))
+        #self.y = np.vstack((self.y, results.objectives))
+        
         return results
 
 class _ScalarDataObjective(ScalarDataObjective):
