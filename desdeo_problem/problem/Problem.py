@@ -21,7 +21,6 @@ from desdeo_problem.problem.Objective import (
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
 from desdeo_problem.problem.Variable import Variable
 
-import copy # To prevent python from coping the pointer
 
 class ProblemError(Exception):
     """Raised when an error related to the Problem class is encountered.
@@ -338,6 +337,16 @@ class ScalarMOProblem(ProblemBase):
 
         """
         return [obj.name for obj in self.objectives]
+    
+    def get_uncertainty_names(self) -> List[str]:
+        """Return the names of the objectives present in the problem in the
+        order they were added.
+
+        Returns:
+            List[str]: Names of the objectives in the order they were added.
+
+        """
+        return [unc.name for unc in self.uncertainty]
 
     def get_variable_lower_bounds(self) -> np.ndarray:
         """Return the lower bounds of each variable as a list. The order of the bounds
@@ -692,6 +701,7 @@ class MOProblem(ProblemBase):
         self.objective_names = self.get_objective_names()
         self.variable_names = self.get_variable_names()
 
+
     @property
     def n_of_constraints(self) -> int:
         return self.__n_of_constraints
@@ -806,6 +816,8 @@ class MOProblem(ProblemBase):
         """
         obj_list = [[(obj.name)] for obj in self.objectives]
         return reduce(iadd, obj_list, [])
+    
+    #TODO: add  get_uncertainty_names() for uncertainty values
 
     def get_variable_lower_bounds(self) -> np.ndarray:
         """Return the lower bounds of each variable as a list. The order of the bounds
@@ -1145,7 +1157,10 @@ class DataProblem(MOProblem):
 
 class ExperimentalProblem(MOProblem):
     """A problem class for data-based problem. This supports surrogate modelling.
-    Data should be given in the form of a pandas dataframe.
+    Data should be given in the form of a pandas dataframe. 
+
+    self.archive is created to save the true function evaluations and update the surrogate models.
+    self.archive updates whenever a true function evaluation happens.  
     
     Args:
         data (pd.DataFrame): The input data. This will be used for training the model.
@@ -1171,6 +1186,7 @@ class ExperimentalProblem(MOProblem):
         self,
         variable_names: List[str],
         objective_names: List[str],
+        uncertainity_names: List[str],
         evaluators : Union[None, List[Callable]] = None,
         dimensions_data: pd.DataFrame = None,
         data: pd.DataFrame = None,
@@ -1178,6 +1194,8 @@ class ExperimentalProblem(MOProblem):
         constraints: List[Tuple[List[str], Callable]] = None,
     ):
         # TODO: add the archiving here for true evaluations.
+
+        self.uncertainity_names = uncertainity_names #  will be removed later
         if not isinstance(data, pd.DataFrame):
             msg = "Please provide data in the pandas dataframe format"
             raise ProblemError(msg)
@@ -1189,7 +1207,7 @@ class ExperimentalProblem(MOProblem):
             raise ProblemError(msg)
         # TODO: Implement the rest
         objectives = []
-        self.archive = copy.deepcopy(data) # this is for model management to archive the solutions and decision variables
+        self.archive = data # this is for model management to archive the solutions and decision variables
         #check if evaluator is NOne in that case make a list of nones and the lenght of the list is the same as obj_names
         #check if evaluator is the same lenght as obj_names if not rais a problem error
         for obj, evaluator in zip(objective_names, evaluators):
@@ -1290,6 +1308,18 @@ class ExperimentalProblem(MOProblem):
         else:
             msg = "Support for VectorDataObjective not supported yet"
             raise ProblemError(msg)
+
+    def evaluate(self, decision_vectors: np.ndarray, use_surrogate: bool) -> EvaluationResults:
+
+        names = np.hstack((self.variable_names,self.objective_names))
+        new_results = super().evaluate(decision_vectors, use_surrogate=use_surrogate)
+
+        # The following is for achiving solutions with true function evaluations
+        if use_surrogate == False:
+            new_samples = np.hstack((decision_vectors, new_results.objectives))
+            new_data = pd.DataFrame(data = new_samples, columns = names)
+            self.archive = self.archive.append(new_data)
+        return new_results
 
 
 class classificationPISProblem(MOProblem):
