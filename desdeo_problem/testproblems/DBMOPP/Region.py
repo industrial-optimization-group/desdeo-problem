@@ -8,10 +8,11 @@ from numpy import matlib # i guess we could implement repmat ourselves
 from desdeo_problem.problem import *
 from matplotlib import cm
 
-# utilities
-# TODO: figure out the structure
 
 class Attractor:
+    """
+        Attractor class.
+    """
     def __init__(self) -> None:
         self._locations = None
     
@@ -28,6 +29,9 @@ class Attractor:
         return np.min(d)
 
 class Region:
+    """
+        Region class.
+    """
     def __init__(self, centre: np.ndarray = None, radius: float = None):
         self._centre = centre
         self._radius = radius
@@ -76,6 +80,9 @@ class Region:
         ax.add_patch(circle)
     
 class AttractorRegion(Region):
+    """
+        AttractorRegion implements region.
+    """
     def __init__(self, locations, indices, centre, radius, convhull):
         self.locations = locations
         self.objective_indices = indices
@@ -94,7 +101,7 @@ class AttractorRegion(Region):
 
     def plot(self, ax, color = 'b'):
         """
-
+            Plots the attractorRegions
         """
         if self.convhull is None: return
 

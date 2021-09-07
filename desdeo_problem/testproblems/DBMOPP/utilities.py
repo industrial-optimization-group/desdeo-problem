@@ -21,15 +21,16 @@ def get_2D_version(x, pi1, pi2):
     print(pi1, pi2)
     return np.hstack((l, r))
 
+
 def euclidean_distance(x1, x2):
+    """
+        Returns the euclidean distance between x1 and x2.
+    """
     if x1 is None or x2 is None:
         print("euclidean distance supplied with nonetype")
         return None
     return np.linalg.norm(x1-x2, axis = -1)
-    #return np.sqrt(np.power(np.sum((x1-x2),axis = -1), 2))
 
-def repmat(t, x, y): # could do this...
-    pass 
 
 def convhull(points):
     """
@@ -67,27 +68,23 @@ def in_hull(x: np.ndarray, points: np.ndarray):
     lp = linprog(c, A_eq=A, b_eq=b)
     return lp.success
 
+
 def get_random_angles(n):
     return np.random.rand(n,1) * 2 * np.pi
 
 
-# def in_region(centres, radii, x) -> Tuple[bool, np.ndarray]:
-#     if centres is None or len(centres) < 1: return (False, np.array([]))
-#     dist = euclidean_distance(centres, x)
-#     in_region = np.any(dist <= radii)
-#     return (in_region, dist)
-    
-# # this and above could be combined/one method
-# def in_region_excluding_boundary(centres, radii, x):
-#     if (centres is None or len(centres) < 1): return (False, np.array([]))
-#     d = euclidean_distance(centres, x)
-#     in_region = np.any(d < radii)
-#     return (in_region, d)
-
-
 def between_lines_rooted_at_pivot(x, pivot_loc, loc1, loc2) -> bool:
     """
-    Plaaplaa
+
+    Args:
+        x (np.ndarray): 2D point to check
+        pivot_loc: attractor on boundary of circle
+        loc1: another point on boundary of circle
+        loc2: another point on boundary of circle
+
+    Returns:
+        bool: true if x on different side of line defined by pivot_loc and loc1, compared to the side of the line defined by pivot_loc and loc2.
+        If x is also in the circle, then x is betweeen the two lines if return is true.
     """
     d1 = ( x[0] - pivot_loc[0])*(loc1[1] - pivot_loc[1]) - (x[1] - pivot_loc[1])*(loc1[0] - pivot_loc[0])
     d2 = ( x[0] - pivot_loc[0])*(loc2[1] - pivot_loc[1]) - (x[1] - pivot_loc[1])*(loc2[0] - pivot_loc[0])
