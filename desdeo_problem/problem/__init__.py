@@ -1,3 +1,9 @@
+"""Desdeo-problem package
+
+This package is for creating a problem for desdeo to solve.
+It includes modules for Variables, Objectives, Constraints, and actual Problem.
+"""
+
 __all__ = [
     "ScalarConstraint",
     "ConstraintError",

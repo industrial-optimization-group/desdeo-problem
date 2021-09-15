@@ -1,3 +1,10 @@
+"""Desdeo-problem variable related definitions.
+
+This file includes definition of Variable class (with initial and current
+values and value bounds), variable_builder, and error classes for Variable
+and VariableBuilder.
+"""
+
 from os import path
 from typing import List, Tuple, Union
 
@@ -25,7 +32,7 @@ class VariableBuilderError(Exception):
 class Variable:
     """Simple variable with a name, initial value and bounds.
 
-    Args:
+    Arguments:
         name (str): Name of the variable
         initial_value (float): The initial value of the variable.
         lower_bound (float, optional): Lower bound of the variable. Defaults
@@ -73,18 +80,39 @@ class Variable:
 
     @property
     def name(self) -> str:
+        """Property: name
+
+        Returns:
+            str: The name of the variable.
+        """
         return self.__name
 
     @property
     def initial_value(self) -> float:
+        """Property: initial_value
+
+        Returns:
+            float: The initial value of the variable.
+        """
         return self.__initial_value
 
     @property
     def current_value(self) -> float:
+        """Property: current_value
+
+        Returns:
+            float: The current value of the variable
+        """
         return self.__current_value
 
     @current_value.setter
     def current_value(self, value: float):
+        """Setter: current_value
+
+        Args:
+            float: The updated value for the current_value variable.
+
+        """
         self.__current_value = value
 
     def get_bounds(self) -> Tuple[float, float]:
@@ -106,7 +134,7 @@ def variable_builder(
 ) -> List[Variable]:
     """Automatically build all variable objects.
 
-    Args:
+    Arguments:
         names (List[str]): Names of the variables
         initial_values (np.ndarray): Initial values taken by the variables.
         lower_bounds (Union[List[float], np.ndarray], optional): Lower bounds of the

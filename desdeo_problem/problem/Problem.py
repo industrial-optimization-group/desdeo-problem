@@ -1,3 +1,17 @@
+"""Desdeo-problem related definitions.
+
+This file has following classes:
+    ProblemError
+    EvaluationResults
+    ProblemBase
+    ScalarMOProblem  -- to be deprecated
+    ScalarDataProblem -- to be deprecated
+    MOProblem
+    DataProblem
+    ExperimentalProblem
+    classificationPISProblem
+    DiscreteDataProblem
+"""
 from abc import ABC, abstractmethod
 
 # , TypedDict coming in py3.8
@@ -52,6 +66,11 @@ class EvaluationResults(NamedTuple):
     uncertainity: Union[None, np.ndarray] = None
 
     def __str__(self):
+        """Textual output of attributes.
+
+        Returns:
+            str: The textual output of attributes
+        """
         prnt_msg = (
             "Evaluation Results Object \n"
             f"Objective values are: \n{self.objectives}\n"
@@ -63,9 +82,21 @@ class EvaluationResults(NamedTuple):
 
 
 class ProblemBase(ABC):
-    """The base class from which every other class representing a problem should
-    derive.
+    """The base class for the problems.
 
+    All other problem classes should be derived from this.
+
+    Attributes:
+        nadir (np.ndarray): Nadir values for the problem, initiated = None
+        ideal (np.ndarray): Ideal values for the problem, initiated = None
+        nadir_fitness (np.ndarray): Fitness values for nadir, initiated = None
+        ideal_fitness (np.ndarray): Fitness values for ideal, initiated = None
+        __n_of_objectives (int): Number of objectives, initiated = 0
+        __n_of_variables (int): Number of variables, initiated = 0
+        __decision_vectors (np.ndarray): Array of decision variable vectors,
+                                            initiated = None
+        __objective_vectors (np.ndarray): Array of objective variable vectors,
+                                            initiated = None
     """
 
     def __init__(self):
@@ -80,40 +111,73 @@ class ProblemBase(ABC):
 
     @property
     def n_of_objectives(self) -> int:
+        """Property, returns the number of objectives.
+
+        Returns:
+            int: The number of objectives
+        """
         return self.__n_of_objectives
 
     @n_of_objectives.setter
     def n_of_objectives(self, val: int):
+        """Setter, the number of objectives.
+
+        Arguments:
+            val (int): the number of objectives
+        """
         self.__n_of_objectives = val
 
     @property
     def n_of_variables(self) -> int:
+        """Property, returns the number of variables.
+
+        Returns:
+            int: The number of variables
+        """
         return self.__n_of_variables
 
     @n_of_variables.setter
     def n_of_variables(self, val: int):
+        """Setter, the number of variables.
+
+        Arguments:
+            val (int): the number of variables
+        """
         self.__n_of_variables = val
 
     @property
     def decision_vectors(self) -> np.ndarray:
+        """Property, returns the decision variable vectors array.
+
+        Returns:
+            np.ndarray: decision vector array
+        """
         return self.__decision_vectors
 
     @decision_vectors.setter
     def decision_vectors(self, val: np.ndarray):
+        """Setter, the decision variable vector array.
+
+        Arguments:
+            val (np.ndarray): the decision vector array
+        """
         self.__decision_vectors = val
 
     @abstractmethod
     def get_variable_bounds(self) -> Union[None, np.ndarray]:
+        """Abstract method to get variable bounds"""
         pass
 
     @abstractmethod
     def evaluate(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
     ) -> EvaluationResults:
-        """Evaluates the problem using an ensemble of input vectors. Uses surrogate
-        models if available. Otherwise, it uses the true evaluator.
+        """Abstract method to evaluate problem.
+                                                                   
+        Evaluates the problem using an ensemble of input vectors. Uses
+        surrogate models if available. Otherwise, it uses the true evaluator.
 
-        Args:
+        Arguments:
             decision_vectors (np.ndarray): An array of decision variable
             input vectors.
             use_surrogate (bool): A bool to control whether to use the true, potentially
@@ -134,9 +198,11 @@ class ProblemBase(ABC):
 
     @abstractmethod
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
-        """Evaluate just the constraint function values using the attributes
-        decision_vectors and objective_vectors
+        """Abstract method to evaluate constraint values.
 
+        Evaluate just the constraint function values using the attributes
+        decision_vectors and objective_vectors
+        
         Note:
             Currently not supported by ScalarMOProblem
 
@@ -145,10 +211,15 @@ class ProblemBase(ABC):
 
 # TODO: Depreciate. Use MO problem in the future
 class ScalarMOProblem(ProblemBase):
-    """A multiobjective optimization problem with user defined objective funcitons,
-    constraints and variables. The objectives each return a single scalar.
+    """A multiobjective optimization problem.
 
-    Args:
+    To be depreciated.
+
+    A multiobjective optimization problem with user defined objective
+    functions, constraints and variables.
+    The objectives each return a single scalar.
+
+    Arguments:   
         objectives (List[ScalarObjective]): A list containing the objectives of
             the problem.
         variables (List[Variable]): A list containing the variables of the
@@ -160,14 +231,14 @@ class ScalarMOProblem(ProblemBase):
         ideal (Optional[np.ndarray]): The ideal point of the problem.
 
     Attributes:
-        n_of_objectives (int): The number of objectives in the problem.
-        n_of_variables (int): The number of variables in the problem.
-        n_of_constraints (int): The number of constraints in the problem.
-        nadir (np.ndarray): The nadir point of the problem.
-        ideal (np.ndarray): The ideal point of the problem.
-        objectives (List[ScalarObjective]): A list containing the objectives of
+        __n_of_objectives (int): The number of objectives in the problem.
+        __n_of_variables (int): The number of variables in the problem.
+        __n_of_constraints (int): The number of constraints in the problem.
+        __nadir (np.ndarray): The nadir point of the problem.
+        __ideal (np.ndarray): The ideal point of the problem.
+        __objectives (List[ScalarObjective]): A list containing the objectives of
             the problem.
-        constraints (List[ScalarConstraint]): A list conatining the constraints
+        __constraints (List[ScalarConstraint]): A list conatining the constraints
             of the problem.
 
     Raises:
@@ -237,70 +308,154 @@ class ScalarMOProblem(ProblemBase):
 
     @property
     def n_of_constraints(self) -> int:
+        """Property: the number of constraints.
+
+        Returns:
+            int: the number of constraints.
+        """
         return self.__n_of_constraints
 
     @n_of_constraints.setter
     def n_of_constraints(self, val: int):
-        self.__n_of_constraints = val
+        """Setter: the number of constraints.
 
+        Arguments:
+            int: the number of constraints.
+        """
+        self.__n_of_constraints = val
     @property
     def objectives(self) -> List[ScalarObjective]:
+        """Property: the list of objectives.
+
+        Returns:
+            List[ScalarObjective]: the list of objectives
+        """
         return self.__objectives
 
     @objectives.setter
     def objectives(self, val: List[ScalarObjective]):
+        """Setter: the list of objectives.
+
+        Arguments:
+            val (List[ScalarObjective]): the list of objectives.
+        """
         self.__objectives = val
 
     @property
     def variables(self) -> List[Variable]:
+        """Property: the list of problem variables.
+
+        Returns:
+            List[_ScalarObjective]: the list of problem variables
+        """
         return self.__variables
 
     @variables.setter
     def variables(self, val: List[Variable]):
+        """Setter: the list of variables.
+
+        Arguments:
+            val (List[_ScalarObjective]): the list of variables.
+        """
         self.__variables = val
 
     @property
     def constraints(self) -> List[ScalarConstraint]:
+        """Property: the list of constraints.
+
+        Returns:
+            List[_ScalarObjective]: the list of constraints
+        """
         return self.__constraints
 
     @constraints.setter
     def constraints(self, val: List[ScalarConstraint]):
+        """Setter: the list of constraints.
+
+        Arguments:
+            val (List[_ScalarObjective]): the list of constraints.
+        """
         self.__constraints = val
 
     @property
     def n_of_objectives(self) -> int:
+        """Property: the number of objectives.
+
+        Returns:
+            int: the number of objectives.
+        """
         return self.__n_of_objectives
 
     @n_of_objectives.setter
     def n_of_objectives(self, val: int):
+        """Setter: the number of objectives.
+
+        Arguments:
+            int: the number of objectives.
+        """
         self.__n_of_objectives = val
 
     @property
     def n_of_variables(self) -> int:
+        """Property: the number of variables.
+
+        Returns:
+            int: the number of variables.
+
+        """
         return self.__n_of_variables
 
     @n_of_variables.setter
     def n_of_variables(self, val: int):
+        """Setter: the number of variables.
+
+        Arguments:
+            int: the number of variables.
+        """
         self.__n_of_variables = val
 
     @property
     def nadir(self) -> np.ndarray:
+        """Property: the nadir point of the problem.
+
+        Returns:
+            np.ndarray: the nadir point of the problem.
+        """
         return self.__nadir
 
     @nadir.setter
     def nadir(self, val: np.ndarray):
+        """Setter: the nadir point of the problem.
+
+        Arguments:
+            val (np.ndarray): The nadir point of the problem.
+
+        """
         self.__nadir = val
 
     @property
     def ideal(self) -> np.ndarray:
+        """Property: the ideal point of the problem.
+
+        Returns:
+            np.ndarray: the ideal point of the problem.
+        """
         return self.__ideal
 
     @ideal.setter
     def ideal(self, val: np.ndarray):
+        """Setter: the ideal point of the problem.
+
+        Arguments:
+            val (np.ndarray): The ideal point of the problem.
+
+        """
         self.__ideal = val
 
     def get_variable_bounds(self) -> Union[np.ndarray, None]:
-        """Return the upper and lower bounds of each decision variable present
+        """Get the variable bounds.
+
+        Return the upper and lower bounds of each decision variable present
         in the problem as a 2D numpy array. The first column corresponds to the
         lower bounds of each variable, and the second column to the upper
         bound.
@@ -319,7 +474,9 @@ class ScalarMOProblem(ProblemBase):
             return None
 
     def get_variable_names(self) -> List[str]:
-        """Return the variable names of the variables present in the problem in
+        """Get variable names.
+
+        Return the variable names of the variables present in the problem in
         the order they were added.
 
         Returns:
@@ -329,7 +486,9 @@ class ScalarMOProblem(ProblemBase):
         return [var.name for var in self.variables]
 
     def get_objective_names(self) -> List[str]:
-        """Return the names of the objectives present in the problem in the
+        """Get objective names.
+
+        Return the names of the objectives present in the problem in the
         order they were added.
 
         Returns:
@@ -339,7 +498,9 @@ class ScalarMOProblem(ProblemBase):
         return [obj.name for obj in self.objectives]
 
     def get_variable_lower_bounds(self) -> np.ndarray:
-        """Return the lower bounds of each variable as a list. The order of the bounds
+        """Get variable lower bounds.
+
+        Return the lower bounds of each variable as a list. The order of the bounds
         follows the order the variables were added to the problem.
 
         Returns:
@@ -348,9 +509,10 @@ class ScalarMOProblem(ProblemBase):
         return np.array([var.get_bounds()[0] for var in self.variables])
 
     def get_variable_upper_bounds(self) -> np.ndarray:
-        """Return the upper bounds of each variable as a list. The order of the bounds
-        follows the order the variables were added to the problem.
-
+        """Get variable upper bounds.
+                                             
+        Return the upper bounds of each variable as a list. The order of the
+        bounds follows the order the variables were added to the problem.
         Returns:
             np.ndarray: An array with the upper bounds of the variables.
         """
@@ -361,7 +523,7 @@ class ScalarMOProblem(ProblemBase):
     ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
-        Args:
+        Arguments:
             decision_vectors (np.ndarray): An 2D array of decision variable
                 input vectors. Each column represent the values of each decision
                 variable.
@@ -429,7 +591,9 @@ class ScalarMOProblem(ProblemBase):
         )
 
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
-        """Evaluate just the constraint function values using the attributes
+        """Evaluate constraint values.
+
+        Evaluate just the constraint function values using the attributes
         decision_vectors and objective_vectors
 
         Raises:
@@ -444,10 +608,14 @@ class ScalarMOProblem(ProblemBase):
 
 # TODO: Depreciate. Use data problem in the future
 class ScalarDataProblem(ProblemBase):
-    """Defines a problem with pre-computed data representing a multiobjective
+    """A problem class for case where the data is pre-computed.
+
+    To be depreciated
+    
+    Defines a problem with pre-computed data representing a multiobjective
     optimization problem with scalar valued objective functions.
 
-    Args:
+    Arguments:
         decision_vectors (np.ndarray): A 2D vector of decision_vectors. Each
             row represents a solution with the value for each decision_vectors
             defined on the columns.
@@ -459,11 +627,12 @@ class ScalarDataProblem(ProblemBase):
     Attributes:
         decision_vectors (np.ndarray): See args
         objective_vectors (np.ndarray): See args
-        epsilon (float): A small floating point number to shift the bounds of
-            the variables. See, get_variable_bounds
-        constraints (List[ScalarConstraint]): A list of defined constraints.
+        __epsilon (float): A small floating point number to shift the bounds of
+            the variables. See, get_variable_bounds, default value 1e-6
+        __constraints (List[ScalarConstraint]): A list of defined constraints.
         nadir (np.ndarray): The nadir point of the problem.
         ideal (np.ndarray): The ideal point of the problem.
+        __model_exists (bool): is there a model for this problem
 
     Note:
         It is assumed that the decision_vectors and objectives follow a direct
@@ -510,24 +679,47 @@ class ScalarDataProblem(ProblemBase):
 
     @property
     def epsilon(self) -> float:
+        """Property: epsilon.
+
+        Return:
+            float: epsilon value (for shifting the bounds of variables)
+        """
         return self.__epsilon
 
     @epsilon.setter
     def epsilon(self, val: float):
+        """Setter: epsilon.
+
+        Argument:
+            val (float): epsilon value (for shifting the bounds of variables.)
+        """
         self.__epsilon = val
 
     @property
     def constraints(self) -> List[ScalarConstraint]:
+        """Property: Constraints.
+
+        Return:
+            List[ScalarConstraint]: list of the defined constraints
+        """
         return self.__constraints
 
     @constraints.setter
     def constraints(self, val: List[ScalarConstraint]):
+        """Setter: Constraints.
+
+        Argument:
+            val (List[ScalarConstraint]): list of the constraints.
+        """
         self.__constraints = val
 
     def get_variable_bounds(self):
-        """Return the variable bounds. A small value might be added to the
-        upper bounds and substracted from the lower bounds to return closed
-        bounds.
+        """Get the variable bounds.
+
+        Returns:
+            np.array[float]: The variable bounds in a stack. The epsilon value
+                will be added to the upper bounds and substracted from the
+                lower bounds to return closed bounds.
 
         Note:
             If self.epsilon is zero, the bounds will represent an open range.
@@ -542,8 +734,9 @@ class ScalarDataProblem(ProblemBase):
         )
 
     def evaluate_constraint_values(self) -> Optional[np.ndarray]:
-        """Evaluate the constraint values for each defined constraint. A
-        positive value indicates that a constraint is adhered to, a negative
+        """Evaluate the constraint values.
+        
+        Evaluate the constraint values for each defined constraint. A positive value indicates that a constraint is adhered to, a negative
         value indicates a violated constraint.
 
         Returns:
@@ -568,7 +761,9 @@ class ScalarDataProblem(ProblemBase):
         return constraint_values
 
     def evaluate(self, decision_vectors: np.ndarray) -> np.ndarray:
-        """Evaluate the values of the objectives corresponding to the decision
+        """Evaluate the values of the objectives at the given decision.
+
+        Evaluate the values of the objectives corresponding to the decision
         decision_vectors.
 
         Args:
@@ -603,26 +798,40 @@ class ScalarDataProblem(ProblemBase):
 
 
 class MOProblem(ProblemBase):
-    """A multiobjective optimization problem with user defined objective funcitons,
-    constraints and variables.
+    """An user defined multiobjective optimization problem.
 
+    A multiobjective optimization problem with user defined objective
+    functions, constraints, and variables.
 
-    Args:
-        objectives (List[Union[ScalarObjective, VectorObjective]]): A list containing
-            the objectives of the problem.
-        variables (List[Variable]): A list containing the variables of the problem.
-        constraints (List[ScalarConstraint]): A list of the constraints of the problem.
+    Arguments:
+        objectives (List[Union[ScalarObjective, VectorObjective]]): A list
+                        containing the objectives of the problem.
+        variables (List[Variable]): A list containing the variables of
+                        the problem.
+        constraints (List[ScalarConstraint]): A list of the constraints
+                        of the problem.
         nadir (Optional[np.ndarray], optional): Nadir point of the problem.
-            Defaults to None.
+                                                Defaults to None.
         ideal (Optional[np.ndarray], optional): Ideal point of the problem.
-            Defaults to None.
+                                                Defaults to None.
+    Attributes:
+        __objectives (List[Union[ScalarObjective, VectorObjective]]): A list
+                        containing the objectives of the problem.
+        __variables (List[Variable]): A list containing the variables of
+                        the problem.
+        __constraints (List[ScalarConstraint]): A list of the constraints
+                        of the problem.
+        __nadir (Optional[np.ndarray], optional): Nadir point of the problem.
+                                                Defaults to None.
+        __ideal (Optional[np.ndarray], optional): Ideal point of the problem.
+                                                Defaults to None.
+        __n_of_variables (int): The number of variables
+        __n_of_objectives (int): The number of objectives
 
     Raises:
-        ProblemError: If ideal or nadir vectors are not the same size as number of
-            objectives.
+        ProblemError: If ideal or nadir vectors are not the same size as
+                number of objectives.
 
-    Returns:
-        [type]: [description]
     """
 
     def __init__(
@@ -693,50 +902,110 @@ class MOProblem(ProblemBase):
 
     @property
     def n_of_constraints(self) -> int:
+        """Property: number of constraints.
+
+        Returns:
+            int: Number of constraints
+        """
         return self.__n_of_constraints
 
     @n_of_constraints.setter
     def n_of_constraints(self, val: int):
+        """Setter: number of constraints.
+
+        Arguments:
+            val (int): number of constraints
+        """
         self.__n_of_constraints = val
 
     @property
     def objectives(self) -> List[ScalarObjective]:
+        """Property: list of objectives.
+
+        Returns:
+            List[ScalarObjective]: list of objectives
+        """
         return self.__objectives
 
     @objectives.setter
     def objectives(self, val: List[ScalarObjective]):
+        """Setter: set list of objectives.
+
+        Arguments:
+            val (List[ScalarObjective]): List of objectives
+        """
         self.__objectives = val
 
     @property
     def variables(self) -> List[Variable]:
+        """Property: List of variables
+
+        Returns:
+            List[Variable]: list of variables
+        """
         return self.__variables
 
     @variables.setter
     def variables(self, val: List[Variable]):
+        """Setter: set list of variables.
+
+        Arguments:
+            val (List[Variable]): list of variables
+        """
         self.__variables = val
 
     @property
     def constraints(self) -> List[ScalarConstraint]:
+        """Property: list of constraints.
+
+        Returns:
+            List[ScalarConstraint]: list of constraints
+        """
         return self.__constraints
 
     @constraints.setter
     def constraints(self, val: List[ScalarConstraint]):
+        """Setter: list of constraints.
+
+        Arguments:
+            val (List[ScalarConstraint]): list of constraints
+        """
         self.__constraints = val
 
     @property
     def n_of_objectives(self) -> int:
+        """Property: number of objectives.
+
+        Returns:
+            int: number of objectives
+        """
         return self.__n_of_objectives
 
     @n_of_objectives.setter
     def n_of_objectives(self, val: int):
+        """Setter: number of objectives.
+
+        Arguments:
+            val (int): number of objectives
+        """    
         self.__n_of_objectives = val
 
     @property
     def n_of_variables(self) -> int:
+        """Property: number of variables.
+
+        Returns:
+            int: Number of variables.
+        """
         return self.__n_of_variables
 
     @n_of_variables.setter
     def n_of_variables(self, val: int):
+        """Setter: number of variables.
+
+        Arguments:
+            val (int): number of variables
+        """
         self.__n_of_variables = val
 
     @staticmethod
@@ -745,7 +1014,7 @@ class MOProblem(ProblemBase):
     ) -> int:
         """Return the number of objectives in the given obj_instance.
 
-        Args:
+        Arguments:
             obj_instance (Union[ScalarObjective, VectorObjective]): An instance of one of
                 the objective classes
 
@@ -767,7 +1036,8 @@ class MOProblem(ProblemBase):
             raise ProblemError(msg)
 
     def get_variable_bounds(self) -> Union[np.ndarray, None]:
-        """Return the upper and lower bounds of each decision variable present
+        """Get variable bounds.
+        Return the upper and lower bounds of each decision variable present
         in the problem as a 2D numpy array. The first column corresponds to the
         lower bounds of each variable, and the second column to the upper
         bound.
@@ -786,7 +1056,8 @@ class MOProblem(ProblemBase):
             return None
 
     def get_variable_names(self) -> List[str]:
-        """Return the variable names of the variables present in the problem in
+        """Get variable names.     
+        Return the variable names of the variables present in the problem in
         the order they were added.
 
         Returns:
@@ -796,7 +1067,8 @@ class MOProblem(ProblemBase):
         return [var.name for var in self.variables]
 
     def get_objective_names(self) -> List[str]:
-        """Return the names of the objectives present in the problem in the
+        """Get objective names.   
+        Return the names of the objectives present in the problem in the
         order they were added.
 
         Returns:
@@ -807,7 +1079,9 @@ class MOProblem(ProblemBase):
         return reduce(iadd, obj_list, [])
 
     def get_variable_lower_bounds(self) -> np.ndarray:
-        """Return the lower bounds of each variable as a list. The order of the bounds
+        """Get variable lower bounds.
+        
+        Return the lower bounds of each variable as a list. The order of the bounds
         follows the order the variables were added to the problem.
 
         Returns:
@@ -816,7 +1090,9 @@ class MOProblem(ProblemBase):
         return np.array([var.get_bounds()[0] for var in self.variables])
 
     def get_variable_upper_bounds(self) -> np.ndarray:
-        """Return the upper bounds of each variable as a list. The order of the bounds
+        """Get variable upper bounds.
+
+        Return the upper bounds of each variable as a list. The order of the bounds
         follows the order the variables were added to the problem.
 
         Returns:
@@ -829,7 +1105,7 @@ class MOProblem(ProblemBase):
     ) -> EvaluationResults:
         """Evaluates the problem using an ensemble of input vectors.
 
-        Args:
+        Arguments:
             decision_vectors (np.ndarray): An 2D array of decision variable
                 input vectors. Each column represent the values of each decision
                 variable.
@@ -889,6 +1165,20 @@ class MOProblem(ProblemBase):
     def evaluate_objectives(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
     ) -> Tuple[np.ndarray]:
+        """Evaluate objective values of the problem
+
+        Arguments:
+           decision_vectors (np.ndarray): An 2D array of decision variable
+                input vectors. Each column represent the values of each
+                decision variable.
+           use_surrogate (bool): A bool to control whether to use the true,
+                potentially expensive function or a surrogate model to
+                evaluate the objectives.
+
+        Returns:
+            Tuple[np.ndarray]: Objective vector values with their uncertainty.
+
+        """
         (n_rows, n_cols) = np.shape(decision_vectors)
         objective_vectors: np.ndarray = np.ndarray(
             (n_rows, self.n_of_objectives), dtype=float
@@ -924,9 +1214,22 @@ class MOProblem(ProblemBase):
     def evaluate_constraint_values(
         self, decision_vectors: np.ndarray, objective_vectors: np.ndarray
     ) -> Optional[np.ndarray]:
-        """Evaluate just the constraint function values using the attributes
+        """Evaluate constraint values
+
+        Evaluate just the constraint function values using the attributes
         decision_vectors and objective_vectors
 
+        Arguments:
+            decision_vectors (np.ndarray): An 2D array of decision variable
+                input vectors. Each column represent the values of each
+                decision variable.
+            use_surrogate (bool): A bool to control whether to use the true,
+                potentially expensive function or a surrogate model to
+                evaluate the objectives.
+
+        Returns:
+            Optional[np.ndarray]: if there are constraints, then this returns
+                np.ndarray of constraint values, else returns None
         Raises:
             NotImplementedError
 
@@ -948,19 +1251,37 @@ class MOProblem(ProblemBase):
         return constraint_values
 
     def evaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
+        """Evaluate fitness of the objectives.
+
+        Arguments:
+            objective_vectors (np.ndarray): objective vector array
+
+        Returns:
+            np.ndarray: fitness of each objective vector
+
+        """
         return objective_vectors * self._max_multiplier
 
     def update_ideal(self, objective_vectors: np.ndarray, fitness: np.ndarray):
+        """Update the ideal vector
+
+        Arguments:
+            objective_vectors (np.ndarray): Objective vectors
+            fitness (np.ndarray): fittness of objective vectors.
+
+        """
         self.ideal_fitness = np.amin(np.vstack((self.ideal_fitness, fitness)), axis=0)
         self.ideal = self.ideal_fitness * self._max_multiplier
 
 
 # TODO: Make this the "main" Problem class?
 class DataProblem(MOProblem):
-    """A problem class for data-based problem. This supports surrogate modelling.
+    """A class for a data based problem.
+
+    A problem class for data-based problem. This supports surrogate modelling.
     Data should be given in the form of a pandas dataframe.
     
-    Args:
+    Arguments:
         data (pd.DataFrame): The input data. This will be used for training the model.
         variable_names (List[str]): Names of the variables in the dataframe provided.
         objective_names (List[str]): Names of the objectices in the dataframe provided.
@@ -975,7 +1296,6 @@ class DataProblem(MOProblem):
             Defaults to None, which means that there are no constraints.
         nadir (Optional[np.ndarray], optional): Nadir of the problem. Defaults to None.
         ideal (Optional[np.ndarray], optional): Ideal of the problem. Defaults to None.
-    
     Raises:
         ProblemError: When input data is not a dataframe.
         ProblemError: When given objective or variable names are not in dataframe column
@@ -1070,11 +1390,13 @@ class DataProblem(MOProblem):
         index: List[int] = None,
         data: pd.DataFrame = None,
     ):
-        """Train surrogate models for all the objectives. The models should have a fit
-        method and a predict method. The predict method should return predicted values
-        as well as uncertainity value (even if they are none.)
+        """Train surrogate models for all the objectives.
 
-        Args:
+        The models should have a fit method and a predict method. The predict method
+        should return predicted values as well as uncertainity value (even if they are
+        none.)
+
+        Arguments:
             models (Union[BaseRegressor, List[BaseRegressor]]): The class for the
                 surrogate modelling algorithm.
             models_parameters: Dict or List[Dict]
@@ -1111,7 +1433,7 @@ class DataProblem(MOProblem):
     ):
         """Train one objective at a time, otherwise same is the train method.
 
-        Args:
+        Arguments:
             name (str): Name of the objective to be trained.
             model (BaseRegressor): The class for the surrogate modelling algorithm.
             model_parameters (Dict): **model_parameters is passed to the model when
@@ -1143,10 +1465,12 @@ class DataProblem(MOProblem):
 
 
 class ExperimentalProblem(MOProblem):
-    """A problem class for data-based problem. This supports surrogate modelling.
+    """A problem class for data-based problem.
+
+    This supports surrogate modelling.
     Data should be given in the form of a pandas dataframe.
     
-    Args:
+    Arguments:
         data (pd.DataFrame): The input data. This will be used for training the model.
         variable_names (List[str]): Names of the variables in the dataframe provided.
         objective_names (List[str]): Names of the objectices in the dataframe provided.
@@ -1164,6 +1488,10 @@ class ExperimentalProblem(MOProblem):
         ProblemError: When given objective or variable names are not in dataframe column
         NotImplementedError: When objective instances are passed
         NotImplementedError: When variable instances are passed
+
+    Note:
+        not properly implemented!
+
     """
 
     def __init__(
@@ -1213,11 +1541,13 @@ class ExperimentalProblem(MOProblem):
         index: List[int] = None,
         data: pd.DataFrame = None,
     ):
-        """Train surrogate models for all the objectives. The models should have a fit
-        method and a predict method. The predict method should return predicted values
-        as well as uncertainity value (even if they are none.)
+        """Train surrogate models for all the objectives. 
+        
+        The models should have a fit method and a predict method. The predict 
+        method should return predicted values as well as uncertainity value
+        (even if they are none.)
 
-        Args:
+        Arguments:
             models (Union[BaseRegressor, List[BaseRegressor]]): The class for the
                 surrogate modelling algorithm.
             models_parameters: Dict or List[Dict]
@@ -1254,7 +1584,7 @@ class ExperimentalProblem(MOProblem):
     ):
         """Train one objective at a time, otherwise same is the train method.
 
-        Args:
+        Arguments:
             name (str): Name of the objective to be trained.
             model (BaseRegressor): The class for the surrogate modelling algorithm.
             model_parameters (Dict): **model_parameters is passed to the model when
@@ -1286,10 +1616,12 @@ class ExperimentalProblem(MOProblem):
 
 
 class classificationPISProblem(MOProblem):
-    """A problem class for the IOPIS formulation for interactive optimization. This variant uses the classification
-    kind of preference information for the creation of the Preference incorporated space (PIS).
+    """A problem class for the IOPIS formulation for interactive optimization.
 
-    Args:
+    This variant uses the classification kind of preference information for 
+    the creation of the Preference incorporated space (PIS).
+
+    Arguments:
         objectives (List[Union[ScalarObjective, VectorObjective]]): A list containing
             the objectives of the problem.
         variables (List[Variable]): A list containing the variables of the problem.
@@ -1322,18 +1654,49 @@ class classificationPISProblem(MOProblem):
         self.num_dim_fitness = len(PIS.scalarizers) + 1
 
     def evaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
+        """Evaluate objective fitness.
+
+        Arguments:
+            objective_vectors (np.ndarray): objective vectors
+
+        Returns:
+            np.ndarray: Objective fitness
+        """
         return self.PIS(objective_vectors * self._max_multiplier)
 
     def reevaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
+        """Re-evaluate objective fitness.
+
+        Calls update_ideal with objective_vectors.
+
+        Arguments:
+            objective_vectors (np.ndarray): objective vectors
+
+        Returns:
+            np.ndarray: Objective fitness
+        """
         fitness = self.PIS(objective_vectors * self._max_multiplier)
         self.ideal_fitness = self.PIS(self.ideal * self._max_multiplier)
         self.update_ideal(objective_vectors, fitness)
         return fitness
 
     def update_preference(self, preference: Dict):
+        """Update PIS preference
+
+        Arguments:
+            preference (Dict): PIS preferences
+
+        """
         self.PIS.update_preference(preference)
 
     def update_ideal(self, objective_vectors: np.ndarray, fitness: np.ndarray):
+        """Update ideal vector.
+
+        Arguments:
+            objective_vectors (np.ndarray): Objective vectors
+            fitness (np.ndarray): Fitness values for objective vectors
+
+        """
         self.ideal_fitness = np.amin(np.vstack((self.ideal_fitness, fitness)), axis=0)
 
         self.ideal = (
@@ -1346,10 +1709,11 @@ class classificationPISProblem(MOProblem):
 
 
 class DiscreteDataProblem:
-    """A problem class for data-based problems with discrete values computed representing a set
-    of non-dominated points.
-    
-    Args:
+    """A problem class for data-based problems with discrete values.
+
+    These data values are computed representing a set of non-dominated points.
+
+    Arguments:
         data (pd.DataFrame): The input data.
         variable_names (List[str]): Names of the variables in the dataframe provided.
         objective_names (List[str]): Names of the objectices in the dataframe provided.
@@ -1375,10 +1739,13 @@ class DiscreteDataProblem:
         self.n_of_objectives = len(objective_names)
 
     def find_closest(self, x: np.ndarray) -> int:
-        """Given a vector of decision variables, finds the closest point in the given data and returns its index.
+        """Find closest point in data to x.
+
+        Given a vector of decision variables, finds the closest point in
+        the given data and returns its index.
         A simple euclidean distance is used.
 
-        Args:
+        Arguments:
             x (np.ndarray): A 1D vector containing decision variables.
         
         Returns:
