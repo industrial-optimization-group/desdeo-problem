@@ -462,7 +462,7 @@ class ScalarMOProblem(ProblemBase):
 
         Returns:
             np.ndarray: Lower and upper bounds of each variable
-                as a 2D numpy array. If undefined variables, return None instead.
+            as a 2D numpy array. If undefined variables, return None instead.
 
         """
         if self.variables is not None:
@@ -1114,9 +1114,9 @@ class MOProblem(ProblemBase):
 
         Returns:
             Tuple[np.ndarray, Union[None, np.ndarray]]: If constraint are
-                defined, returns the objective vector values and corresponding
-                constraint values. Or, if no constraints are defined, returns just
-                the objective vector values with None as the constraint values.
+            defined, returns the objective vector values and corresponding
+            constraint values. Or, if no constraints are defined, returns just
+            the objective vector values with None as the constraint values.
 
         Raises:
             ProblemError: The decision_vectors have wrong dimensions.

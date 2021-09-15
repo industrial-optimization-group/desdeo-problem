@@ -8,7 +8,7 @@ __all__ = [
     "ScalarConstraint",
     "ConstraintError",
     "constraint_function_factory",
-    "ConstraintError",
+    "ConstraintBase",
     "supported_operators",
     "ObjectiveBase",
     "ObjectiveError",
@@ -58,6 +58,7 @@ from desdeo_problem.problem.Objective import (
 
 from desdeo_problem.problem.Constraint import (
     ConstraintError,
+    ConstraintBase,
     ScalarConstraint,
     constraint_function_factory,
     supported_operators,

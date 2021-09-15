@@ -33,12 +33,12 @@ class ConstraintBase(ABC):
                 objective function values.
 
         Returns:
-            float: A float representing how and if the constraing has
-                been violated. A positive value represents no violation and a
-                negative value represents a violation. The absolute value of the
-                returned float functions as an indicator of the severity of the
-                violation (or how well the constraint holds, if the returned value
-                of positive).
+            float: A float representing how and if the constraint has
+            been violated. A positive value represents no violation and a
+            negative value represents a violation. The absolute value of the
+            returned float functions as an indicator of the severity of the
+            violation (or how well the constraint holds, if the returned value
+            of positive).
 
         """
         pass
@@ -174,7 +174,7 @@ def constraint_function_factory(lhs: Callable, rhs: float, operator: str) -> Cal
         operator (str): The kind of constraint. Can be '==', '<', '>'.
 
     Returns:
-       Callable: A function that can be called to evaluate the rhs and
+        Callable: A function that can be called to evaluate the rhs and
         which returns representing how the constraint is obeyed. A negative
         value represent a violation of the constraint and a positive value an
         agreement with the constraint. The absolute value of the float is a
