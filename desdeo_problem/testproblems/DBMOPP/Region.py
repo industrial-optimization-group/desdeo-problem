@@ -1,12 +1,8 @@
 from utilities import *
-from typing import Dict, Tuple
+from typing import Dict 
 import numpy as np
-from time import time
-import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from numpy import matlib # i guess we could implement repmat ourselves
-from desdeo_problem.problem import *
-from matplotlib import cm
 
 
 class Attractor:

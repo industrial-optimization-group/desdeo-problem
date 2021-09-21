@@ -5,9 +5,10 @@ from time import time
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from numpy import matlib # i guess we could implement repmat ourselves
-from desdeo_problem.problem import *
+#from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder, ScalarConstraint
 from matplotlib import cm
 from Region import AttractorRegion, Attractor, Region
+
 
 
 class DBMOPPobject:
@@ -193,7 +194,7 @@ class DBMOPP:
 
     def generate_problem(self):
         """
-        Generate the test problem
+        Generate the test problem to use in DESDEO.
 
         Returns:
             MOProblem: A test problem
@@ -362,7 +363,6 @@ class DBMOPP:
                     break
                 too_long = (time() - time_start) > max_elapsed
                 if (too_long): break
-            # self.obj.centre_list[i,:] = rand_coord
             self.obj.centre_regions[i].centre = rand_coord
 
         if (too_long): # Took longer than max_elapsed. 
@@ -438,12 +438,6 @@ class DBMOPP:
         
      
 
-    # DBMOPP
-    # TODO: test this
-    # with test DBMOPP object, two runs, failes to construct convex hull.
-    #File "DBMOPP.py", line 594, in place_disconnected_pareto_elements
-    #self.obj.bracketing_locations_lower[i,:] = calc_location(i, r_angles[2])
-    #IndexError: index 2 is out of bounds for axis 0 with size 2
     def place_disconnected_pareto_elements(self):
         n = self.ngp - 1
         pivot_index = np.random.randint(self.k)
@@ -466,7 +460,6 @@ class DBMOPP:
             range_covered = offset_angle_1 + 2 * np.pi - offset_angle_2
             p1 = offset_angle_1 / range_covered
             r = np.random.rand(n)
-            #r = temp ## whats the point of temp
             p1 = np.sum(r < p1)
             r[:p1] = 2*np.pi + np.random.rand(p1) * offset_angle_1
             r[p1:n] = np.random.rand(n-p1) * (2*np.pi - offset_angle_2) + offset_angle_2
@@ -479,7 +472,7 @@ class DBMOPP:
             r = r = np.random.rand(n)
             r = np.sort(r)
             r_angles = np.zeros(n+2)
-            r_angles[0] = offset_angle_2 # doing almost the same thing above
+            r_angles[0] = offset_angle_2 
             r_angles[n+1] = offset_angle_1
             r_angles[1:n+1] = r 
 
@@ -657,11 +650,9 @@ class DBMOPP:
         return self.check_region(self.obj.neutral_regions, x, True)
 
 
-    # DBMOPP
     def get_hard_constraint_violation(self, x):
         return self.check_region(self.obj.hard_constraint_regions, x, False)
 
-    # DBMOPP
     def get_soft_constraint_violation(self, x):
         in_soft_constraint_region = self.check_region(self.obj.soft_constraint_regions, x, True)
         # return in_soft_constraint_region
@@ -698,7 +689,6 @@ class DBMOPP:
                 y += self.obj.centre_regions[index].radius
         return y
     
-    # DBMOPP
     def get_objectives(self, x):
         if (self.pareto_set_type == 0):
             y = self.get_minimun_distance_to_attractors(x)
@@ -709,7 +699,6 @@ class DBMOPP:
         y = self.update_with_neutrality(x,y)
         return y
 
-    # DBMOPP
     def is_in_limited_region(self, x, eps = 1e-06):
         """
         
@@ -731,7 +720,6 @@ class DBMOPP:
                     dist = self.obj.centre_regions[i].get_distance(x)
                     radius = self.obj.centre_regions[i].radius
                     r = np.min(np.abs(dist), np.abs(radius))
-                    # THIS if + elif could be a oneliner ans["inhull"] = np.abs .. or in_hull
                     if np.abs(dist) - radius < 1e4 * eps * r:
                         ans["in_hull"] = True
                 elif in_hull(x, self.obj.attractor_regions[i].locations[self.obj.attractor_regions[i].convhull.simplices]):
@@ -892,36 +880,13 @@ class DBMOPP:
 if __name__=="__main__":
     import random
 
-    #n_objectives = random.randint(2, 10) 
-    #n_variables = random.randint(2, 10) 
-    #n_local_pareto_regions = random.randint(0, 5) 
-    #n_disconnected_regions = random.randint(0, 5) 
-    #n_global_pareto_regions = random.randint(1, 5) 
-    #pareto_set_type = random.randint(0,2) 
-    #constraint_type = random.randint(0,8) 
-    
-
     n_objectives = 4
     n_variables = 2 
-    n_local_pareto_regions = 0 
+    n_local_pareto_regions = 3
     n_disconnected_regions = 0 
-    n_global_pareto_regions = 5 
-    pareto_set_type = 1 
+    n_global_pareto_regions = 1 
+    pareto_set_type = 0 
     constraint_type = 0
-
-    # 6 3 0 4 3 0 1 4
-   #  7 3 0 0 2 0 2 5
-# seems to just happen randomly. Problem happens in problem.generate_problem()
-# File "DBMOPP.py", line 774, in get_soft_constraint_violation
-#    k = np.sum(d < self.obj.soft_constraint_radii)
-#AttributeError: 'DBMOPPobject' object has no attribute 'soft_constraint_radii'
-
-
-    #  eli jos PO set type 1,niin pitää olla enemmän kuin 1 global PO set, mikä käy järkeen ?
-    # eli ei bugia (sama juttu käy matlabissa), väärin syötetty
-    # 6 10 5 2 5 0 2 0 .. got failed to construct convex hull, but worked after all
-
-    print(n_objectives, n_variables, n_local_pareto_regions, n_disconnected_regions, n_global_pareto_regions, 0, pareto_set_type, constraint_type)
 
     problem = DBMOPP(
         n_objectives,
@@ -935,25 +900,18 @@ if __name__=="__main__":
     )
     print(problem._print_params())
 
-    #my_complex_instance = DBMOPP(3,10,3,3,2,0.3,2,4,2,False, True, 0.2)
-    #bug_instance = DBMOPP(2,2,0,0,1,0,0,0,0,False, False, 0) # mahdollisesti toinenkin tälläinen
-    #test = DBMOPP(4, 2, 0, 0, 5, 0, 1, 0, 0,False, False, 0) # mahdollisesti toinenkin tälläinen
-
-    # 598 error with: 9, 9, 3, 0, 1, 0, 1, 0
-
     print("Initializing works!")
     x = np.random.rand(1, n_variables)
     print(problem.evaluate(x))
-    moproblem = problem.generate_problem()
 
-    print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
 
-    #test.plot_problem_instance()
-    #test.plot_pareto_set_members(800)
-    #problem.plot_problem_instance()
-    #problem.plot_pareto_set_members(150)
-    #problem.plot_landscape_for_single_objective(0, 100)
-    #print(test._print_params())
+    # For desdeos MOProblem only
+    #moproblem = problem.generate_problem()
+    #print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
+
+    problem.plot_problem_instance()
+    problem.plot_pareto_set_members(150)
+    problem.plot_landscape_for_single_objective(0, 100)
 
     # show all plots
-    #plt.show()
+    plt.show()

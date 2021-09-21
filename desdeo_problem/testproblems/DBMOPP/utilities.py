@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.spatial import ConvexHull
 from scipy.optimize import linprog
-from typing import Tuple
 
 def get_2D_version(x, pi1, pi2):
     """
