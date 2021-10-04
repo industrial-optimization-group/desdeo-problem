@@ -5,7 +5,7 @@ from time import time
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from numpy import matlib # i guess we could implement repmat ourselves
-#from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder, ScalarConstraint
+from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder, ScalarConstraint
 from matplotlib import cm
 from Region import AttractorRegion, Attractor, Region
 
@@ -906,8 +906,8 @@ if __name__=="__main__":
 
 
     # For desdeos MOProblem only
-    #moproblem = problem.generate_problem()
-    #print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
+    moproblem = problem.generate_problem()
+    print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
 
     problem.plot_problem_instance()
     problem.plot_pareto_set_members(150)

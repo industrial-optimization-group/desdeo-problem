@@ -31,8 +31,9 @@ __all__ = [
     "DiscreteDataProblem",
     "classificationPISProblem",
     "test_problem_builder",
+    "DBMOPP",
+    "Region",
 ]
-
 
 from desdeo_problem.problem import (
     ObjectiveError,
@@ -70,4 +71,7 @@ from desdeo_problem.surrogatemodels import (
     ModelError,
 )
 from desdeo_problem.testproblems.TestProblems import test_problem_builder
+
+from desdeo_problem.testproblems.DBMOPP import DBMOPP
+from desdeo_problem.testproblems.Region import Region
 
