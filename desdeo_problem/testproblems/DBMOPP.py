@@ -5,7 +5,7 @@ from time import time
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from numpy import matlib # i guess we could implement repmat ourselves
-from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder, ScalarConstraint
+from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder, ScalarConstraint, VectorObjective
 from matplotlib import cm
 from desdeo_problem.testproblems.Region import AttractorRegion, Attractor, Region
 
@@ -200,9 +200,10 @@ class DBMOPP:
             MOProblem: A test problem
         """
 
-        objectives = [ScalarObjective(f"objective{i}", lambda x: self.evaluate(x)['obj_vector'][i]) for i in range(self.k)] 
-
-        var_names = [f'x{i}' for i in range(self.n)]
+        # objectives = [ScalarObjective(f"objective{i}", lambda x: self.evaluate(x)['obj_vector'][i]) for i in range(self.k)] # this is probably the problem.
+        obj_names = ["f" + str(i + 1) for i in range(self.k)]
+        #var_names = [f'x{i}' for i in range(self.n)]
+        var_names = ["x" + str(i + 1) for i in range(self.n)]
         initial_values = (np.random.rand(self.n,1) * 2) - 1
         lower_bounds = np.ones(self.n) * -1
         upper_bounds = np.ones(self.n)
@@ -215,7 +216,24 @@ class DBMOPP:
             ScalarConstraint("hard constraint", self.n, self.k, ch),
             ScalarConstraint("soft constraint", self.n, self.k, cs)
         ]
-        return MOProblem(objectives, variables, constraints)  
+        #objective = VectorObjective(name=)
+
+        def modified_obj_func(x):
+            if isinstance(x, list):
+                if len(x) == n_of_variables:
+                    return [obj_func(x)]
+                elif len(x[0]) == n_of_variables:
+                    return list(map(obj_func, x))
+            else:
+                if x.ndim == 1:
+                    return [obj_func(x)]
+                elif x.ndim == 2:
+                    return list(map(obj_func, x))
+            raise TypeError("Unforseen problem, contact developer")
+
+
+        objective = VectorObjective(name=obj_names, evaluator=modified_obj_func)
+        return MOProblem([objective], variables, None)  
 
 
     def is_pareto_set_member(self, z):
