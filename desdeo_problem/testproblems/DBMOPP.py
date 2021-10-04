@@ -1,4 +1,4 @@
-from utilities import get_2D_version, euclidean_distance, convhull, in_hull, get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
+from desdeo_problem.testproblems.utilities import get_2D_version, euclidean_distance, convhull, in_hull, get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
 from typing import Dict, Tuple
 import numpy as np
 from time import time
@@ -7,7 +7,7 @@ from matplotlib.patches import Circle
 from numpy import matlib # i guess we could implement repmat ourselves
 from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder, ScalarConstraint
 from matplotlib import cm
-from Region import AttractorRegion, Attractor, Region
+from desdeo_problem.testproblems.Region import AttractorRegion, Attractor, Region
 
 
 
