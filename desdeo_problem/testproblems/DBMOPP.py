@@ -1,4 +1,4 @@
-from utilities import *
+from utilities import get_2D_version, euclidean_distance, convhull, in_hull, get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
 from typing import Dict, Tuple
 import numpy as np
 from time import time
