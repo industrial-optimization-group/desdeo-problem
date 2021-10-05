@@ -200,15 +200,17 @@ class DBMOPP:
             MOProblem: A test problem
         """
 
-        objectives = [ScalarObjective(f"objective{i}", lambda x: self.evaluate(x)['obj_vector'][i]) for i in range(self.k)] # this is probably the problem.
+        objectives = [ScalarObjective(f"objective{i}", lambda x: self.evaluate2(x)['obj_vector'][i]) for i in range(self.k)] # this is probably the problem.
+        #print("kissa")
+        #input()
         var_names = [f'x{i}' for i in range(self.n)]
         initial_values = (np.random.rand(self.n,1) * 2) - 1
         lower_bounds = np.ones(self.n) * -1
         upper_bounds = np.ones(self.n)
         variables = variable_builder(var_names, initial_values, lower_bounds, upper_bounds)
 
-        cs = lambda x, _y: self.evaluate(x)['soft_constr_viol'] * -1
-        ch = lambda x, _y: self.evaluate(x)['hard_constr_viol'] * -1
+        cs = lambda x, _y: self.evaluate2(x)['soft_constr_viol'] * -1
+        ch = lambda x, _y: self.evaluate2(x)['hard_constr_viol'] * -1
 
         constraints = [
             ScalarConstraint("hard constraint", self.n, self.k, ch),
@@ -224,7 +226,7 @@ class DBMOPP:
         return self.is_pareto_2D(x)
 
 
-    def evaluate(self, x):
+    def evaluate2(self, x):
         x = np.atleast_2d(x)
         self.check_valid_length(x)
         z = get_2D_version(x, self.obj.pi1, self.obj.pi2)
