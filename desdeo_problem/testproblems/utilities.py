@@ -22,6 +22,11 @@ def get_2D_version(x, pi1, pi2):
     return np.hstack((l, r))
 
 
+
+# X1 is a matrix or array, size n x number of design variables
+#x2 is a array, size 1 x number of design variables
+
+# currently x1 and x2 return float, and are both vectors?
 def euclidean_distance(x1, x2):
     """
         Returns the euclidean distance between x1 and x2.
@@ -29,7 +34,12 @@ def euclidean_distance(x1, x2):
     if x1 is None or x2 is None:
         print("euclidean distance supplied with nonetype")
         return None
-    return np.linalg.norm(x1-x2, axis = -1)
+
+    #dist = np.sqrt(np.sum((x1 - x2)**2, axis=1 ))
+    dist = np.linalg.norm(x1-x2, axis = -1)
+    #print(dist)
+    return dist
+
 
 
 def convhull(points):
@@ -42,6 +52,7 @@ def convhull(points):
     Returns:
         np.ndarray: The indices of the simplices that form the convex hull
     """
+    points = np.sort(points)
     try:
        return ConvexHull(points)
     except Exception:

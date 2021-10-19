@@ -200,24 +200,23 @@ class DBMOPP:
             MOProblem: A test problem
         """
 
-        objectives = [ScalarObjective(f"objective{i}", lambda x: self.evaluate2(x)['obj_vector'][i]) for i in range(self.k)] # this is probably the problem.
-        #print("kissa")
-        #input()
+        objectives = [ScalarObjective(f"objective{i}", lambda x: self.evaluate(x)['obj_vector'][i]) for i in range(self.k)] # this is probably the problem.
         var_names = [f'x{i}' for i in range(self.n)]
         initial_values = (np.random.rand(self.n,1) * 2) - 1
         lower_bounds = np.ones(self.n) * -1
         upper_bounds = np.ones(self.n)
         variables = variable_builder(var_names, initial_values, lower_bounds, upper_bounds)
 
-        cs = lambda x, _y: self.evaluate2(x)['soft_constr_viol'] * -1
-        ch = lambda x, _y: self.evaluate2(x)['hard_constr_viol'] * -1
+        cs = lambda x, _y: self.evaluate(x)['soft_constr_viol'] * -1
+        ch = lambda x, _y: self.evaluate(x)['hard_constr_viol'] * -1
 
         constraints = [
             ScalarConstraint("hard constraint", self.n, self.k, ch),
             ScalarConstraint("soft constraint", self.n, self.k, cs)
         ]
-
-        return MOProblem(objectives, variables, constraints)  
+            
+        prob = MOProblem(objectives, variables, constraints) 
+        return prob 
 
 
     def is_pareto_set_member(self, z):
@@ -226,7 +225,7 @@ class DBMOPP:
         return self.is_pareto_2D(x)
 
 
-    def evaluate2(self, x):
+    def evaluate(self, x):
         x = np.atleast_2d(x)
         self.check_valid_length(x)
         z = get_2D_version(x, self.obj.pi1, self.obj.pi2)
@@ -393,6 +392,10 @@ class DBMOPP:
                 matlib.repmat(self.obj.centre_regions[i].centre, self.k, 1) + 
                 (matlib.repmat(self.obj.centre_regions[i].radius, self.k, 2) * B)
             )
+            
+            convhull_locs = None
+            if self.k > 2:
+                convhull_locs = convhull(locs)
 
             # create attractor region
             self.obj.attractor_regions[i] = AttractorRegion(
@@ -400,7 +403,7 @@ class DBMOPP:
                 indices = np.arange(self.k),
                 centre = self.obj.centre_regions[i].centre,
                 radius = self.obj.centre_regions[i].radius,
-                convhull = convhull(locs)
+                convhull = convhull_locs
             )
 
             for k in np.arange(self.k):
@@ -426,12 +429,18 @@ class DBMOPP:
             n_include = n_include[0] # Take the first one
             I = np.argsort(np.random.rand(self.k))
             j = I[:n_include]
+
+            # only calculate convex hull if there are more than two points'
+            convehull = None
+            if (len(locs[:,1] > 2)):
+                convehull = convhull(locs[j, :])
+
             self.obj.attractor_regions[i] = AttractorRegion(
                 locations = locs[j, :], 
                 indices = j,
                 centre = None, 
                 radius = self.obj.centre_regions[i].radius,
-                convhull = convhull(locs[j, :])
+                convhull = convehull
             )
    
             for k in range(n_include):
@@ -773,23 +782,19 @@ class DBMOPP:
         return y
 
 
-
-
     # PLOTTING
 
     def plot_problem_instance(self):
         """
         """
         fig, ax = plt.subplots()
-        # Plot local Pareto regions
-
-        plt.xlim([-1, 1])
+        plt.xlim([-1,1])
         plt.ylim([-1,1])
+        # Plot local Pareto regions
         for i in range(self.nlp):
             self.obj.attractor_regions[i].plot(ax, 'g') # Green
         
         # global pareto regions
-
         for i in range(self.nlp, self.nlp + self.ngp):
             self.obj.attractor_regions[i].plot(ax, 'r')
             print("the fill here is different than above")
@@ -799,7 +804,6 @@ class DBMOPP:
             # attractor regions should take care of different cases
             self.obj.attractor_regions[i].plot(ax, 'b') 
 
-        
         def plot_constraint_regions(constraint_regions, color):
             if constraint_regions is None: return
             for constraint_region in constraint_regions:
@@ -809,11 +813,10 @@ class DBMOPP:
         plot_constraint_regions(self.obj.soft_constraint_regions, 'grey')
         plot_constraint_regions(self.obj.neutral_regions, 'c')
 
-
         # PLOT DISCONNECTED PENALTY
         print("disconnected Pareto penalty regions not yet plotted. THIS IS NOT IMPLEMENTED IN MATLAB")
-
         #plt.show()
+
 
     def plot_landscape_for_single_objective(self, index, res = 500):
         if res < 1:
@@ -877,18 +880,18 @@ class DBMOPP:
     def plot_dominance_landscape_from_matrix(self, z, x, y, moore_neighbourhood):
         pass
 
-    
 
 if __name__=="__main__":
     import random
 
-    n_objectives = 4
-    n_variables = 2 
-    n_local_pareto_regions = 3
-    n_disconnected_regions = 0 
+    n_objectives = 3 
+    n_variables = 10 
+    n_local_pareto_regions = 3 
+    n_disconnected_regions = 1 
     n_global_pareto_regions = 1 
-    pareto_set_type = 0 
-    constraint_type = 0
+    const_space = 0.3
+    pareto_set_type = 2 
+    constraint_type = 4 
 
     problem = DBMOPP(
         n_objectives,
@@ -896,7 +899,7 @@ if __name__=="__main__":
         n_local_pareto_regions,
         n_disconnected_regions,
         n_global_pareto_regions,
-        0,
+        const_space,
         pareto_set_type,
         constraint_type, 0, False, False, 0, 10000
     )
@@ -904,6 +907,7 @@ if __name__=="__main__":
 
     print("Initializing works!")
     x = np.random.rand(1, n_variables)
+    print(x.shape, x)
     print(problem.evaluate(x))
 
 
@@ -911,9 +915,14 @@ if __name__=="__main__":
     moproblem = problem.generate_problem()
     print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
 
+    print(moproblem.objectives)
+    print(moproblem.variables)
+    print(moproblem.get_variable_bounds())
+
+
     problem.plot_problem_instance()
-    problem.plot_pareto_set_members(150)
-    problem.plot_landscape_for_single_objective(0, 100)
+    #problem.plot_pareto_set_members(150)
+    #problem.plot_landscape_for_single_objective(0, 100)
 
     # show all plots
     plt.show()

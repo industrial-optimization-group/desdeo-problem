@@ -21,6 +21,7 @@ class Attractor:
     def locations(self, value):
         self._locations = value
     
+    # x atleast 2d here too?
     def get_minimum_distance(self, x):
         d = euclidean_distance(self.locations, x)
         return np.min(d)
@@ -57,6 +58,8 @@ class Region:
             return self.get_distance(x) <= self.radius
         return self.get_distance(x) < self.radius 
     
+
+    # x atleast 2d here too?
     def get_distance(self, x: np.ndarray):
         return euclidean_distance(self.centre, x)
     
@@ -100,23 +103,31 @@ class AttractorRegion(Region):
         """
             Plots the attractorRegions
         """
-        if self.convhull is None: return
+        #if self.convhull is None: return
 
+        n = self.locations.shape[0]
+        print(n)
         p = np.atleast_2d(self.locations)
 
-        if not isinstance(self.convhull, ConvexHull):
-            if p.shape[0] == 1:
-                ax.scatter(self.locations[:,0], self.locations[:,1], color=color)
-            else:
-                ax.plot(self.locations[:,0], self.locations[:,1], color=color)
-        else:
+        #if not isinstance(self.convhull, ConvexHull):
+        if n > 2:
             for i, s in enumerate(self.convhull.simplices):
                 ax.plot(p[s,0], p[s,1], color = 'black') # outline
-
                 # add points
                 ax.scatter(p[i,0], p[i,1], color = 'blue')
                 ax.annotate(i, (p[i,0], p[i,1]))
-            
             ax.fill(p[self.convhull.vertices, 0], p[self.convhull.vertices, 1], color=color, alpha = 0.7)
-
+        else:
+            # for points
+            if p.shape[0] == 1:
+                for i in range(len(p)):
+                    ax.scatter(self.locations[:,0], self.locations[:,1], color=color)
+                    ax.scatter(p[i,0], p[i,1], color = 'blue')
+                    ax.annotate(i, (p[i,0], p[i,1]))
+            else:
+                # for lines
+                for i in range(len(p)):
+                    ax.plot(self.locations[:,0], self.locations[:,1], color=color)
+                    ax.scatter(p[i,0], p[i,1], color = 'blue')
+                    ax.annotate(i, (p[i,0], p[i,1]))
 
