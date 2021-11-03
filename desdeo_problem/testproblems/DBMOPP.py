@@ -13,14 +13,13 @@ from desdeo_problem.testproblems.Region import AttractorRegion, Attractor, Regio
 
 class DBMOPPobject:
     """
-       Object that holds the problem state and information 
+       Object that holds the problem state and information
     """
     def __init__(self):
-        self.rescaleConstant = 0 
-        self.rescaleMultiplier = 1 
+        self.rescaleConstant = 0
+        self.rescaleMultiplier = 1
         self.pi1 = None
         self.pi2 = None
-       
         self.pareto_set_indices = 0
         self.pareto_angles = None
         self.rotations = None
@@ -200,7 +199,7 @@ class DBMOPP:
             MOProblem: A test problem
         """
 
-        objectives = [ScalarObjective(f"objective{i}", lambda x: self.evaluate(x)['obj_vector'][i]) for i in range(self.k)] # this is probably the problem.
+        objectives = [ScalarObjective(f"objective{i}", lambda x,i=i: self.evaluate(x)['obj_vector'][i]) for i in range(self.k)] # this is probably the problem.
         var_names = [f'x{i}' for i in range(self.n)]
         initial_values = (np.random.rand(self.n,1) * 2) - 1
         lower_bounds = np.ones(self.n) * -1
@@ -228,8 +227,35 @@ class DBMOPP:
     def evaluate(self, x):
         x = np.atleast_2d(x)
         self.check_valid_length(x)
-        z = get_2D_version(x, self.obj.pi1, self.obj.pi2)
-        return self.evaluate_2D(z)
+        print(x.shape)
+        
+        #input()
+        #result = np.zeros_like(x)
+        obj_array =np.zeros_like([[None]*self.k]),
+        result = {
+            "obj_vector": obj_array, # this just correctly and looks good
+            "soft_constr_viol": False,
+            "hard_constr_viol": False,
+        }
+        if x.shape[0] == 1:
+            z = get_2D_version(x, self.obj.pi1, self.obj.pi2)
+            return self.evaluate_2D(z)
+        else:
+            for i,j in enumerate(x):
+                print("here",i,j)
+                z = get_2D_version(j, self.obj.pi1, self.obj.pi2)
+                print("Z",z)
+                ans = self.evaluate_2D(z) # stupid code and stupid problem to solve still.
+                obj_array = np.insert(obj_array, i -1, ans['obj_vector'], axis=0)
+                result['obj_vector'] = obj_array
+                result['soft_constr_viol'] = ans['soft_constr_viol']
+                result['hard_constr_viol'] = ans['hard_constr_viol'] 
+                print(result)
+                input()
+                #result.append(self.evaluate_2D(z))
+
+        
+        return result
     
 
     def evaluate_2D(self, x) -> Dict:
@@ -885,7 +911,7 @@ if __name__=="__main__":
     import random
 
     n_objectives = 3 
-    n_variables = 10 
+    n_variables = 3 
     n_local_pareto_regions = 3 
     n_disconnected_regions = 1 
     n_global_pareto_regions = 1 
@@ -906,7 +932,8 @@ if __name__=="__main__":
     print(problem._print_params())
 
     print("Initializing works!")
-    x = np.random.rand(1, n_variables)
+    #x = np.random.rand(1, n_variables)
+    x = np.array([[0.1,0.3, 0.5],[0.88,0.6,0.2],[-0.5,-0.3,0.3]])
     print(x.shape, x)
     print(problem.evaluate(x))
 
@@ -915,12 +942,8 @@ if __name__=="__main__":
     moproblem = problem.generate_problem()
     print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
 
-    print(moproblem.objectives)
-    print(moproblem.variables)
-    print(moproblem.get_variable_bounds())
 
-
-    problem.plot_problem_instance()
+    #problem.plot_problem_instance()
     #problem.plot_pareto_set_members(150)
     #problem.plot_landscape_for_single_objective(0, 100)
 
