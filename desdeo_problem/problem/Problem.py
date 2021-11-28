@@ -19,6 +19,7 @@ from functools import reduce
 from operator import iadd
 from os import path
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -1141,11 +1142,11 @@ class MOProblem(ProblemBase):
         if len(shape) == 1:
             decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
 
-        # Checking bounds
+        # Checking bounds; warn if bounds are breached. 
         if np.any(self.get_variable_lower_bounds() > decision_vectors):
-            raise ValueError("Some decision variable values violate lower bounds")
+            warn("Some decision variable values violate lower bounds")
         if np.any(self.get_variable_upper_bounds() < decision_vectors):
-            raise ValueError("Some decision variable values violate upper bounds")
+            warn("Some decision variable values violate upper bounds")
 
         (n_rows, n_cols) = np.shape(decision_vectors)
 
