@@ -13,12 +13,12 @@ def get_2D_version(x, pi1, pi2):
     Returns:
         np.ndarray: A 2-dimensional vector
     """
-    # if (x.shape[1] <= 2):
-    #    print("Skipping projection, vector already 2 dimensional or less")
-    #    return x
+    if (x.shape[1] <= 2):
+        print("Skipping projection, vector already 2 dimensional or less")
+        return x
     l = np.divide(np.dot(x, pi1), np.sum(pi1))  # Left side of vector
     r = np.divide(np.dot(x, pi2), np.sum(pi2))  # Right side of vector
-    print(pi1, pi2)
+    #print(pi1, pi2)
     # should be [[]] still
     return np.hstack((l, r))
 
