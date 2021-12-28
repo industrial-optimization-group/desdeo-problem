@@ -263,7 +263,7 @@ class DBMOPP:
             z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
             soft_const[i] = self.get_soft_constraint_violation(z)
 
-        print("Soft const", soft_const)
+        #print("Soft const", soft_const)
         return soft_const
 
     # just has np array as return type. Currently only takes most violated constraints because i see desdeos ScalarObjective wants that
@@ -274,9 +274,9 @@ class DBMOPP:
         for i in range(soft_const.shape[0]):
             y = np.atleast_2d(x[i])
             z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
-            soft_const[i] = self.get_soft_constraint_violation(z)
+            soft_const[i] = self.get_soft_constraint_violation_prob(z)
 
-        print("Soft const", soft_const)
+        #print("Soft const", soft_const)
         return soft_const
 
     def evaluate_hard_constraints(self, x):
@@ -288,41 +288,14 @@ class DBMOPP:
             z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
             ret.append(self.get_hard_constraint_violation(z))
 
-        print("Hard const", ret)
+        #print("Hard const", ret)
         return ret
 
     def evaluate(self, x):
         x = np.atleast_2d(x)
         self.check_valid_length(x)
-
-        obj_array = None
-
-        result = {
-            'obj_vector':obj_array, # this just correctly and looks good
-            "soft_constr_viol":None, 
-            "hard_constr_viol": None,
-        } 
-        if x.shape[0] == 1:
-            z = get_2D_version(x, self.obj.pi1, self.obj.pi2)
-            return self.evaluate_2D(z)
-        else:
-            for i in range(x.shape[0]):
-                y = np.atleast_2d(x[i]) 
-                z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
-                ans = self.evaluate_2D(z) # stupid code and stupid problem to solve still.
- 
-                if obj_array is None:
-                    obj_array = np.array(ans['obj_vector'])
-                #    print(i)
-                else:
-                    obj_array = np.vstack((obj_array, ans['obj_vector']))
-
-                result['obj_vector'] = obj_array
-                result['soft_constr_viol'] = ans['soft_constr_viol']
-                result['hard_constr_viol'] = ans['hard_constr_viol'] 
-
-        #print("MOres",result)
-        return result
+        z = get_2D_version(x, self.obj.pi1, self.obj.pi2)
+        return self.evaluate_2D(z)
     
     def evaluate_2D_new(self, decision_vector: np.ndarray) -> Tuple:
         """
@@ -795,9 +768,12 @@ class DBMOPP:
 
     
     # TODO: overhaul of checkregions and get constraints probably would do good.
-    def check_region(self, regions, x, include_boundary):
+    # used for moproblem
+    def check_region_prob(self, regions, x, include_boundary):
         if regions is None: return False
-
+        # only reason this is 2d is that when decision variables == 2, we dont need to convert x to 2 dimensions 
+        # and it does not get rid of the [[]]. But those are used many times here so better just make sure its [[]] here too
+        x = np.atleast_2d(x) 
         in_region = np.zeros(regions.size, dtype=bool)
         d = np.zeros(regions.size) 
         for i, region in enumerate(regions):
@@ -805,10 +781,19 @@ class DBMOPP:
                 in_region[i] = True
             else:
                 in_region[i] = False
-            d_temp = euclidean_distance(region.centre, x)
-            d[i] = d_temp[0]
+            d[i] = euclidean_distance(region.centre, x)[0]
 
         return in_region, d 
+
+
+    # used for dbmopp stuff
+    def check_region(self, regions, x, include_boundary):
+        if regions is None: return False
+        for region in regions:
+            if region.is_inside(x, include_boundary):
+                return True
+        return False 
+
 
     def check_neutral_regions(self, x):
         return self.check_region(self.obj.neutral_regions, x, True)
@@ -816,55 +801,35 @@ class DBMOPP:
 
         # Matlab code has hard constraints as true or false
     def get_hard_constraint_violation(self, x):
-        in_hard_constraint_region, d = self.check_region(self.obj.hard_constraint_regions, x, False)
+        in_hard_constraint_region = self.check_region(self.obj.hard_constraint_regions, x, False)
         return in_hard_constraint_region
 
 
     # TODO: check self.obj.soft.constraint.regions.. seems there is only 1 region, when more is necessary?
-    def get_soft_constraint_violation(self, x):
-        in_soft_constraint_region, d = self.check_region(self.obj.soft_constraint_regions, x, True)
+    def get_soft_constraint_violation_prob(self, x):
+        in_soft_constraint_region, d = self.check_region_prob(self.obj.soft_constraint_regions, x, True)
         #return in_soft_constraint_region
         violations = np.zeros_like(in_soft_constraint_region, dtype=float) 
         #print("soft const region vio", in_soft_constraint_region)
         #print("soft const distances", d)
+        #print(violations.shape)
         # TODO: fix this. self.obj.soft_constraint_radius does not exist right now.
         for i in in_soft_constraint_region:
             if in_soft_constraint_region.size > 0:
                # if in_soft_constraint_region:
-                print(self.obj.soft_constraint_radius)
+                #print(self.obj.soft_constraint_radius)
                 for i in range(violations.shape[0]):
                     violations[i] = d[i] - self.obj.soft_constraint_regions[i].radius 
 
-        print(violations)
+        #print(violations)
         # now returning only the max violation not all..
         return np.max(violations)
 
-    """
 
-    print("regions[0] radius",problem.obj.soft_constraint_regions[0].radius)
 
     def get_soft_constraint_violation(self, x):
         in_soft_constraint_region = self.check_region(self.obj.soft_constraint_regions, x, True)
-        #return in_soft_constraint_region
-        print("soft const region", in_soft_constraint_region)
-        input()
-        # TODO: fix this. self.obj.soft_constraint_radius does not exist right now.
-        if in_soft_constraint_region:
-            d = np.zeros(len(self.obj.soft_constraint_regions))
-            radiis = np.zeros(len(self.obj.soft_constraint_regions))
-            for i, soft_constraint_region in enumerate(self.obj.soft_constraint_regions):
-                d[i] = soft_constraint_region.get_distance(x)
-                radiis[i] = soft_constraint_region.radius
-            k = np.sum(d < self.obj.soft_constraint_radius)
-            print("k",k)
-            if k > 0:
-                c = d - radiis
-                c = c * k
-                return np.max(c)
-        return False
-
-    """
-
+        return in_soft_constraint_region
 
 
     def get_minimun_distance_to_attractors(self, x: np.ndarray):
@@ -878,6 +843,7 @@ class DBMOPP:
         y += self.obj.rescaleConstant
         return y
 
+
     def get_minimum_distances_to_attractors_overlap_or_discontinuous_form(self, x):
         y = self.get_minimun_distance_to_attractors(x)
         in_pareto_region, in_hull, index  = self.is_in_limited_region(x).values()
@@ -886,6 +852,7 @@ class DBMOPP:
                 y += self.obj.centre_regions[index].radius
         return y
     
+
     def get_objectives(self, x):
         if (self.pareto_set_type == 0):
             y = self.get_minimun_distance_to_attractors(x)
@@ -1030,6 +997,7 @@ class DBMOPP:
         fig.colorbar(surf, shrink=0.5, aspect=5)
         #plt.show()
 
+
     def plot_pareto_set_members(self, resolution = 500):
         if resolution < 1: 
             raise Exception("Cannot grid the space with a resolution less than 1")
@@ -1048,6 +1016,7 @@ class DBMOPP:
 
         #plt.show()
     
+
     def plot_dominance_landscape(self, res = 500, moore_neighbourhood = True):
         if res < 1: 
             raise Exception("Cannot grid the space with a resolution less than 1")
@@ -1069,9 +1038,9 @@ class DBMOPP:
 if __name__=="__main__":
     import random
 
-    n_objectives = 2 
-    n_variables = 2 
-    n_local_pareto_regions = 0 
+    n_objectives = 3 
+    n_variables = 10 
+    n_local_pareto_regions = 2 
     n_disconnected_regions = 0 
     n_global_pareto_regions = 1 
     const_space = 0.0
@@ -1102,7 +1071,7 @@ if __name__=="__main__":
 
     # those atleast exist
    # print("regions[0] radius",problem.obj.soft_constraint_regions[0].radius)
-    print(problem.obj.soft_constraint_radius)
+    #print(problem.obj.soft_constraint_radius)
 
     ## this works prob like it should
     #x = np.array(np.random.rand(1, n_variables)) 
@@ -1111,19 +1080,19 @@ if __name__=="__main__":
     #print(x.shape, x)
     #print("regions[0] centre",problem.obj.soft_constraint_regions[0].centre)
 
-    x_c = [(problem.obj.soft_constraint_regions[0].centre[0] + 0.01), (problem.obj.soft_constraint_regions[0].centre[1] +0.01)] 
+    #x_c = [(problem.obj.soft_constraint_regions[0].centre[0] + 0.01), (problem.obj.soft_constraint_regions[0].centre[1] +0.01)] 
 
-    x_maybe = [0.4,0.5]
+    #x_maybe = [0.4,0.5]
     #print(problem.evaluate(x))
-    print("const eva result: ",problem.evaluate_soft_constraints([x_c, x_maybe]))
+    print("const eva result: ",problem.evaluate_soft_constraints(x))
 
     # For desdeos MOProblem only
     moproblem = problem.generate_problem()
-    print("\nFormed MOProblem: \n\n", moproblem.evaluate(np.array([x_c, x_maybe]))) 
+    print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
     problem.plot_problem_instance()
 
     # need to get the population
     #problem.plot_pareto_set_members(150)
-    #problem.plot_landscape_for_single_objective(0, 100)
+    #problem.plot_landscape_for_single_objective(0, 500)
 
     plt.show()
