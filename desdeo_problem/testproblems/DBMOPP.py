@@ -39,6 +39,11 @@ class DBMOPPobject:
         self.bracketing_locations_lower = None
         self.bracketing_locations_upper = None
 
+        # these need to be set somewhere somehow. STill seem not to work
+        self.hard_constraint_radius =[] 
+        self.soft_constraint_radius = []
+
+
 
 class DBMOPP:
     """
@@ -210,12 +215,16 @@ class DBMOPP:
         upper_bounds = np.ones(self.n)
         variables = variable_builder(var_names, initial_values, lower_bounds, upper_bounds)
 
-        cs = lambda x, _y: self.evaluate(x)['soft_constr_viol'] * -1
-        ch = lambda x, _y: self.evaluate(x)['hard_constr_viol'] * -1
+        #cs = lambda x, _y: self.evaluate(x)['soft_constr_viol'] * -1
+        #ch = lambda x, _y: self.evaluate(x)['hard_constr_viol'] * -1
+    
+        #constr = self.evaluate_soft_constraints(x)
+        #print("constree in gene",constr)
+        #cs = lambda x : self.evaluate_soft_constraints(x)
 
         constraints = [
-            ScalarConstraint("hard constraint", self.n, self.k, ch),
-            ScalarConstraint("soft constraint", self.n, self.k, cs)
+            #ScalarConstraint("hard constraint", self.n, self.k, ch),
+            ScalarConstraint("soft constraint", self.n, self.k, evaluator=self.evaluate_soft_constraints)
         ]
         #constraints = None
         # TODO: issue with objectives[VectorObjective evaluator] and self evaluate with constraints not working together.
@@ -242,6 +251,44 @@ class DBMOPP:
             z = get_2D_version(y, self.obj.pi1,self.obj.pi2)
             ret.append(self.get_objectives(z))
 
+        return ret
+
+    # return type list to help MOProblem. seems not to help.
+    def evaluate_soft_constraints2(self, x, obj=None):
+        x = np.atleast_2d(x)
+        self.check_valid_length(x)
+        soft_const = [] 
+        for i in range(x.shape[0]):
+            y = np.atleast_2d(x[i])
+            z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
+            soft_const.append(self.get_soft_constraint_violation(z).tolist())
+
+        print("Soft const", soft_const)
+        return soft_const
+
+    # just has np array as return type
+    def evaluate_soft_constraints(self, x, obj=None):
+        x = np.atleast_2d(x)
+        self.check_valid_length(x)
+        soft_const = np.zeros((x.shape[0], self.k))
+        for i in range(soft_const.shape[0]):
+            y = np.atleast_2d(x[i])
+            z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
+            soft_const[i] = self.get_soft_constraint_violation(z)
+
+        print("Soft const", soft_const)
+        return soft_const
+
+    def evaluate_hard_constraints(self, x):
+        x = np.atleast_2d(x)
+        self.check_valid_length(x)
+        ret = [] 
+        for i in range(x.shape[0]):
+            y = np.atleast_2d(x[i])
+            z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
+            ret.append(self.get_hard_constraint_violation(z))
+
+        print("Hard const", ret)
         return ret
 
     def evaluate(self, x):
@@ -317,7 +364,7 @@ class DBMOPP:
         
         #objective_vectors = np.atleast_2d(self.get_objectives(x))
         objective_vectors = self.get_objectives(x)
-        print(objective_vectors)
+        #print(objective_vectors)
         #input()
         # TODO: fitness and uncertainity if they exist
 
@@ -634,11 +681,16 @@ class DBMOPP:
                 for i, hard_constraint_region in enumerate(self.obj.hard_constraint_regions):
                     hard_constraint_region.centre = centres[i,:]
                     hard_constraint_region.radius = radii[i]
-            else: # TODO: some sort of bug with soft_constraints and soft const radii missing
+
+                    self.obj.hard_constraint_radius.append(radii[i])
+            else: 
                 self.obj.soft_constraint_regions = np.array([Region() for _ in range(to_place)])
                 for i, soft_constraint_region in enumerate(self.obj.soft_constraint_regions):
                     soft_constraint_region.centre = centres[i,:]
                     soft_constraint_region.radius = radii[i]
+
+                    # not sure if these at bottom even necessary
+                    self.obj.soft_constraint_radius.append(radii[i])
 
 
     def place_centre_constraint_locations(self):
@@ -742,38 +794,77 @@ class DBMOPP:
         return np.array(regions) , S
 
     
+    # TODO: overhaul of checkregions and get constraints probably would do good.
     def check_region(self, regions, x, include_boundary):
         if regions is None: return False
-        for region in regions:
+
+        in_region = np.zeros(regions.size, dtype=bool)
+        d = np.zeros(regions.size) 
+        for i, region in enumerate(regions):
             if region.is_inside(x, include_boundary):
-                return True
-        return False
+                in_region[i] = True
+            else:
+                in_region[i] = False
+            d_temp = euclidean_distance(region.centre, x)
+            d[i] = d_temp[0]
+
+        return in_region, d 
 
     def check_neutral_regions(self, x):
         return self.check_region(self.obj.neutral_regions, x, True)
 
 
+        # Matlab code has hard constraints as true or false
     def get_hard_constraint_violation(self, x):
-        return self.check_region(self.obj.hard_constraint_regions, x, False)
+        in_hard_constraint_region, d = self.check_region(self.obj.hard_constraint_regions, x, False)
+        return in_hard_constraint_region
 
+
+    # TODO: check self.obj.soft.constraint.regions.. seems there is only 1 region, when more is necessary?
+    def get_soft_constraint_violation(self, x):
+        in_soft_constraint_region, d = self.check_region(self.obj.soft_constraint_regions, x, True)
+        #return in_soft_constraint_region
+        violations = np.zeros_like(in_soft_constraint_region, dtype=float) 
+        print("soft const region vio", in_soft_constraint_region)
+        print("soft const distances", d)
+        # TODO: fix this. self.obj.soft_constraint_radius does not exist right now.
+        for i in in_soft_constraint_region:
+            if in_soft_constraint_region.size > 0:
+               # if in_soft_constraint_region:
+                print(self.obj.soft_constraint_radius)
+                for i in range(violations.shape[0]):
+                    violations[i] = d[i] - self.obj.soft_constraint_regions[i].radius 
+
+        print(violations)
+        return violations
+
+    """
+
+    print("regions[0] radius",problem.obj.soft_constraint_regions[0].radius)
 
     def get_soft_constraint_violation(self, x):
         in_soft_constraint_region = self.check_region(self.obj.soft_constraint_regions, x, True)
-        return in_soft_constraint_region
+        #return in_soft_constraint_region
+        print("soft const region", in_soft_constraint_region)
+        input()
         # TODO: fix this. self.obj.soft_constraint_radius does not exist right now.
-        #if in_soft_constraint_region:
-        #    d = np.zeros(len(self.obj.soft_constraint_regions))
-        #    radiis = np.zeros(len(self.obj.soft_constraint_regions))
-        #    for i, soft_constraint_region in enumerate(self.obj.soft_constraint_regions):
-        #        d[i] = soft_constraint_region.get_distance(x)
-        #        radiis[i] = soft_constraint_region.radius
-        #    k = np.sum(d < self.obj.soft_constraint_radius)
-        #    print(k)
-        #    if k > 0:
-        #        c = d - radiis
-        #        c = c * k
-        #        return np.max(c)
-        #return False
+        if in_soft_constraint_region:
+            d = np.zeros(len(self.obj.soft_constraint_regions))
+            radiis = np.zeros(len(self.obj.soft_constraint_regions))
+            for i, soft_constraint_region in enumerate(self.obj.soft_constraint_regions):
+                d[i] = soft_constraint_region.get_distance(x)
+                radiis[i] = soft_constraint_region.radius
+            k = np.sum(d < self.obj.soft_constraint_radius)
+            print("k",k)
+            if k > 0:
+                c = d - radiis
+                c = c * k
+                return np.max(c)
+        return False
+
+    """
+
+
 
     def get_minimun_distance_to_attractors(self, x: np.ndarray):
         """
@@ -977,14 +1068,16 @@ class DBMOPP:
 if __name__=="__main__":
     import random
 
-    n_objectives = 3 
-    n_variables = 5 
-    n_local_pareto_regions = 1 
+    n_objectives = 3
+    n_variables = 2 
+    n_local_pareto_regions = 0 
     n_disconnected_regions = 0 
-    n_global_pareto_regions = 2 
+    n_global_pareto_regions = 1 
     const_space = 0.0
-    pareto_set_type = 1 
-    constraint_type = 1 
+    pareto_set_type = 0 
+    constraint_type = 4 
+
+    # DBMOP object misses attribute hard_constraint_radius aswell wehen setting const space
 
     # 0: No constraint, 1-4: Hard vertex, centre, moat, extended checker, 
     # 5-8: soft vertex, centre, moat, extended checker.
@@ -1005,18 +1098,27 @@ if __name__=="__main__":
     print(problem._print_params())
 
     print("Initializing works!")
+
+    # those atleast exist
+   # print("regions[0] radius",problem.obj.soft_constraint_regions[0].radius)
+    print(problem.obj.soft_constraint_radius)
+
     ## this works prob like it should
-    #x = np.array(np.random.rand(1, n_variables)) 
-    x = np.array(np.random.rand(10, n_variables))
+    x = np.array(np.random.rand(1, n_variables)) 
+    #x = np.array(np.random.rand(10, n_variables))
 
     #print(x.shape, x)
-    #print(problem.evaluate(x))
+    print("regions[0] centre",problem.obj.soft_constraint_regions[0].centre)
 
+    x_c = [(problem.obj.soft_constraint_regions[0].centre[0] + 0.01), (problem.obj.soft_constraint_regions[0].centre[1] +0.01)] 
+
+    x_maybe = [0.4,0.5]
+    #print(problem.evaluate(x))
+    print("const eva result: ",problem.evaluate_soft_constraints([x_c, x_maybe]))
 
     # For desdeos MOProblem only
-    moproblem = problem.generate_problem()
-    print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
-
+    #moproblem = problem.generate_problem()
+    #print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
     problem.plot_problem_instance()
 
     # TODO: constraints 
@@ -1053,3 +1155,4 @@ if __name__=="__main__":
     # show all plots
     plt.show()
 
+##
