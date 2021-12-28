@@ -274,7 +274,7 @@ class DBMOPP:
         for i in range(soft_const.shape[0]):
             y = np.atleast_2d(x[i])
             z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
-            soft_const[i] = np.min(self.get_soft_constraint_violation(z))
+            soft_const[i] = self.get_soft_constraint_violation(z)
 
         print("Soft const", soft_const)
         return soft_const
@@ -669,8 +669,7 @@ class DBMOPP:
             radii = np.zeros((to_place, 1))
             k = 0
 
-            #penalty_radius = np.random.rand(1) / 2
-            penalty_radius = np.random.rand(1) *3 
+            penalty_radius = np.random.rand(1) / 2
             for i, attractor_region in enumerate(self.obj.attractor_regions):
                 for j in range(len(attractor_region.objective_indices)):
                     centres[k,:] = attractor_region.locations[j,:] # Could make an object here...
@@ -826,8 +825,8 @@ class DBMOPP:
         in_soft_constraint_region, d = self.check_region(self.obj.soft_constraint_regions, x, True)
         #return in_soft_constraint_region
         violations = np.zeros_like(in_soft_constraint_region, dtype=float) 
-        print("soft const region vio", in_soft_constraint_region)
-        print("soft const distances", d)
+        #print("soft const region vio", in_soft_constraint_region)
+        #print("soft const distances", d)
         # TODO: fix this. self.obj.soft_constraint_radius does not exist right now.
         for i in in_soft_constraint_region:
             if in_soft_constraint_region.size > 0:
@@ -837,7 +836,8 @@ class DBMOPP:
                     violations[i] = d[i] - self.obj.soft_constraint_regions[i].radius 
 
         print(violations)
-        return violations
+        # now returning only the max violation not all..
+        return np.max(violations)
 
     """
 
@@ -1126,7 +1126,4 @@ if __name__=="__main__":
     #problem.plot_pareto_set_members(150)
     #problem.plot_landscape_for_single_objective(0, 100)
 
-    # show all plots
     plt.show()
-
-##
