@@ -252,22 +252,9 @@ class DBMOPP:
             ret.append(self.get_objectives(z))
 
         return ret
-
-    # return type list to help MOProblem. seems not to help.
+    
+    # this it how it should be to get all of the csontraint values always
     def evaluate_soft_constraints2(self, x, obj=None):
-        x = np.atleast_2d(x)
-        self.check_valid_length(x)
-        soft_const = [] 
-        for i in range(x.shape[0]):
-            y = np.atleast_2d(x[i])
-            z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
-            soft_const.append(self.get_soft_constraint_violation(z).tolist())
-
-        print("Soft const", soft_const)
-        return soft_const
-
-    # just has np array as return type
-    def evaluate_soft_constraints(self, x, obj=None):
         x = np.atleast_2d(x)
         self.check_valid_length(x)
         soft_const = np.zeros((x.shape[0], self.k))
@@ -275,6 +262,19 @@ class DBMOPP:
             y = np.atleast_2d(x[i])
             z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
             soft_const[i] = self.get_soft_constraint_violation(z)
+
+        print("Soft const", soft_const)
+        return soft_const
+
+    # just has np array as return type. Currently only takes most violated constraints because i see desdeos ScalarObjective wants that
+    def evaluate_soft_constraints(self, x, obj=None):
+        x = np.atleast_2d(x)
+        self.check_valid_length(x)
+        soft_const = np.zeros(x.shape[0])
+        for i in range(soft_const.shape[0]):
+            y = np.atleast_2d(x[i])
+            z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
+            soft_const[i] = np.min(self.get_soft_constraint_violation(z))
 
         print("Soft const", soft_const)
         return soft_const
@@ -365,7 +365,7 @@ class DBMOPP:
         #objective_vectors = np.atleast_2d(self.get_objectives(x))
         objective_vectors = self.get_objectives(x)
         #print(objective_vectors)
-        #input()
+        #oinput()
         # TODO: fitness and uncertainity if they exist
 
         return objective_vectors
@@ -669,7 +669,8 @@ class DBMOPP:
             radii = np.zeros((to_place, 1))
             k = 0
 
-            penalty_radius = np.random.rand(1) / 2
+            #penalty_radius = np.random.rand(1) / 2
+            penalty_radius = np.random.rand(1) *3 
             for i, attractor_region in enumerate(self.obj.attractor_regions):
                 for j in range(len(attractor_region.objective_indices)):
                     centres[k,:] = attractor_region.locations[j,:] # Could make an object here...
@@ -1068,7 +1069,7 @@ class DBMOPP:
 if __name__=="__main__":
     import random
 
-    n_objectives = 3
+    n_objectives = 2 
     n_variables = 2 
     n_local_pareto_regions = 0 
     n_disconnected_regions = 0 
@@ -1104,11 +1105,11 @@ if __name__=="__main__":
     print(problem.obj.soft_constraint_radius)
 
     ## this works prob like it should
-    x = np.array(np.random.rand(1, n_variables)) 
-    #x = np.array(np.random.rand(10, n_variables))
+    #x = np.array(np.random.rand(1, n_variables)) 
+    x = np.array(np.random.rand(20, n_variables))
 
     #print(x.shape, x)
-    print("regions[0] centre",problem.obj.soft_constraint_regions[0].centre)
+    #print("regions[0] centre",problem.obj.soft_constraint_regions[0].centre)
 
     x_c = [(problem.obj.soft_constraint_regions[0].centre[0] + 0.01), (problem.obj.soft_constraint_regions[0].centre[1] +0.01)] 
 
@@ -1117,36 +1118,9 @@ if __name__=="__main__":
     print("const eva result: ",problem.evaluate_soft_constraints([x_c, x_maybe]))
 
     # For desdeos MOProblem only
-    #moproblem = problem.generate_problem()
-    #print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
+    moproblem = problem.generate_problem()
+    print("\nFormed MOProblem: \n\n", moproblem.evaluate(np.array([x_c, x_maybe]))) 
     problem.plot_problem_instance()
-
-    # TODO: constraints 
-    # IBEA is in objective space and the other plot in decision space .
-    """ 
-    from desdeo_emo.EAs.IBEA import IBEA
-    ib = IBEA(moproblem, population_size=32, n_iterations=10, n_gen_per_iter=100,total_function_evaluations=3000)
-    while ib.continue_evolution():
-        ib.iterate()
-    individuals, objective_values = ib.end()
-    print(individuals)
-    print("IBEA ideal",ib.population.problem.ideal)
-    #print(problem.evaluate(ib.population.problem.ideal))
-    
-    # TODO: plot ndim individuals to 2d plot so can see top eachother ..
-    # plotting in objective space, they go on top of each other which is really nice!
-    #plt.scatter(x=objective_values[:,0], y=objective_values[:,1], label="IBEA Front")
-    test_objectives = moproblem.evaluate(individuals)[0]
-    print("\nFormed MOProblem: \n\n", test_objectives) 
-    plt.scatter(x=individuals[:,0], y=individuals[:,1], label="IBEA Front")
-    #plt.scatter(x=test_objectives[:,0], y=test_objectives[:,1], label="front from moproblem")
-    plt.title(f"IBEA approximation")
-    plt.xlabel("F1")
-    plt.ylabel("F2")
-    plt.legend()
-    plt.show()
-    """
-    
 
     # need to get the population
     #problem.plot_pareto_set_members(150)
