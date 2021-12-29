@@ -165,7 +165,9 @@ class DBMOPP:
             msg += f"Number of objectives needs to be more than three, if number of global pareto sets is more than one"
         if constraint_type not in np.arange(9):
             msg += f"Constraint type should be a integer number between 0 and 8, was {constraint_type}.\n"
-        if constraint_type not in [4,8] and prop_constraint_checker != 0: 
+        if prop_constraint_checker == 0.0 and constraint_type in [4,8]: 
+            msg += f"Proporortion of constrained space checker should not be 0 if constraint type is 4 or 8, was constraint type {constraint_type} and prop {prop_constraint_checker}"
+        if constraint_type not in [4,8] and prop_constraint_checker != 0.0: 
             msg += f"Proporortion of constrained space checker should be 0 if constraint type is not 4 or 8, was constraint type {constraint_type} and prop {prop_constraint_checker}"
         if ndo < 0:
             msg += f"Number of discontinuous objective function regions should be greater than or equal to zero, was {ndo}.\n"
@@ -634,13 +636,13 @@ class DBMOPP:
         print('Assigning any moat soft/hard constraint regions\n')
         r = np.random.rand() + 1
         if self.constraint_type == 3:
-            self.obj.hard_regions = self.obj.centre_regions
-            for i in range(len(self.obj.hard_regions)):
-                self.obj.hard_regions[i].radius = self.obj.hard_regions[i].radius * r
+            self.obj.hard_constraint_regions = self.obj.centre_regions
+            for i in range(len(self.obj.hard_constraint_regions)):
+                self.obj.hard_constraint_regions[i].radius = self.obj.hard_constraint_regions[i].radius * r
         elif self.constraint_type == 7:
-            self.obj.soft_regions = self.obj.centre_regions
-            for i in range(len(self.obj.soft_regions)):
-                self.obj.soft_regions[i].radius = self.obj.soft_regions[i].radius * r
+            self.obj.soft_constraint_regions = self.obj.centre_regions
+            for i in range(len(self.obj.soft_constraint_regions)):
+                self.obj.soft_constraint_regions[i].radius = self.obj.soft_constraint_regions[i].radius * r
 
 
     def place_discontinunities_neutral_and_checker_constraints(self):
@@ -762,11 +764,13 @@ class DBMOPP:
             constraint_regions = self.obj.soft_constraint_regions
         else:
             in_constraint_region, d = self.check_region_prob(self.obj.hard_constraint_regions, x, False)
+            #print(in_constraint_region, d)
+            #input()
             constraint_regions = self.obj.hard_constraint_regions
 
         #return in_soft_constraint_region
         violations = np.zeros_like(in_constraint_region, dtype=float) 
-        print("const region vio", in_constraint_region)
+        #print("const region vio", in_constraint_region)
         #print("soft const distances", d)
         #print(violations.shape)
         # TODO: fix this. self.obj.soft_constraint_radius does not exist right now.
@@ -777,7 +781,7 @@ class DBMOPP:
                 for i in range(violations.shape[0]):
                     violations[i] = d[i] - constraint_regions[i].radius 
 
-        print(violations)
+        #print(violations)
         # now returning only the min violation not all.. violation[i] contains distance to constraint breach for each region[i] 
         # for each objective.
         return np.min(violations)
@@ -995,14 +999,14 @@ class DBMOPP:
 if __name__=="__main__":
     import random
 
-    n_objectives = 3 
+    n_objectives = 4 
     n_variables = 2 
     n_local_pareto_regions = 2 
     n_disconnected_regions = 0 
     n_global_pareto_regions = 1 
-    const_space = 0.0
+    const_space = 0
     pareto_set_type = 0 
-    constraint_type = 8  
+    constraint_type = 3 
 
     # DBMOP object misses attribute hard_constraint_radius aswell wehen setting const space
 
