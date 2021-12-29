@@ -11,17 +11,18 @@ testproblems with DESDEO's methods is work in progress.
 
 - Original DBMOPP generator's functionality is done.
 - MOProblem can be called to evaluate objective function values.
-- Constraints have been redefined, currently vertex soft constraints will return
-correct values when called with
-DBMOPP.evaluate_soft_constraints(x), where x is vector containing n number of
-decision vectors. As with DESDEO's way, if returned value is positive, it means
-constraint is not violated and negative means it violated. The value itself is
-the distance from the point x_i to the vertex border.
+- MOProblem can be called to evaluate constraints as well.
+- Constraints include:
+    - Hard / Soft vertex constraints
+    - Hard / Soft center constraints
+    - Hard / Soft moat constraints
+    - Hard / Soft extended checker constraints
 
 ## What does not work yet
 
-- MOProblem cannot be called to get constraint violation values.
-- Constraints are in the middle of rewriting to fit better to use with DESDEO.
+- MOProblem only gets and returns the most broken constraint value, instead of
+getting and returning vector containing all constraint values for each
+objective.
 
 ## Example usage 
 

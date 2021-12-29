@@ -1,4 +1,4 @@
-from desdeo_problem.testproblems.utilities import get_2D_version, euclidean_distance, convhull, in_hull, get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
+from desdeo_problem.testproblems.DBMOPP.utilities import get_2D_version, euclidean_distance, convhull, in_hull, get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
 from typing import Dict, Tuple
 import numpy as np
 from time import time
@@ -7,7 +7,7 @@ from matplotlib.patches import Circle
 from numpy import matlib # i guess we could implement repmat ourselves
 from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder, ScalarConstraint, VectorObjective, EvaluationResults
 from matplotlib import cm
-from desdeo_problem.testproblems.Region import AttractorRegion, Attractor, Region
+from desdeo_problem.testproblems.DBMOPP.Region import AttractorRegion, Attractor, Region
 
 
 
@@ -45,7 +45,7 @@ class DBMOPPobject:
 
 
 
-class DBMOPP:
+class DBMOPP_generator:
     """
         DBMOPP-class has all the necessary functions and methods to create different problems.
 
@@ -1020,7 +1020,7 @@ if __name__=="__main__":
 
     # 4, 5 seem to work
 
-    problem = DBMOPP(
+    problem = DBMOPP_generator(
         n_objectives,
         n_variables,
         n_local_pareto_regions,
