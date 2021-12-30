@@ -8,10 +8,10 @@ from numpy import matlib # i guess we could implement repmat ourselves
 from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder, ScalarConstraint, VectorObjective, EvaluationResults
 from matplotlib import cm
 from desdeo_problem.testproblems.DBMOPP.Region import AttractorRegion, Attractor, Region
+import functools
 
 
-
-class DBMOPPobject:
+class DBMOPP:
     """
        Object that holds the problem state and information
     """
@@ -39,7 +39,6 @@ class DBMOPPobject:
         self.bracketing_locations_lower = None
         self.bracketing_locations_upper = None
 
-        # these need to be set somewhere somehow. STill seem not to work
         self.hard_constraint_radius =[] 
         self.soft_constraint_radius = []
 
@@ -106,7 +105,7 @@ class DBMOPP_generator:
         self.prop_neutral = prop_neutral
         self.nm = nm
 
-        self.obj = DBMOPPobject() # The obj in the matlab implementation
+        self.obj = DBMOPP() # The obj in the matlab implementation
 
         self.initialize()
 
@@ -207,6 +206,8 @@ class DBMOPP_generator:
         Returns:
             MOProblem: A test problem
         """
+        print("Generating MOProblem")
+
         obj_names = ["f" + str(i + 1) for i in range(self.k)]
         objectives = [VectorObjective(name=obj_names, evaluator=self.evaluate_objectives)]
 
@@ -216,19 +217,32 @@ class DBMOPP_generator:
         upper_bounds = np.ones(self.n)
         variables = variable_builder(var_names, initial_values, lower_bounds, upper_bounds)
 
+        constraints = []            
+
+        # eval wrapper seems promising... Finalyy!! 
+        # this must have cleaner way to do it but atleast it works
+        def eval_wrapper(x, obj,region):
+            x = x
+            region = region
+            return self.evaluate_constraint(x,region)
+        
         if self.constraint_type in [1,2,3,4]:
-            const_evaluator = self.evaluate_hard_constraints
+            for i, region in enumerate(self.obj.hard_constraint_regions):
+                const_evaluator = functools.partial(eval_wrapper, region=region)
+                constraints.append(ScalarConstraint(f"hard constraint {i}", self.n, self.k, evaluator=const_evaluator))
+            
+
         elif self.constraint_type in [5,6,7,8]:
-            const_evaluator = self.evaluate_soft_constraints
+            for i, region in enumerate(self.obj.soft_constraint_regions):
+                const_evaluator = functools.partial(eval_wrapper, region=region)
+                constraints.append(ScalarConstraint(f"soft constraint {i}", self.n, self.k, evaluator=const_evaluator))
         else:
             const_evaluator = None  
 
         if const_evaluator is None:
             return MOProblem(objectives, variables)
-            
-        constraints = [
-            ScalarConstraint("constraint", self.n, self.k, evaluator=const_evaluator),
-        ]
+
+
         return MOProblem(objectives, variables, constraints) 
 
 
@@ -251,43 +265,26 @@ class DBMOPP_generator:
 
         return ret
     
-    # this it how it should be to get all of the csontraint values always
-    def evaluate_soft_constraints2(self, x, obj=None):
-        x = np.atleast_2d(x)
-        self.check_valid_length(x)
-        soft_const = np.zeros((x.shape[0], self.k))
-        for i in range(soft_const.shape[0]):
-            y = np.atleast_2d(x[i])
-            z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
-            soft_const[i] = self.get_soft_constraint_violation(z)
 
-        #print("Soft const", soft_const)
-        return soft_const
-
-    # just has np array as return type. Currently only takes most violated constraints because i see desdeos ScalarObjective wants that
-    def evaluate_soft_constraints(self, x, obj=None):
+    def evaluate_constraint(self, x, region):
         x = np.atleast_2d(x)
         self.check_valid_length(x)
         constr = np.zeros(x.shape[0])
         for i in range(constr.shape[0]):
             y = np.atleast_2d(x[i])
             z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
-            constr[i] = self.get_constraint_violations(z, True)
+            constr[i] = self.get_constraint_violation(z, region, False)
 
-        #print("Soft const", soft_const)
         return constr
 
-    def evaluate_hard_constraints(self, x, obj=None):
+    def get_constraint_violation(self, x, region, include_boundary):
+        return self.distance_from_region(region.centre, x) - region.radius 
+
+    
+    def distance_from_region(self, region, x):
         x = np.atleast_2d(x)
-        self.check_valid_length(x)
-        constr = np.zeros(x.shape[0])
-        for i in range(constr.shape[0]):
-            y = np.atleast_2d(x[i])
-            z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
-            constr[i] = self.get_constraint_violations(z, False)
+        return euclidean_distance(region, x)[0]
 
-        #print("hard const", constr)
-        return constr
 
     def evaluate(self, x):
         x = np.atleast_2d(x)
@@ -424,7 +421,7 @@ class DBMOPP_generator:
                 distances = np.array([self.obj.centre_regions[i].get_distance(rand_coord) for i in range(i)])
                 t = np.min(distances)
                 if t > threshold:
-                    print("assigned centre", i)
+                    #print("assigned centre", i)
                     break
                 too_long = (time() - time_start) > max_elapsed
                 if (too_long): break
@@ -671,7 +668,7 @@ class DBMOPP_generator:
             regions, _ = self.set_not_attractor_regions_as_proportion_of_space(S, self.prop_neutral, regions)
             self.obj.neutral_regions = regions
 
-        print("TODO check discontinuity, not done in matlab")
+        #print("TODO check discontinuity, not done in matlab")
 
 
     def set_not_attractor_regions_as_proportion_of_space(self, S, proportion_to_attain, other_regions):
@@ -768,12 +765,8 @@ class DBMOPP_generator:
             #input()
             constraint_regions = self.obj.hard_constraint_regions
 
-        #return in_soft_constraint_region
         violations = np.zeros_like(in_constraint_region, dtype=float) 
-        #print("const region vio", in_constraint_region)
-        #print("soft const distances", d)
-        #print(violations.shape)
-        # TODO: fix this. self.obj.soft_constraint_radius does not exist right now.
+
         for i in in_constraint_region:
             if in_constraint_region.size > 0:
                # if in_soft_constraint_region:
@@ -781,10 +774,7 @@ class DBMOPP_generator:
                 for i in range(violations.shape[0]):
                     violations[i] = d[i] - constraint_regions[i].radius 
 
-        #print(violations)
-        # now returning only the min violation not all.. violation[i] contains distance to constraint breach for each region[i] 
-        # for each objective.
-        return np.min(violations)
+        return violations
 
 
 
@@ -927,7 +917,7 @@ class DBMOPP_generator:
         plot_constraint_regions(self.obj.neutral_regions, 'c')
 
         # PLOT DISCONNECTED PENALTY
-        print("disconnected Pareto penalty regions not yet plotted. THIS IS NOT IMPLEMENTED IN MATLAB")
+        #print("disconnected Pareto penalty regions not yet plotted. THIS IS NOT IMPLEMENTED IN MATLAB")
         #plt.show()
 
 
@@ -999,26 +989,17 @@ class DBMOPP_generator:
 if __name__=="__main__":
     import random
 
-    n_objectives = 4 
+    n_objectives = 3 
     n_variables = 2 
     n_local_pareto_regions = 2 
     n_disconnected_regions = 0 
     n_global_pareto_regions = 1 
-    const_space = 0
+    const_space = 0.0
     pareto_set_type = 0 
-    constraint_type = 3 
-
-    # DBMOP object misses attribute hard_constraint_radius aswell wehen setting const space
+    constraint_type = 1
 
     # 0: No constraint, 1-4: Hard vertex, centre, moat, extended checker, 
     # 5-8: soft vertex, centre, moat, extended checker.
-
-    # 1,2 works 3, 4 not sure
-    
-    # for both hard and soft, vertex and centre constraints work. So 1-2 and 5-6 works
-    # moat needs work and so do extended checker
-
-    # 4, 5 seem to work
 
     problem = DBMOPP_generator(
         n_objectives,
@@ -1031,38 +1012,19 @@ if __name__=="__main__":
         constraint_type, 0, False, False, 0, 10000
     )
     print(problem._print_params())
-
     print("Initializing works!")
 
-    # those atleast exist
-   # print("regions[0] radius",problem.obj.soft_constraint_regions[0].radius)
-    #print(problem.obj.soft_constraint_radius)
+    x = np.array(np.random.rand(5, n_variables))
+    # For desdeos MOProblem only
+    moproblem = problem.generate_problem()
+    print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
+    problem.plot_problem_instance()
 
-    ## this works prob like it should
-    #x = np.array(np.random.rand(1, n_variables)) 
-    x = np.array(np.random.rand(20, n_variables))
-
-    #print(x.shape, x)
-    #print("regions[0] centre",problem.obj.soft_constraint_regions[0].centre)
-
-    #x_1 = [(problem.obj.soft_constraint_regions[0].centre[0]), (problem.obj.soft_constraint_regions[0].centre[1])] 
-    #x_2 = [(problem.obj.soft_constraint_regions[1].centre[0]), (problem.obj.soft_constraint_regions[1].centre[1])] 
-    #x_3 = [(problem.obj.soft_constraint_regions[2].centre[0]), (problem.obj.soft_constraint_regions[2].centre[1])] 
-
+    # this should always violate the current constraint region
     #x_1 = [(problem.obj.hard_constraint_regions[0].centre[0]), (problem.obj.hard_constraint_regions[0].centre[1])] 
     #x_2 = [(problem.obj.hard_constraint_regions[1].centre[0]), (problem.obj.hard_constraint_regions[1].centre[1])] 
     #x_3 = [(problem.obj.hard_constraint_regions[2].centre[0]), (problem.obj.hard_constraint_regions[2].centre[1])] 
-    #x_maybe = [0.4,0.5]
-    #print(problem.evaluate(x))
-
-    # For desdeos MOProblem only
-    moproblem = problem.generate_problem()
-    print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)[2]) 
-    problem.plot_problem_instance()
-
-    #test_soft = problem.evaluate_hard_constraints([x_1, x_2, x_3])
-    #print("const eva result: ",test_soft)
-    #assert(np.all(test_soft < 0))
+    #print("\n Testing with hard constraint region centres: \n\n", moproblem.evaluate(np.array([x_1, x_2, x_3]))) 
 
     # need to get the population
     #problem.plot_pareto_set_members(150)
