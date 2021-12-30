@@ -111,8 +111,8 @@ def assign_design_dimension_projection(n_variables, vary_sol_density):
     which will be subsequantly evaluated
     """
     if n_variables <= 2:
-        print(
-            "fNo need to assign dimension projections as number of variables is already {n_variables}")
+        #print(
+        #    "fNo need to assign dimension projections as number of variables is already {n_variables}")
         return None, None
     mask = np.random.permutation(n_variables-1)  # Test againt matlab
     if vary_sol_density:

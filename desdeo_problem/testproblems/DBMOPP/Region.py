@@ -106,7 +106,7 @@ class AttractorRegion(Region):
         #if self.convhull is None: return
 
         n = self.locations.shape[0]
-        print(n)
+        #print(n)
         p = np.atleast_2d(self.locations)
 
         #if not isinstance(self.convhull, ConvexHull):

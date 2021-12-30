@@ -761,16 +761,12 @@ class DBMOPP_generator:
             constraint_regions = self.obj.soft_constraint_regions
         else:
             in_constraint_region, d = self.check_region_prob(self.obj.hard_constraint_regions, x, False)
-            #print(in_constraint_region, d)
-            #input()
             constraint_regions = self.obj.hard_constraint_regions
 
         violations = np.zeros_like(in_constraint_region, dtype=float) 
 
         for i in in_constraint_region:
             if in_constraint_region.size > 0:
-               # if in_soft_constraint_region:
-                #print(self.obj.soft_constraint_radius)
                 for i in range(violations.shape[0]):
                     violations[i] = d[i] - constraint_regions[i].radius 
 
