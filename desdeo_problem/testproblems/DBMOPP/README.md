@@ -20,9 +20,14 @@ testproblems with DESDEO's methods is work in progress.
     - Hard / Soft moat constraints
     - Hard / Soft extended checker constraints
 
+  - Can we approximation of the Pareto set either by:
+    - calling the plot_pareto_set_members() which returns the found members.
+    - calling get_Pareto_set_member() which returns one pareto set member uniformly from the pareto regions.
+
 ## What does not work yet
 
 - Disconnected Pareto penalty regions are not yet plotted.
+- get_Pareto_set_member currently only works for problems with 2 design variables.
 - Some parameters and combination of them is not tested yet with MOProblem.
 These are ndo, vary_sol_density, vary_objective_scales, prop_neutral and nm and
 are suggested to be left on their default values.

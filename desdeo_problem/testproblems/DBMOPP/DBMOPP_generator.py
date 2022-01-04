@@ -20,7 +20,7 @@ class DBMOPP:
         self.rescaleMultiplier = 1
         self.pi1 = None
         self.pi2 = None
-        self.pareto_set_indices = 0
+        self.pareto_set_indices = None
         self.pareto_angles = None
         self.rotations = None
 
@@ -39,8 +39,6 @@ class DBMOPP:
         self.bracketing_locations_lower = None
         self.bracketing_locations_upper = None
 
-        self.hard_constraint_radius =[] 
-        self.soft_constraint_radius = []
 
 
 
@@ -118,6 +116,7 @@ class DBMOPP_generator:
         print("n_ngp: ", self.ngp)
         print("potype: ", self.pareto_set_type)
         print("const type: ", self.constraint_type)
+        return
 
 
     def _validate_args(
@@ -603,16 +602,11 @@ class DBMOPP_generator:
                 for i, hard_constraint_region in enumerate(self.obj.hard_constraint_regions):
                     hard_constraint_region.centre = centres[i,:]
                     hard_constraint_region.radius = radii[i]
-
-                    self.obj.hard_constraint_radius.append(radii[i])
             else: 
                 self.obj.soft_constraint_regions = np.array([Region() for _ in range(to_place)])
                 for i, soft_constraint_region in enumerate(self.obj.soft_constraint_regions):
                     soft_constraint_region.centre = centres[i,:]
                     soft_constraint_region.radius = radii[i]
-
-                    # not sure if these at bottom even necessary
-                    self.obj.soft_constraint_radius.append(radii[i])
 
 
     def place_centre_constraint_locations(self):
@@ -736,7 +730,7 @@ class DBMOPP_generator:
 
 
     # used for dbmopp stuff
-    def check_region(self, regions, x, include_boundary):
+    def check_region(self, regions, x, include_boundary) -> bool:
         if regions is None: return False
         for region in regions:
             if region.is_inside(x, include_boundary):
@@ -749,13 +743,13 @@ class DBMOPP_generator:
 
 
         # Matlab code has hard constraints as true or false
-    def get_hard_constraint_violation(self, x):
+    def get_hard_constraint_violation(self, x) -> bool:
         in_hard_constraint_region = self.check_region(self.obj.hard_constraint_regions, x, False)
         return in_hard_constraint_region
 
 
-    # TODO: check self.obj.soft.constraint.regions.. seems there is only 1 region, when more is necessary?
-    def get_constraint_violations(self, x, include_boundary):
+    # gets contstraint violations for MOProblem
+    def get_constraint_violations(self, x, include_boundary) -> np.ndarray:
         if include_boundary:
             in_constraint_region, d = self.check_region_prob(self.obj.soft_constraint_regions, x, True)
             constraint_regions = self.obj.soft_constraint_regions
@@ -773,8 +767,7 @@ class DBMOPP_generator:
         return violations
 
 
-
-    def get_soft_constraint_violation(self, x):
+    def get_soft_constraint_violation(self, x) -> bool:
         in_soft_constraint_region = self.check_region(self.obj.soft_constraint_regions, x, True)
         return in_soft_constraint_region
 
@@ -954,14 +947,17 @@ class DBMOPP_generator:
         plt.ylim([-1,1])
         
         xy = np.linspace(-1, 1, resolution)
+        po_set = np.empty((0,2), float)
 
         for x in xy:
             for y in xy:
                 z = np.array([x,y])
                 if self.is_pareto_2D(z):
+                    po_set = np.vstack((po_set, z))
                     ax.scatter(x,y, color='black', s=1)
 
-        #plt.show()
+        plt.show()
+        return po_set
     
 
     def plot_dominance_landscape(self, res = 500, moore_neighbourhood = True):
@@ -981,18 +977,129 @@ class DBMOPP_generator:
     def plot_dominance_landscape_from_matrix(self, z, x, y, moore_neighbourhood):
         pass
 
+    #% function X = unit_hypercube_simplex_sample(number_of_points, dim, sum_value)
+    #%
+    #% INPUTS
+    #%
+    #% dim = dimensions
+    #% sum_value = value that each vector should sum to
+    #% number_of_points = number of dim-dimensional points to sample (output in
+    #%       X)
+    #%
+    #% OUTPUT
+    #%
+    #% X = number_of_points by dim matrix of uniform samples in unit cube from
+    #%       simplex which sums to sum_value
+    #%
+    #% Returns X which contains uniform samples from the simplex summing to
+    #% sum_value, which lies in the unit hypercube
+
+    # TODO: fix the inputs for this function.. 
+    def unit_hypercube_simplex_sample(self, dim, sum_value):
+        no_points = 1 # TODO: make sure this can be one..
+        X = np.random.exponential(np.ones((no_points,self.n)))
+        S = np.sum(X, 2)
+        if sum_value == 1:
+            X = np.divide(X,matlib.repmat(S,1,dim))
+        elif sum_value < 1:
+            X = (np.divide(X,matlib.repmat(S,1,dim)))*sum_value
+        else:
+            if sum_value < dim/2:
+                #rejection sampling
+                X = self.recalibrate(X, no_points, S, sum_value, dim)
+            elif sum_value < dim-1:
+                # flipped around dim/2 face for rejection sampling
+                X = 1 - self.recalibrate(X, no_points, S, dim-sum_value, dim)
+            else:
+                # special case when sum value >= dim -1, just flip round the scaled unit simplex no rejection sampling
+                X = (np.divide(X, matlib.repmat(S, 1, dim)))*(dim-sum_value)
+                X = 1 - X
+        return X
+
+
+    def recalibrate(self, Z, npoints, S, sum_value, dim):
+        X = (np.divide(Z, matlib.repmat(S, 1, dim)))*sum_value 
+
+        for i in range(npoints):
+            while (np.max(X[i,:])) > 1: # rejection sampling
+                Z[i,:] = np.random.exponential(np.ones((1, dim)))
+                S[i] = np.sum(Z[i,:])
+                X[i,:] = Z[i,:]/S[i] * sum_value
+
+        return X
+
+
+    def get_vectors_mapping_to_location(self, x):
+        z = np.zeros((1, self.n)) 
+        
+        def process_dims(z, x, pi):
+            pi_mag = np.sum(pi)
+            if pi_mag == 1:
+                z[pi] = x
+            else:
+                # map value from [-1, 1] to [0,1]
+                x = ((x + 1)/2) * pi_mag
+                s = self.unit_hypercube_simplex_sample(pi_mag, x)
+                s = (s*2)-1 # map s back to [-1, 1]
+                z[pi] = s
+            return z
+
+        z = process_dims(z, x[0], self.obj.pi1)
+        z = process_dims(z, x[1], self.obj.pi2)
+        print(z)
+        return z
+
+
+    # returns random pareto set member uniformly from the Pareto set and the point in 2D it maps to
+    # should not be used during optimization
+    def get_Pareto_set_member(self) -> Tuple:
+        #while not legal point obtained, get random pareto centre
+        invalid = True
+        x = []
+        point = []
+
+        centres = self.obj.centre_regions
+        while invalid:
+            k = np.random.randint(self.ngp) + self.nlp
+            angle = np.random.rand() * 2.0 * np.pi
+
+            # 2D case
+            if self.constraint_type == 2 or self.constraint_type == 6:
+                # if centre constraints used, randomly choose angle and use that radius from Pareto set centre list and project
+                x = centres[k].centre + [centres[k].radius * np.cos(angle), centres[k].radius * np.sin(angle)]
+                invalid = False
+            else:
+                # generate random point in Circle
+                r = centres[k].radius * np.sqrt(np.random.rand())
+                x = centres[k].centre + [r*np.cos(angle), r*np.sin(angle)]     
+                if self.is_pareto_2D(x):
+                    invalid = False
+
+        # project to higher dims if needed
+        if self.n > 2:
+            # design spcae is larger than 2d, so need to randomly select a locations
+            # in this higher dim space which maps to this Pareto location
+            point = x
+            x = self.get_vectors_mapping_to_location(x)
+        else:
+            point = x
+        
+        return (x, point)
+        
+
+
 
 if __name__=="__main__":
     import random
 
-    n_objectives = 3 
+    n_objectives = 4 
     n_variables = 2 
     n_local_pareto_regions = 2 
     n_disconnected_regions = 0 
     n_global_pareto_regions = 1 
     const_space = 0.0
     pareto_set_type = 0 
-    constraint_type = 1
+    constraint_type = 1 
 
     # 0: No constraint, 1-4: Hard vertex, centre, moat, extended checker, 
     # 5-8: soft vertex, centre, moat, extended checker.
@@ -1009,12 +1116,16 @@ if __name__=="__main__":
     )
     print(problem._print_params())
     print("Initializing works!")
+    
+    # get Pareto set member works currently only when number of variables is 2.
+    x, point = problem.get_Pareto_set_member()  
+    print("A pareto set member", x, point)
 
     x = np.array(np.random.rand(5, n_variables))
     # For desdeos MOProblem only
     moproblem = problem.generate_problem()
     print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
-    problem.plot_problem_instance()
+    #problem.plot_problem_instance()
 
     # this should always violate the current constraint region
     #x_1 = [(problem.obj.hard_constraint_regions[0].centre[0]), (problem.obj.hard_constraint_regions[0].centre[1])] 
@@ -1023,7 +1134,8 @@ if __name__=="__main__":
     #print("\n Testing with hard constraint region centres: \n\n", moproblem.evaluate(np.array([x_1, x_2, x_3]))) 
 
     # need to get the population
-    #problem.plot_pareto_set_members(150)
+    po_set = problem.plot_pareto_set_members(300)
+    print(po_set)
     #problem.plot_landscape_for_single_objective(0, 500)
 
     plt.show()
