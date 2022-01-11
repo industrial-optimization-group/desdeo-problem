@@ -121,9 +121,11 @@ def assign_design_dimension_projection(n_variables, vary_sol_density):
     else:
         half = int(np.ceil(n_variables))
         mask = mask[:half]  # Take half first elements
-    pi1 = np.zeros(n_variables)
+    pi1 = np.zeros(n_variables, dtype=bool)
     pi1[mask] = True
     pi2 = pi1
-    pi2 = np.ones(n_variables)
+    pi2 = np.ones(n_variables, dtype=bool)
     pi2[mask] = False
+    #print(pi1, pi2)
+
     return pi1, pi2

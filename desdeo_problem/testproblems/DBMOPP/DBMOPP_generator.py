@@ -994,11 +994,12 @@ class DBMOPP_generator:
     #% Returns X which contains uniform samples from the simplex summing to
     #% sum_value, which lies in the unit hypercube
 
-    # TODO: fix the inputs for this function.. 
+    # TODO: Make sure the [0] at somepoints make sense. They are here to emulate matlab
+    # code. Maybe could be done better
     def unit_hypercube_simplex_sample(self, dim, sum_value):
         no_points = 1 # TODO: make sure this can be one..
-        X = np.random.exponential(np.ones((no_points,self.n)))
-        S = np.sum(X, 2)
+        X = np.random.exponential(np.ones((no_points,dim)))[0]
+        S = np.sum(X) # drop array bracket or not
         if sum_value == 1:
             X = np.divide(X,matlib.repmat(S,1,dim))
         elif sum_value < 1:
@@ -1030,23 +1031,27 @@ class DBMOPP_generator:
 
 
     def get_vectors_mapping_to_location(self, x):
-        z = np.zeros((1, self.n)) 
+        z = np.zeros(self.n) 
         
         def process_dims(z, x, pi):
-            pi_mag = np.sum(pi)
+            #print("Processing dims")
+            #print(z)
+            #print(pi)
+            pi_mag = int(np.sum(pi))
             if pi_mag == 1:
                 z[pi] = x
             else:
                 # map value from [-1, 1] to [0,1]
                 x = ((x + 1)/2) * pi_mag
-                s = self.unit_hypercube_simplex_sample(pi_mag, x)
+                s = self.unit_hypercube_simplex_sample(pi_mag, x)[0]
                 s = (s*2)-1 # map s back to [-1, 1]
+
                 z[pi] = s
             return z
 
         z = process_dims(z, x[0], self.obj.pi1)
         z = process_dims(z, x[1], self.obj.pi2)
-        print(z)
+        #print(z)
         return z
 
 
@@ -1093,7 +1098,7 @@ if __name__=="__main__":
     import random
 
     n_objectives = 4 
-    n_variables = 2 
+    n_variables = 5 
     n_local_pareto_regions = 2 
     n_disconnected_regions = 0 
     n_global_pareto_regions = 1 
@@ -1119,7 +1124,8 @@ if __name__=="__main__":
     
     # get Pareto set member works currently only when number of variables is 2.
     x, point = problem.get_Pareto_set_member()  
-    print("A pareto set member", x, point)
+    print("A pareto set member ", x)
+    print("A corresponding 2D point", point)
 
     x = np.array(np.random.rand(5, n_variables))
     # For desdeos MOProblem only
@@ -1134,8 +1140,8 @@ if __name__=="__main__":
     #print("\n Testing with hard constraint region centres: \n\n", moproblem.evaluate(np.array([x_1, x_2, x_3]))) 
 
     # need to get the population
-    po_set = problem.plot_pareto_set_members(300)
-    print(po_set)
+    #po_set = problem.plot_pareto_set_members(300)
+    #print(po_set)
     #problem.plot_landscape_for_single_objective(0, 500)
 
     plt.show()
