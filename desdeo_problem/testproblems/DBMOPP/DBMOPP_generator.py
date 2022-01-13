@@ -506,18 +506,18 @@ class DBMOPP_generator:
             for k in range(n_include):
                 attractor_loc = self.obj.attractors[k].locations
                 self.obj.attractors[k].locations = np.vstack((attractor_loc,  locs[I[k], :]))
-        
      
 
     def place_disconnected_pareto_elements(self):
-        n = self.ngp - 1
-        pivot_index = np.random.randint(self.k)
+        n = self.ngp - 1 # number of points to use to set up separete subregions
+        # first get base angles in region of interest on unrotated Pareto set
+        pivot_index = np.random.randint(self.k) # get attractor at random
 
         # sort from smallest to largest and get the indices
         indices = np.argsort(self.obj.pareto_angles, axis = 0)
 
         offset_angle_1 = (self.obj.pareto_angles[indices[self.k - 1]] if pivot_index == 0
-            else self.obj.pareto_angles[indices[pivot_index-1]]) # check this minus
+            else self.obj.pareto_angles[indices[pivot_index - 1]]) # check this minus
         
         offset_angle_2 = (self.obj.pareto_angles[indices[0]] if pivot_index == self.k-1
             else self.obj.pareto_angles[indices[pivot_index + 1]]) # check plus
@@ -556,6 +556,9 @@ class DBMOPP_generator:
             return self.obj.centre_regions[ind].calc_location(a, self.obj.rotations[ind])
 
         index = 0
+        # now for each Pareto set region, get the corresponding (rotated) locations
+        # of the points defining each slice, and save
+
         for i in range(self.nlp, self.nlp + self.ngp): # verify indexing
             self.obj.pivot_locations[i,:] = calc_location(i, pivot_angle)
             
@@ -968,14 +971,206 @@ class DBMOPP_generator:
         y = np.zeros((self.k, res, res))
         for i in range(res):
             for j in range(res):
+                #obj_vector = self.evaluate_2D(decision_vector)["obj_vector"]
+                #obj_vector = np.atleast_2d(obj_vector)
+                # bug here..
                 decision_vector = np.hstack((xy[i], xy[j]))
-                obj_vector = self.evaluate_2D(decision_vector)
+                obj_vector = self.evaluate_2D(decision_vector)["obj_vector"]
+                obj_vector = np.atleast_2d(obj_vector)
                 y[:, i, j] = obj_vector
 
         return self.plot_dominance_landscape_from_matrix(y, xy, xy, moore_neighbourhood)
     
+    """
+             [neutral_areas, dominated, destination, dominating_neighbours, offset] = plotDominanceLandscapeFromMatrix(Y,x,y,moore_neighbourhood)
+            %
+            % INPUTS
+            %
+            % Y = number of objectives by resolution by resolution matrix
+            %       holding objective vector for each mesh location
+            % x = resolution by 1 array of ordered x locations of samples
+            %       (e.g. x = linspace(-1, 1, resolution) )
+            % y = resolution by 1 array of ordered x locations of samples
+            %       (e.g. y = linspace(-1, 1, resolution) )
+            % moore_neighbourhood = type of neighbourhood used, if true then
+            %         Moore neighbourhood, if false Von Neumann
+            %         nieghbourhood used
+            %
+            % OUTPUTS
+            %
+            % neural_areas = resolution by resolution matrix. contigious
+            %       dominance neutral araes have same positive integer value. 
+            %       dominated located have a value of -1
+            % dominated = Boolean resolution by resolution matrix. true is
+            %       corresponding location is dominated.
+            % destination = resolution by resolution cell matrix, holding
+            %       the list of distinct neutral areas reached by all
+            %       downhill dominance walks commences at the cell (see the
+            %       neutral_areas matrix for mapping)
+            % offset = neighbourhood mapping matrix 
+            % basins = matrix of basin memberships (resolution by 
+            %       resolution). A value of 0 at basins(i,j) denotes the
+            %       corresponding location is dominance neutral. A value of
+            %       1 denotes that dominance paths rooted at the cell lead
+            %       to more than one distinct neutral region. A value
+            %       between 0.25 and 0.75 denotes that all dominance paths
+            %       starting from this location end in the same dominance
+            %       neutral regions -- all members of the same basin having
+            %       the same value in this range.
+    """
     def plot_dominance_landscape_from_matrix(self, z, x, y, moore_neighbourhood):
+        basins, neutral_areas, dominated, destination, dominating_neighbours, offset = self.get_dominance_landscape_basins_from_matrix(z, x, y, moore_neighbourhood)    
+        ## plotting here
+
+
+
+        """
+            % [basins, neutral_areas, dominated, destination, dominating_neighbours, offset] = getDominanceLandscapeBasinsFromMatrix(Y,x,y,moore_neighbourhood)
+            %
+            % INPUTS
+            %
+            % Y = number of objectives by resolution by resolution matrix
+            %       holding objective vector for each mesh location
+            % x = resolution by 1 array of ordered x locations of samples
+            %       (e.g. x = linspace(-1, 1, resolution) )
+            % y = resolution by 1 array of ordered x locations of samples
+            %       (e.g. y = linspace(-1, 1, resolution) )
+            % moore_neighbourhood = type of neighbourhood used, if true then
+            %         Moore neighbourhood, if false Von Neumann
+            %         nieghbourhood used
+            %
+            % OUTPUTS
+            %
+            % basins = matrix of basin memberships (resolution by 
+            %       resolution). A value of 0 at basins(i,j) denotes the
+            %       corresponding location is dominance neutral. A value of
+            %       1 denotes that dominance paths rooted at the cell lead
+            %       to more than one distinct neutral region. A value
+            %       between 0.25 and 0.75 denotes that all dominance paths
+            %       starting from this location end in the same dominance
+            %       neutral regions -- all members of the same basin having
+            %       the same value in this range.
+            % neural_areas = resolution by resolution matrix. contigious
+            %       dominance neutral araes have same positive integer value. 
+            %       dominated located have a value of -1
+            % dominated = Boolean resolution by resolution matrix. true is
+            %       corresponding location is dominated.
+            % destination = resolution by resolution cell matrix, holding
+            %       the list of distinct neutral areas reached by all
+            %       downhill dominance walks commences at the cell (see the
+            %       neutral_areas matrix for mapping)
+            % offset = neighbourhood mapping matrix 
+            %
+            % plots dominance landscae given arguments
+        """
+        # TODO: there must be a way to optimize the code..
+    def get_dominance_landscape_basins_from_matrix(self, z, x, y, moore_neighbourhood):
+        print(z.shape)
+        print(x.shape)
+        print(y.shape)
+        num_obj, res, r = z.shape
+
+        print(num_obj, res, r)
+        # some checks 
+        assert res == r, "Second and third dimension of z must be the same size"
+        assert self.k >= 2, "must have atleast two objectives"
+        assert x.shape[0] == res, "must be as many x grid labels as elements"
+        assert y.shape[0] == res, "must be as many y grid labels as elements"
+
+        if moore_neighbourhood:
+            dominating_neighbours = np.zeros((res, res, 8))
+            neutral_neighbours = np.zeros((res, res, 8))
+        else:
+            dominating_neighbours = np.zeros((res, res, 4))
+            neutral_neighbours = np.zeros((res, res, 4))
+        dominated = np.ones((res,res))
+
+        # array holding neighbourhood directions
+        offset = [[1,0], [-1,0], [0,1], [0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]
+        # determine those which r not dominated
+        for i in range(res):
+            for j in range(res):
+                dominating_neighbours[i, j,:], neutral_neighbours[i,j,:], dominated[i,j] = self.identify_dominating_neighbours(z,i,j, res, moore_neighbourhood, offset)
+
+        # dominating_neighbours now holds location of neigbours which dominate and dominated holds whether a particular location is dominated by any neigbour
+        neutral_areas = np.ones((res,res))*-1
+        neutral_idx = 1
+        # label contiguos neutral areas
+        for i in range(res):
+            for j in range(res):
+                # if not dominated and not yet assigned to a neutral area
+                if dominated[i,j] == 0 and neutral_areas[i,j] < 0:
+                    neutral_areas = self.identify_neutral_area_members(i,j,neutral_areas, neutral_idx, dominated, neutral_neighbours, moore_neighbourhood, offset)
+                    neutral_idx = neutral_idx + 1
+
+        # identify basins of attraction
+        basins = np.ones((res, res))*-1
+        basins[neutral_areas>0] = 0
+        processed = np.zeros((res,res))
+        number_distinct_neutral_regions = np.max(np.max(neutral_areas)) # check if this is correct
+        destination = [[] for d in range(res)]
+        for i in range(res):
+            for j in range(res):
+                if processed[i, j] == 0:
+                    processed, destination, _ = self.update_destinations(i, j, processed, destination, dominating_neighbours, neutral_areas, offset)
+
+        # now fill value in basins
+        for i in range(res):
+            for j in range(res):
+                if neutral_areas[i,j] > 0:
+                    basins[i,j] = 0
+                else:
+                    if len(destination[i,j]) == 1:
+                        # put between 0.25 and 0.75, graded by which basin it leads to
+                        basins[i,j] = 0.25 + destination[i,j] / (2*number_distinct_neutral_regions)
+                    else:
+                        basins[i,j] = 1
+
+        return basins, neutral_areas, dominated, destination, dominating_neighbours, offset
+
+
+    
+    def identify_dominating_neighbours(self, z, i, j, res, moore_neighbourhood, offset):
+        if moore_neighbourhood:
+            n = 8
+        else:
+            n = 4
+        dominating_neighbours = np.zeros((n, 1))
+        neutral_neighbours = np.zeros((n, 1))
+
+        for k in range(n):
+            if i + offset[k,1] > 0 and i + offset[k,1] <= res and j + offset[k,2] > 0 and j + offset[k,2] <= res:
+                dominating_neighbours[k], neutral_neighbours[k] = self.vector_is_dominated_or_neutral(z[:, i, j], z[:, i + offset[k,1] + offset[k,2]])
+
+        dominated = np.any(dominating_neighbours) # check its same as matlabs any
+        return dominating_neighbours, neutral_neighbours, dominated
+
+
+    def identify_neutral_area_members(self, i, j, neutral_areas, n_idx, dominated, neutral_neighbours, moore_neighbourhood, offset):
         pass
+
+
+    def update_destinations(self, i, j, processed, destination, dominating_neighbours, neutral_areas, offset):
+        pass
+
+    
+        # TODO: make work on 0s and 1s instead of true and falses, since np arrays are using 0s as false and 1s as true
+    def vector_is_dominated_or_neutral(x, y):
+
+        # TODO: check if works make properly if not
+        def vector_dominates(x1, x2):
+            return (np.sum(x1 <= x2) == x1.shape[0] and np.sum(x1 < x2) >  0)
+        # returns is true if y dominates x.
+        # n is true if x and y are incomparable under the dominates relation
+        d = vector_dominates(y, x)
+        if d == False:
+            n = not vector_dominates(x, y)
+        else:
+            n = False
+        return d, n
+
+
+
 
     #% function X = unit_hypercube_simplex_sample(number_of_points, dim, sum_value)
     #%
@@ -1097,14 +1292,15 @@ class DBMOPP_generator:
 if __name__=="__main__":
     import random
 
-    n_objectives = 4 
-    n_variables = 5 
-    n_local_pareto_regions = 2 
-    n_disconnected_regions = 0 
-    n_global_pareto_regions = 1 
+    n_objectives = 3
+    n_variables = 3 
+    n_local_pareto_regions = 0 
+    n_dominance_res_regions = 1 
+    n_global_pareto_regions = 2 
     const_space = 0.0
-    pareto_set_type = 0 
-    constraint_type = 1 
+    pareto_set_type = 2 
+    constraint_type = 0 
+    ndo = 0 #numberOfdiscontinousObjectiveFunctionRegions
 
     # 0: No constraint, 1-4: Hard vertex, centre, moat, extended checker, 
     # 5-8: soft vertex, centre, moat, extended checker.
@@ -1113,11 +1309,12 @@ if __name__=="__main__":
         n_objectives,
         n_variables,
         n_local_pareto_regions,
-        n_disconnected_regions,
+        n_dominance_res_regions,
         n_global_pareto_regions,
         const_space,
         pareto_set_type,
-        constraint_type, 0, False, False, 0, 10000
+        constraint_type, 
+        ndo, False, False, 0, 10000
     )
     print(problem._print_params())
     print("Initializing works!")
@@ -1131,7 +1328,7 @@ if __name__=="__main__":
     # For desdeos MOProblem only
     moproblem = problem.generate_problem()
     print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
-    #problem.plot_problem_instance()
+    problem.plot_problem_instance()
 
     # this should always violate the current constraint region
     #x_1 = [(problem.obj.hard_constraint_regions[0].centre[0]), (problem.obj.hard_constraint_regions[0].centre[1])] 
@@ -1142,6 +1339,7 @@ if __name__=="__main__":
     # need to get the population
     #po_set = problem.plot_pareto_set_members(300)
     #print(po_set)
-    #problem.plot_landscape_for_single_objective(0, 500)
+    problem.plot_landscape_for_single_objective(0, 500)
+    problem.plot_dominance_landscape(10)
 
     plt.show()
