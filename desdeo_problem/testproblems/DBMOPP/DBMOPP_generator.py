@@ -385,7 +385,7 @@ class DBMOPP_generator:
         self.place_region_radius(n, radius)
         
         # save indices of PO set locations
-        self.obj.pareto_set_indices = np.arange(self.ngp+1, self.nlp + self.ngp + 1)
+        self.obj.pareto_set_indices = np.arange(self.nlp, self.nlp + self.ngp + 1)
     
 
     def place_region_radius(self, n, r):
@@ -508,8 +508,10 @@ class DBMOPP_generator:
                 self.obj.attractors[k].locations = np.vstack((attractor_loc,  locs[I[k], :]))
      
 
+    # TODO : Big problem here with the indices
     def place_disconnected_pareto_elements(self):
-        n = self.ngp - 1 # number of points to use to set up separete subregions
+        n = self.ngp #- 1 # number of points to use to set up separete subregions
+        #print(n)
         # first get base angles in region of interest on unrotated Pareto set
         pivot_index = np.random.randint(self.k) # get attractor at random
 
@@ -547,6 +549,7 @@ class DBMOPP_generator:
             r_angles[n+1] = offset_angle_1
             r_angles[1:n+1] = r 
 
+        #until this should work
         k = self.nlp + self.ngp
         self.obj.pivot_locations = np.zeros((k, 2)) 
         self.obj.bracketing_locations_lower = np.zeros((k,2))
@@ -559,7 +562,7 @@ class DBMOPP_generator:
         # now for each Pareto set region, get the corresponding (rotated) locations
         # of the points defining each slice, and save
 
-        for i in range(self.nlp, self.nlp + self.ngp): # verify indexing
+        for i in range(self.nlp, k): # verify indexing
             self.obj.pivot_locations[i,:] = calc_location(i, pivot_angle)
             
             self.obj.bracketing_locations_lower[i,:] = calc_location(i, r_angles[index])
@@ -572,11 +575,12 @@ class DBMOPP_generator:
 
             elif self.pareto_set_type == 1:
                 if index == self.ngp - 1:
-                    self.obj.bracketing_locations_lower[i,:] = calc_location(i, r_angles[2]) # with some input this: IndexError: index 2 is out of bounds for axis 0 with size 2
+                    self.obj.bracketing_locations_lower[i,:] = calc_location(i, r_angles[1]) # with some input this: IndexError: index 2 is out of bounds for axis 0 with size 2
                     self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[n])
                 else:
                     self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[index+2])
             index += 1
+
                     
 
     def place_vertex_constraint_locations(self):
@@ -818,9 +822,15 @@ class DBMOPP_generator:
 
         # can still be improved?
         I = np.array([i for i in range(len(self.obj.centre_regions)) if self.obj.centre_regions[i].is_close(x, eps)])
-        
+        #print("I",I)
+        #print(I.shape)
+        #
         if len(I) > 0: # is not empty 
             i = I[0]
+            #print("here in limited region\n",i)
+            #print(len(self.obj.attractor_regions))
+            #print(len(self.obj.attractor_regions[i].convhull.simplices))
+            #input()
             if self.nlp <= i < self.nlp + self.ngp:
                 if self.constraint_type in [2,6]: 
                     # Smaller of dist
@@ -829,6 +839,7 @@ class DBMOPP_generator:
                     r = np.min(np.abs(dist), np.abs(radius))
                     if np.abs(dist) - radius < 1e4 * eps * r:
                         ans["in_hull"] = True
+                        # bug here because I fixed the problem with disconnected po fronts atleast type 2.
                 elif in_hull(x, self.obj.attractor_regions[i].locations[self.obj.attractor_regions[i].convhull.simplices]):
                     ans["in_hull"] = True 
         
@@ -845,7 +856,7 @@ class DBMOPP_generator:
                     self.obj.bracketing_locations_upper[I[0],:],
                 )
                 if self.pareto_set_type == 1:
-                    if I[0] == self.nlp + self.ngp: # should maybe be -1
+                    if I[0] == self.nlp + self.ngp-1 : # should maybe be -1
                         ans["in_pareto_region"] = not ans["in_pareto_region"] # special case where last region is split at the two sides, should not get here everytime
 
         return ans
@@ -971,9 +982,6 @@ class DBMOPP_generator:
         y = np.zeros((self.k, res, res))
         for i in range(res):
             for j in range(res):
-                #obj_vector = self.evaluate_2D(decision_vector)["obj_vector"]
-                #obj_vector = np.atleast_2d(obj_vector)
-                # bug here..
                 decision_vector = np.hstack((xy[i], xy[j]))
                 obj_vector = self.evaluate_2D(decision_vector)["obj_vector"]
                 obj_vector = np.atleast_2d(obj_vector)
@@ -1159,7 +1167,7 @@ class DBMOPP_generator:
 
         # TODO: check if works make properly if not
         def vector_dominates(x1, x2):
-            return (np.sum(x1 <= x2) == x1.shape[0] and np.sum(x1 < x2) >  0)
+            return (np.sum(x1 <= x2) == x1.shape[0] and np.sum(x1 < x2) > 0)
         # returns is true if y dominates x.
         # n is true if x and y are incomparable under the dominates relation
         d = vector_dominates(y, x)
@@ -1167,7 +1175,10 @@ class DBMOPP_generator:
             n = not vector_dominates(x, y)
         else:
             n = False
-        return d, n
+
+        
+        return d, n # as booleans below as ints
+        #return int(d), int(n)
 
 
 
@@ -1257,10 +1268,17 @@ class DBMOPP_generator:
         invalid = True
         x = []
         point = []
-
+        low = np.min(self.obj.pareto_set_indices)
+        high = np.max(self.obj.pareto_set_indices)
+        #print(self.obj.pareto_set_indices)
+        #print(low, high)
         centres = self.obj.centre_regions
+        
+        #print(len(centres))
+
         while invalid:
-            k = np.random.randint(self.ngp) + self.nlp
+
+            k = np.random.randint(low, high) #+ self.nlp + self.ndr
             angle = np.random.rand() * 2.0 * np.pi
 
             # 2D case
@@ -1294,12 +1312,12 @@ if __name__=="__main__":
 
     n_objectives = 3
     n_variables = 3 
-    n_local_pareto_regions = 0 
+    n_local_pareto_regions = 1 
     n_dominance_res_regions = 1 
-    n_global_pareto_regions = 2 
-    const_space = 0.0
-    pareto_set_type = 2 
-    constraint_type = 0 
+    n_global_pareto_regions = 3
+    const_space = 0.2
+    pareto_set_type = 1 
+    constraint_type = 4 
     ndo = 0 #numberOfdiscontinousObjectiveFunctionRegions
 
     # 0: No constraint, 1-4: Hard vertex, centre, moat, extended checker, 
@@ -1321,6 +1339,22 @@ if __name__=="__main__":
     
     # get Pareto set member works currently only when number of variables is 2.
     x, point = problem.get_Pareto_set_member()  
+    n_of_points = 300
+    po_list = np.zeros((n_of_points, problem.n))
+    po_points = np.zeros((n_of_points, 2))
+    for i in range(n_of_points):
+        result = problem.get_Pareto_set_member()
+        po_list[i] = result[0]
+        po_points[i] = result[1]
+
+    plt.scatter(x=po_points[:,0], y=po_points[:,1], c="r", label="Pareto set members")
+    plt.title(f"Pareto set members")
+    plt.xlabel("F1")
+    plt.xlim([-1,1])
+    plt.ylim([-1,1])
+    plt.ylabel("F2")
+    #plt.legend()
+
     print("A pareto set member ", x)
     print("A corresponding 2D point", point)
 
@@ -1339,7 +1373,7 @@ if __name__=="__main__":
     # need to get the population
     #po_set = problem.plot_pareto_set_members(300)
     #print(po_set)
-    problem.plot_landscape_for_single_objective(0, 500)
-    problem.plot_dominance_landscape(10)
+    #problem.plot_landscape_for_single_objective(0, 500)
+    #problem.plot_dominance_landscape(10)
 
     plt.show()
