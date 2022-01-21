@@ -510,18 +510,13 @@ class DBMOPP_generator:
                 self.obj.attractors[k].locations = np.vstack((attractor_loc,  locs[I[k], :]))
      
 
-    # TODO : Big problem here with the indices
     def place_disconnected_pareto_elements(self):
         n = self.ngp - 1 # number of points to use to set up separete subregions
-        #print(n)
         # first get base angles in region of interest on unrotated Pareto set
         pivot_index = np.random.randint(self.k) # get attractor at random
         #pivot_index = np.random.randint(0,self.k-1) #  check if this is the correct way
-
         # sort from smallest to largest and get the indices
         indices = np.argsort(self.obj.pareto_angles, axis = 0)
-        #print(indices) # again this being 2d might cause isssue. Or more like there is one 
-        # part of code where we assume we using 2d array but actaully use 1d or smhm like that.
 
         offset_angle_1 = (self.obj.pareto_angles[indices[self.k - 1]] if pivot_index == 0
             else self.obj.pareto_angles[indices[pivot_index - 1]]) # check this minus
@@ -540,7 +535,6 @@ class DBMOPP_generator:
             range_covered = offset_angle_1 + 2 * np.pi - offset_angle_2
             p1 = offset_angle_1 / range_covered
             r = np.random.rand(n) # does this return vals to sum of 1 ??
-            print("r",r)
             p1 = np.sum(r < p1)
             r[:p1] = 2*np.pi + np.random.rand(p1) * offset_angle_1
             r[p1:n] = np.random.rand(n-p1) * (2*np.pi - offset_angle_2) + offset_angle_2
@@ -551,7 +545,6 @@ class DBMOPP_generator:
             r_angles[1:n+1] = r
         else:
             r = np.random.rand(n) * (offset_angle_1 - offset_angle_2) + offset_angle_2
-            print("r2",r)
             r = np.sort(r)
             r_angles = np.zeros(n+2)
             r_angles[0] = offset_angle_2 
@@ -568,14 +561,8 @@ class DBMOPP_generator:
             return self.obj.centre_regions[ind].calc_location(a, self.obj.rotations[ind])
 
         index = 0
-        # TODO: FIX, r_angles are not sorted.. thats atleast one issue found
-        # also r_angles might be too tiny overral. I mean seem like matlab has most times angles bigger than 2 or 3. When this
-        # has almost always less than 1.
-        # yea i think that is the thing. if r_angles and/or offset_angles too tiny, there won't be any area to hit etc.. ther emust be a bug to make it so tiny
-       # r_angles = np.sort(r_angles) # not sure if need to sort totally or just between the start and end.
-        print(r_angles)
-        print(offset_angle_1)
-        print(offset_angle_2)
+        # r_angles = np.sort(r_angles) # not sure if need to sort totally or just between the start and end.
+
         # now for each Pareto set region, get the corresponding (rotated) locations
         # of the points defining each slice, and save
 
@@ -1246,7 +1233,6 @@ class DBMOPP_generator:
         centres = self.obj.centre_regions
         
         centre_list = []
-        print(len(centres))
         counter = 0
 
         #results = np.zeros((points, 2))
@@ -1292,7 +1278,6 @@ class DBMOPP_generator:
             results.append(x)
             results2d.append(point)
         
-        print(centre_list)
         return results, results2d 
 
 
