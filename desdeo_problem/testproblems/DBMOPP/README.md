@@ -30,7 +30,6 @@ testproblems with DESDEO's methods is work in progress.
 
 - Dominance landscape not yet plotted
 - Disconnected Pareto penalty regions are not yet plotted.
-- get_Pareto_set_member has a bug with Pareto set type 2, meaning it ignores one or more of the regions sometimes.
 - Some parameters and combination of them is not tested yet with MOProblem and some are still under development.
 These are ndo, vary_sol_density, vary_objective_scales, prop_neutral and nm and
 are suggested to be left on their default values.

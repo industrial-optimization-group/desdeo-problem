@@ -1,4 +1,5 @@
-from desdeo_problem.testproblems.DBMOPP.utilities import get_2D_version, euclidean_distance, convhull, in_hull, get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
+from desdeo_problem.testproblems.DBMOPP.utilities import get_2D_version, euclidean_distance, \
+    get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
 from typing import Dict, Tuple
 import numpy as np
 from time import time
@@ -9,6 +10,7 @@ from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder,
 from matplotlib import cm
 from desdeo_problem.testproblems.DBMOPP.Region import AttractorRegion, Attractor, Region
 import functools
+from shapely.geometry import MultiPoint, Point
 
 
 class DBMOPP:
@@ -348,6 +350,7 @@ class DBMOPP_generator:
     def in_convex_hull_of_attractor_region(self, y: np.ndarray):
         """
             # Attractor region method? 
+            # TODO:
         """
         self.check_valid_length(y)
         x = get_2D_version(y, self.obj.pi1, self.obj.pi2)
@@ -372,18 +375,14 @@ class DBMOPP_generator:
         """
         # number of local PO sets, global PO sets, dominance resistance regions
         n = self.nlp + self.ngp + self.ndr 
-
         #Create the attractor objects
+        # put here different types of regions..
         self.obj.centre_regions = np.array([Region() for _ in range(n)]) # Different objects
-
         max_radius = 1/(2*np.sqrt(n)+1) * (1 - (self.prop_neutral + self.prop_contraint_checker)) # prop 0 and 0.
-        
         # Assign centres
         radius = self.place_region_centres(n, max_radius)
-
         # Assign radius
         self.place_region_radius(n, radius)
-        
         # save indices of PO set locations
         self.obj.pareto_set_indices = np.arange(self.nlp, self.nlp + self.ngp + 1)
     
@@ -391,14 +390,11 @@ class DBMOPP_generator:
     def place_region_radius(self, n, r):
         for i in range(n):
             self.obj.centre_regions[i].radius = r
-
         # reduce raddius if local fronts used
         if self.nlp > 0:
             for i in range(self.nlp + 1, n):
                 self.obj.centre_regions[i].radius = r / 2
-
             w = np.linspace(1, 0.5, self.nlp+1)
-
             # linearly decrease local front radius
             for i in range(self.nlp+1):
                 self.obj.centre_regions[i].radius = self.obj.centre_regions[i].radius * w[i]
@@ -414,7 +410,7 @@ class DBMOPP_generator:
         rand_coord = (np.random.rand(2)*2*effective_bound) - effective_bound
         self.obj.centre_regions[0].centre = rand_coord
 
-        for i in np.arange(1, n): # looping the objects would be nicer
+        for i in range(1, n): # looping the objects would be nicer
             while True:
                 rand_coord = (np.random.rand(2)*2*effective_bound) - effective_bound
                 distances = np.array([self.obj.centre_regions[i].get_distance(rand_coord) for i in range(i)])
@@ -442,7 +438,8 @@ class DBMOPP_generator:
 
         self.obj.attractor_regions = np.array([None] * (l + self.ndr))
 
-        for i in np.arange(l):
+        # assign atractors per region for local and global fronts 
+        for i in range(l): # used to be arange dunno why.
             B = np.hstack((
                 np.cos(self.obj.pareto_angles + self.obj.rotations[i]),
                 np.sin(self.obj.pareto_angles + self.obj.rotations[i])
@@ -455,7 +452,8 @@ class DBMOPP_generator:
             
             convhull_locs = None
             if self.k > 2:
-                convhull_locs = convhull(locs)
+                mpoints = MultiPoint(locs)
+                convhull_locs = mpoints.convex_hull 
 
             # create attractor region
             self.obj.attractor_regions[i] = AttractorRegion(
@@ -474,6 +472,8 @@ class DBMOPP_generator:
         for i in range(self.k):
             self.obj.attractors[i].locations = ini_locs[:,:,i]
 
+
+        # now assign dominance resistance regions which have a subset of attractors per region active.
         for i in range(l, l + self.ndr):
             locs = (
                 matlib.repmat(self.obj.centre_regions[i].centre, self.k,1) 
@@ -493,7 +493,9 @@ class DBMOPP_generator:
             # only calculate convex hull if there are more than two points'
             convehull = None
             if (len(locs[:,1] > 2)):
-                convehull = convhull(locs[j, :])
+                mpoints = MultiPoint(locs)
+                convehull = mpoints.convex_hull 
+
 
             self.obj.attractor_regions[i] = AttractorRegion(
                 locations = locs[j, :], 
@@ -510,21 +512,26 @@ class DBMOPP_generator:
 
     # TODO : Big problem here with the indices
     def place_disconnected_pareto_elements(self):
-        n = self.ngp #- 1 # number of points to use to set up separete subregions
+        n = self.ngp - 1 # number of points to use to set up separete subregions
         #print(n)
         # first get base angles in region of interest on unrotated Pareto set
         pivot_index = np.random.randint(self.k) # get attractor at random
+        #pivot_index = np.random.randint(0,self.k-1) #  check if this is the correct way
 
         # sort from smallest to largest and get the indices
         indices = np.argsort(self.obj.pareto_angles, axis = 0)
+        #print(indices) # again this being 2d might cause isssue. Or more like there is one 
+        # part of code where we assume we using 2d array but actaully use 1d or smhm like that.
 
         offset_angle_1 = (self.obj.pareto_angles[indices[self.k - 1]] if pivot_index == 0
             else self.obj.pareto_angles[indices[pivot_index - 1]]) # check this minus
+        offset_angle_1 = offset_angle_1[0] 
         
         offset_angle_2 = (self.obj.pareto_angles[indices[0]] if pivot_index == self.k-1
             else self.obj.pareto_angles[indices[pivot_index + 1]]) # check plus
         
-        pivot_angle = self.obj.pareto_angles[indices[pivot_index]]
+        offset_angle_2 = offset_angle_2[0] 
+        pivot_angle = self.obj.pareto_angles[indices[pivot_index]][0] # dunno if needed to be 2d
 
         if pivot_angle == (offset_angle_1 or offset_angle_2):
             raise Exception("Angle should not be duplicated!")
@@ -532,7 +539,8 @@ class DBMOPP_generator:
         if offset_angle_1 < offset_angle_2:
             range_covered = offset_angle_1 + 2 * np.pi - offset_angle_2
             p1 = offset_angle_1 / range_covered
-            r = np.random.rand(n)
+            r = np.random.rand(n) # does this return vals to sum of 1 ??
+            print("r",r)
             p1 = np.sum(r < p1)
             r[:p1] = 2*np.pi + np.random.rand(p1) * offset_angle_1
             r[p1:n] = np.random.rand(n-p1) * (2*np.pi - offset_angle_2) + offset_angle_2
@@ -542,7 +550,8 @@ class DBMOPP_generator:
             r_angles[n+1] = offset_angle_1
             r_angles[1:n+1] = r
         else:
-            r = r = np.random.rand(n)
+            r = np.random.rand(n) * (offset_angle_1 - offset_angle_2) + offset_angle_2
+            print("r2",r)
             r = np.sort(r)
             r_angles = np.zeros(n+2)
             r_angles[0] = offset_angle_2 
@@ -559,6 +568,14 @@ class DBMOPP_generator:
             return self.obj.centre_regions[ind].calc_location(a, self.obj.rotations[ind])
 
         index = 0
+        # TODO: FIX, r_angles are not sorted.. thats atleast one issue found
+        # also r_angles might be too tiny overral. I mean seem like matlab has most times angles bigger than 2 or 3. When this
+        # has almost always less than 1.
+        # yea i think that is the thing. if r_angles and/or offset_angles too tiny, there won't be any area to hit etc.. ther emust be a bug to make it so tiny
+       # r_angles = np.sort(r_angles) # not sure if need to sort totally or just between the start and end.
+        print(r_angles)
+        print(offset_angle_1)
+        print(offset_angle_2)
         # now for each Pareto set region, get the corresponding (rotated) locations
         # of the points defining each slice, and save
 
@@ -571,7 +588,9 @@ class DBMOPP_generator:
                 raise Exception('should not be calling this method with an instance with identical Pareto set regions')
             
             elif self.pareto_set_type == 2:
-                self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[index+1])
+                self.obj.bracketing_locations_upper[i] = calc_location(i, r_angles[index+1])
+                #print("brack",self.obj.bracketing_locations_upper)
+                #print(len(self.obj.bracketing_locations_upper))
 
             elif self.pareto_set_type == 1:
                 if index == self.ngp - 1:
@@ -810,7 +829,7 @@ class DBMOPP_generator:
         y = self.update_with_neutrality(x,y)
         return y
 
-    def is_in_limited_region(self, x, eps = 1e-06):
+    def is_in_limited_region(self, x, eps = 1e-16):
         """
         
         """
@@ -820,17 +839,14 @@ class DBMOPP_generator:
             "index": -1
         }
 
+        if x.shape[0] != 2:
+            #print(x)
+            x = x[0]
         # can still be improved?
         I = np.array([i for i in range(len(self.obj.centre_regions)) if self.obj.centre_regions[i].is_close(x, eps)])
-        #print("I",I)
-        #print(I.shape)
-        #
         if len(I) > 0: # is not empty 
             i = I[0]
-            #print("here in limited region\n",i)
-            #print(len(self.obj.attractor_regions))
-            #print(len(self.obj.attractor_regions[i].convhull.simplices))
-            #input()
+ 
             if self.nlp <= i < self.nlp + self.ngp:
                 if self.constraint_type in [2,6]: 
                     # Smaller of dist
@@ -839,9 +855,12 @@ class DBMOPP_generator:
                     r = np.min(np.abs(dist), np.abs(radius))
                     if np.abs(dist) - radius < 1e4 * eps * r:
                         ans["in_hull"] = True
-                        # bug here because I fixed the problem with disconnected po fronts atleast type 2.
-                elif in_hull(x, self.obj.attractor_regions[i].locations[self.obj.attractor_regions[i].convhull.simplices]):
-                    ans["in_hull"] = True 
+                
+                else:
+                    xpoint = Point(x)
+                    t = self.obj.attractor_regions[i].convhull.contains(xpoint)
+                    if t:
+                        ans["in_hull"] = True 
         
         if self.pareto_set_type == 0 or self.constraint_type in [2,6]:
             ans["in_pareto_region"] = ans["in_hull"]
@@ -849,12 +868,16 @@ class DBMOPP_generator:
         else:
             if ans["in_hull"]:
                 ans["index"] = I[0]
-                ans["in_pareto_region"] = between_lines_rooted_at_pivot(
+                # maybe between_lines_rooted_at_pivot does not work correctly
+                res = between_lines_rooted_at_pivot(
                     x,
                     self.obj.pivot_locations[I[0], :],
                     self.obj.bracketing_locations_lower[I[0],:],
                     self.obj.bracketing_locations_upper[I[0],:],
                 )
+                #print(res)
+                ans["in_pareto_region"] = res 
+                #ans["in_pareto_region"] = True
                 if self.pareto_set_type == 1:
                     if I[0] == self.nlp + self.ngp-1 : # should maybe be -1
                         ans["in_pareto_region"] = not ans["in_pareto_region"] # special case where last region is split at the two sides, should not get here everytime
@@ -975,6 +998,9 @@ class DBMOPP_generator:
     
 
     def plot_dominance_landscape(self, res = 500, moore_neighbourhood = True):
+        print("Plotting dominance landscape not implemented!")
+        return
+    """
         if res < 1: 
             raise Exception("Cannot grid the space with a resolution less than 1")
         
@@ -988,89 +1014,12 @@ class DBMOPP_generator:
                 y[:, i, j] = obj_vector
 
         return self.plot_dominance_landscape_from_matrix(y, xy, xy, moore_neighbourhood)
-    
     """
-             [neutral_areas, dominated, destination, dominating_neighbours, offset] = plotDominanceLandscapeFromMatrix(Y,x,y,moore_neighbourhood)
-            %
-            % INPUTS
-            %
-            % Y = number of objectives by resolution by resolution matrix
-            %       holding objective vector for each mesh location
-            % x = resolution by 1 array of ordered x locations of samples
-            %       (e.g. x = linspace(-1, 1, resolution) )
-            % y = resolution by 1 array of ordered x locations of samples
-            %       (e.g. y = linspace(-1, 1, resolution) )
-            % moore_neighbourhood = type of neighbourhood used, if true then
-            %         Moore neighbourhood, if false Von Neumann
-            %         nieghbourhood used
-            %
-            % OUTPUTS
-            %
-            % neural_areas = resolution by resolution matrix. contigious
-            %       dominance neutral araes have same positive integer value. 
-            %       dominated located have a value of -1
-            % dominated = Boolean resolution by resolution matrix. true is
-            %       corresponding location is dominated.
-            % destination = resolution by resolution cell matrix, holding
-            %       the list of distinct neutral areas reached by all
-            %       downhill dominance walks commences at the cell (see the
-            %       neutral_areas matrix for mapping)
-            % offset = neighbourhood mapping matrix 
-            % basins = matrix of basin memberships (resolution by 
-            %       resolution). A value of 0 at basins(i,j) denotes the
-            %       corresponding location is dominance neutral. A value of
-            %       1 denotes that dominance paths rooted at the cell lead
-            %       to more than one distinct neutral region. A value
-            %       between 0.25 and 0.75 denotes that all dominance paths
-            %       starting from this location end in the same dominance
-            %       neutral regions -- all members of the same basin having
-            %       the same value in this range.
-    """
+
     def plot_dominance_landscape_from_matrix(self, z, x, y, moore_neighbourhood):
         basins, neutral_areas, dominated, destination, dominating_neighbours, offset = self.get_dominance_landscape_basins_from_matrix(z, x, y, moore_neighbourhood)    
         ## plotting here
 
-
-
-        """
-            % [basins, neutral_areas, dominated, destination, dominating_neighbours, offset] = getDominanceLandscapeBasinsFromMatrix(Y,x,y,moore_neighbourhood)
-            %
-            % INPUTS
-            %
-            % Y = number of objectives by resolution by resolution matrix
-            %       holding objective vector for each mesh location
-            % x = resolution by 1 array of ordered x locations of samples
-            %       (e.g. x = linspace(-1, 1, resolution) )
-            % y = resolution by 1 array of ordered x locations of samples
-            %       (e.g. y = linspace(-1, 1, resolution) )
-            % moore_neighbourhood = type of neighbourhood used, if true then
-            %         Moore neighbourhood, if false Von Neumann
-            %         nieghbourhood used
-            %
-            % OUTPUTS
-            %
-            % basins = matrix of basin memberships (resolution by 
-            %       resolution). A value of 0 at basins(i,j) denotes the
-            %       corresponding location is dominance neutral. A value of
-            %       1 denotes that dominance paths rooted at the cell lead
-            %       to more than one distinct neutral region. A value
-            %       between 0.25 and 0.75 denotes that all dominance paths
-            %       starting from this location end in the same dominance
-            %       neutral regions -- all members of the same basin having
-            %       the same value in this range.
-            % neural_areas = resolution by resolution matrix. contigious
-            %       dominance neutral araes have same positive integer value. 
-            %       dominated located have a value of -1
-            % dominated = Boolean resolution by resolution matrix. true is
-            %       corresponding location is dominated.
-            % destination = resolution by resolution cell matrix, holding
-            %       the list of distinct neutral areas reached by all
-            %       downhill dominance walks commences at the cell (see the
-            %       neutral_areas matrix for mapping)
-            % offset = neighbourhood mapping matrix 
-            %
-            % plots dominance landscae given arguments
-        """
         # TODO: there must be a way to optimize the code..
     def get_dominance_landscape_basins_from_matrix(self, z, x, y, moore_neighbourhood):
         print(z.shape)
@@ -1181,31 +1130,11 @@ class DBMOPP_generator:
         #return int(d), int(n)
 
 
-
-
-    #% function X = unit_hypercube_simplex_sample(number_of_points, dim, sum_value)
-    #%
-    #% INPUTS
-    #%
-    #% dim = dimensions
-    #% sum_value = value that each vector should sum to
-    #% number_of_points = number of dim-dimensional points to sample (output in
-    #%       X)
-    #%
-    #% OUTPUT
-    #%
-    #% X = number_of_points by dim matrix of uniform samples in unit cube from
-    #%       simplex which sums to sum_value
-    #%
-    #% Returns X which contains uniform samples from the simplex summing to
-    #% sum_value, which lies in the unit hypercube
-
-    # TODO: Make sure the [0] at somepoints make sense. They are here to emulate matlab
-    # code. Maybe could be done better
     def unit_hypercube_simplex_sample(self, dim, sum_value):
         no_points = 1 # TODO: make sure this can be one..
-        X = np.random.exponential(np.ones((no_points,dim)))[0]
+        X = np.random.exponential(np.ones((no_points,dim)))
         S = np.sum(X) # drop array bracket or not
+
         if sum_value == 1:
             X = np.divide(X,matlib.repmat(S,1,dim))
         elif sum_value < 1:
@@ -1228,10 +1157,10 @@ class DBMOPP_generator:
         X = (np.divide(Z, matlib.repmat(S, 1, dim)))*sum_value 
 
         for i in range(npoints):
-            while (np.max(X[i,:])) > 1: # rejection sampling
-                Z[i,:] = np.random.exponential(np.ones((1, dim)))
-                S[i] = np.sum(Z[i,:])
-                X[i,:] = Z[i,:]/S[i] * sum_value
+            while (np.max(X[i])) > 1: # rejection sampling
+                Z[i,:] = np.random.exponential(np.ones((1, dim))) 
+                S = np.sum(Z[i])
+                X[i,:] = Z[i,:]/S * sum_value
 
         return X
 
@@ -1242,7 +1171,6 @@ class DBMOPP_generator:
         def process_dims(z, x, pi):
             #print("Processing dims")
             #print(z)
-            #print(pi)
             pi_mag = int(np.sum(pi))
             if pi_mag == 1:
                 z[pi] = x
@@ -1251,13 +1179,11 @@ class DBMOPP_generator:
                 x = ((x + 1)/2) * pi_mag
                 s = self.unit_hypercube_simplex_sample(pi_mag, x)[0]
                 s = (s*2)-1 # map s back to [-1, 1]
-
                 z[pi] = s
             return z
 
         z = process_dims(z, x[0], self.obj.pi1)
         z = process_dims(z, x[1], self.obj.pi2)
-        #print(z)
         return z
 
 
@@ -1273,8 +1199,7 @@ class DBMOPP_generator:
         #print(self.obj.pareto_set_indices)
         #print(low, high)
         centres = self.obj.centre_regions
-        
-        #print(len(centres))
+        iters = 0
 
         while invalid:
 
@@ -1293,6 +1218,8 @@ class DBMOPP_generator:
                 if self.is_pareto_2D(x):
                     invalid = False
 
+            iters += 1
+
         # project to higher dims if needed
         if self.n > 2:
             # design spcae is larger than 2d, so need to randomly select a locations
@@ -1306,19 +1233,89 @@ class DBMOPP_generator:
         
 
 
+    # test for get Pareto set.. 
+    def get_Pareto_set(self, points):
+        print("getting the pareto set approximation")
+       #while not legal point obtained, get random pareto centre
+        x = []
+        point = []
+        low = np.min(self.obj.pareto_set_indices)
+        high = np.max(self.obj.pareto_set_indices)
+        #print(self.obj.pareto_set_indices)
+        #print(low, high)
+        centres = self.obj.centre_regions
+        
+        centre_list = []
+        print(len(centres))
+        counter = 0
+
+        #results = np.zeros((points, 2))
+        results = []
+        results2d = []
+        k = low
+
+        while len(results2d) < points:
+            invalid = True
+            while invalid and len(centre_list) <= len(centres):
+
+                if k >= high:
+                    k = low
+                #k = np.random.randint(low, high) #+ self.nlp + self.ndr
+                angle = np.random.rand() * 2.0 * np.pi
+
+                # 2D case
+                if self.constraint_type == 2 or self.constraint_type == 6:
+                    # if centre constraints used, randomly choose angle and use that radius from Pareto set centre list and project
+                    x = centres[k].centre + [centres[k].radius * np.cos(angle), centres[k].radius * np.sin(angle)]
+                    invalid = False
+                else:
+                    # generate random point in Circle
+                    r = centres[k].radius * np.sqrt(np.random.rand())
+                    x = centres[k].centre + [r*np.cos(angle), r*np.sin(angle)]     
+                    if self.is_pareto_2D(x):
+                        if k not in centre_list:
+                            centre_list.append(k)
+                        invalid = False
+                
+                k += 1
+
+            counter += 1
+            # project to higher dims if needed
+            if self.n > 2:
+                # design spcae is larger than 2d, so need to randomly select a locations
+                # in this higher dim space which maps to this Pareto location
+                point = x
+                x = self.get_vectors_mapping_to_location(x)
+            else:
+                point = x
+
+            results.append(x)
+            results2d.append(point)
+        
+        print(centre_list)
+        return results, results2d 
+
+
+
 
 if __name__=="__main__":
     import random
 
-    n_objectives = 3
-    n_variables = 3 
-    n_local_pareto_regions = 1 
-    n_dominance_res_regions = 1 
-    n_global_pareto_regions = 3
-    const_space = 0.2
-    pareto_set_type = 1 
-    constraint_type = 4 
+    #import cProfile
+    #import re
+    #cProfile.run('re.compile("DBMOPP_generator")', 'stats')
+
+    n_objectives = 4 
+    n_variables = 5 
+    n_local_pareto_regions =2 
+    n_dominance_res_regions = 2 
+    n_global_pareto_regions = 3 
+    const_space = 0.10
+    pareto_set_type = 2 
+    constraint_type = 8 
     ndo = 0 #numberOfdiscontinousObjectiveFunctionRegions
+    neutral_space = 0.1
+
 
     # 0: No constraint, 1-4: Hard vertex, centre, moat, extended checker, 
     # 5-8: soft vertex, centre, moat, extended checker.
@@ -1332,14 +1329,32 @@ if __name__=="__main__":
         const_space,
         pareto_set_type,
         constraint_type, 
-        ndo, False, False, 0, 10000
+        ndo, False, False, neutral_space, 10000
     )
     print(problem._print_params())
     print("Initializing works!")
     
     # get Pareto set member works currently only when number of variables is 2.
-    x, point = problem.get_Pareto_set_member()  
-    n_of_points = 300
+
+    #print("centres")
+    #for i in range(len(problem.obj.centre_regions)):
+    #    centre = problem.obj.centre_regions[i].centre
+    #    print(centre)
+    #    print(problem.is_pareto_2D(centre))
+
+    print("====")
+    #print(problem.obj.centre_regions)
+    #print(len(problem.obj.centre_regions))
+    
+    #print(problem.obj.attractor_regions)
+    #for i in problem.obj.attractor_regions:
+    #    print(i.convhull)
+        #plt.fill(i.convhull)
+
+    #x, point = problem.get_Pareto_set_member()  
+    #print("A pareto set member ", x)
+    #print("A corresponding 2D point", point)
+    n_of_points = 150 
     po_list = np.zeros((n_of_points, problem.n))
     po_points = np.zeros((n_of_points, 2))
     for i in range(n_of_points):
@@ -1347,32 +1362,29 @@ if __name__=="__main__":
         po_list[i] = result[0]
         po_points[i] = result[1]
 
-    plt.scatter(x=po_points[:,0], y=po_points[:,1], c="r", label="Pareto set members")
+    print(po_points.shape)
+    #po_list, po_points = problem.get_Pareto_set(50)
+    #print(po_list)
+    #print(po_points)
+
+    plt.scatter(x=po_points[:,0], y=po_points[:,1], s=5, c="r", label="Pareto set members")
     plt.title(f"Pareto set members")
     plt.xlabel("F1")
     plt.xlim([-1,1])
     plt.ylim([-1,1])
     plt.ylabel("F2")
-    #plt.legend()
+    plt.legend()
 
-    print("A pareto set member ", x)
-    print("A corresponding 2D point", point)
 
-    x = np.array(np.random.rand(5, n_variables))
+    #x = np.array(np.random.rand(5, n_variables))
     # For desdeos MOProblem only
-    moproblem = problem.generate_problem()
-    print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
+    #moproblem = problem.generate_problem()
+    #print("\nFormed MOProblem: \n\n", moproblem.evaluate(x)) 
     problem.plot_problem_instance()
 
-    # this should always violate the current constraint region
-    #x_1 = [(problem.obj.hard_constraint_regions[0].centre[0]), (problem.obj.hard_constraint_regions[0].centre[1])] 
-    #x_2 = [(problem.obj.hard_constraint_regions[1].centre[0]), (problem.obj.hard_constraint_regions[1].centre[1])] 
-    #x_3 = [(problem.obj.hard_constraint_regions[2].centre[0]), (problem.obj.hard_constraint_regions[2].centre[1])] 
-    #print("\n Testing with hard constraint region centres: \n\n", moproblem.evaluate(np.array([x_1, x_2, x_3]))) 
-
     # need to get the population
-    #po_set = problem.plot_pareto_set_members(300)
-    #print(po_set)
+    po_set = problem.plot_pareto_set_members(500)
+    #print(po_set[:5])
     #problem.plot_landscape_for_single_objective(0, 500)
     #problem.plot_dominance_landscape(10)
 

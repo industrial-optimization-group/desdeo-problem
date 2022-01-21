@@ -1,9 +1,11 @@
-from desdeo_problem.testproblems.DBMOPP.utilities import get_2D_version, euclidean_distance, convhull, in_hull, get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
-from scipy.spatial import ConvexHull
+from desdeo_problem.testproblems.DBMOPP.utilities import get_2D_version, euclidean_distance, \
+    get_random_angles, between_lines_rooted_at_pivot, assign_design_dimension_projection
 from typing import Dict 
 import numpy as np
 from matplotlib.patches import Circle
 from numpy import matlib # i guess we could implement repmat ourselves
+
+from shapely.geometry import Point
 
 
 class Attractor:
@@ -50,8 +52,8 @@ class Region:
     def radius(self, value):
         self._radius = value
     
-    def is_close(self, x:np.ndarray, eps = 1e-06):
-        return self.radius + eps > self.get_distance(x)
+    def is_close(self, x:np.ndarray, eps = 1e-16):
+        return self.radius + eps >= self.get_distance(x)
     
     def is_inside(self, x:np.ndarray, include_boundary = False):
         if include_boundary:
@@ -63,6 +65,7 @@ class Region:
     def get_distance(self, x: np.ndarray):
         return euclidean_distance(self.centre, x)
     
+        # TODO: check, might be incorrect
     def calc_location(self, a, rotation): # this is also used in place attractors. so maybe move this so it's also accesible from there
         radiis = matlib.repmat(self.radius, 1, 2)
         return (
@@ -90,8 +93,9 @@ class AttractorRegion(Region):
         self.convhull = convhull 
     
     def in_hull(self, x):
-        if isinstance(self.convhull, ConvexHull):
-            return in_hull(x, self.convhull.simplices)
+        shapeX = Point(x)
+        if self.convhull is not None:
+            return self.convhull.contains(shapeX)
         else:
             if self.locations.shape[0] == 1:
                 return self.locations == x
@@ -105,29 +109,32 @@ class AttractorRegion(Region):
         """
         #if self.convhull is None: return
 
+        # TODO: fix annotations
         n = self.locations.shape[0]
         #print(n)
         p = np.atleast_2d(self.locations)
 
         #if not isinstance(self.convhull, ConvexHull):
         if n > 2:
-            for i, s in enumerate(self.convhull.simplices):
-                ax.plot(p[s,0], p[s,1], color = 'black') # outline
-                # add points
-                ax.scatter(p[i,0], p[i,1], color = 'blue')
-                ax.annotate(i, (p[i,0], p[i,1]))
-            ax.fill(p[self.convhull.vertices, 0], p[self.convhull.vertices, 1], color=color, alpha = 0.7)
+            x, y = self.convhull.exterior.xy
+            ax.plot(x, y, linewidth=1, color='black')
+            ax.fill(x,y, color=color)
+            ax.scatter(x,y, s=1,  color = 'blue')
+            #ax.annotate(0,(x,y))
+            for i in range(len(p)):
+                ax.scatter(p[i,0], p[i,1], s=1,  color = 'blue')
+                #ax.annotate(i, (p[i,0], p[i,1]))
         else:
             # for points
             if p.shape[0] == 1:
                 for i in range(len(p)):
                     ax.scatter(self.locations[:,0], self.locations[:,1], color=color)
-                    ax.scatter(p[i,0], p[i,1], color = 'blue')
-                    ax.annotate(i, (p[i,0], p[i,1]))
+                    ax.scatter(p[i,0], p[i,1], s=1, color = 'blue')
+                    #ax.annotate(i, (p[i,0], p[i,1]))
             else:
                 # for lines
                 for i in range(len(p)):
                     ax.plot(self.locations[:,0], self.locations[:,1], color=color)
-                    ax.scatter(p[i,0], p[i,1], color = 'blue')
-                    ax.annotate(i, (p[i,0], p[i,1]))
+                    ax.scatter(p[i,0], p[i,1], s=1, color = 'blue')
+                    #ax.annotate(i, (p[i,0], p[i,1]))
 
