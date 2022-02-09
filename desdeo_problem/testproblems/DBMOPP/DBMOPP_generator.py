@@ -472,7 +472,6 @@ class DBMOPP_generator:
         for i in range(self.k):
             self.obj.attractors[i].locations = ini_locs[:,:,i]
 
-
         # now assign dominance resistance regions which have a subset of attractors per region active.
         for i in range(l, l + self.ndr):
             locs = (
@@ -576,8 +575,6 @@ class DBMOPP_generator:
             
             elif self.pareto_set_type == 2:
                 self.obj.bracketing_locations_upper[i] = calc_location(i, r_angles[index+1])
-                #print("brack",self.obj.bracketing_locations_upper)
-                #print(len(self.obj.bracketing_locations_upper))
 
             elif self.pareto_set_type == 1:
                 if index == self.ngp - 1:
@@ -587,6 +584,14 @@ class DBMOPP_generator:
                     self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[index+2])
             index += 1
 
+
+        print(r_angles)
+        print("============================")
+        print(self.obj.pivot_locations)
+        print("============================")
+        print(self.obj.bracketing_locations_lower)
+        print("============================")
+        print(self.obj.bracketing_locations_upper)
                     
 
     def place_vertex_constraint_locations(self):
@@ -911,10 +916,37 @@ class DBMOPP_generator:
         for i in range(self.nlp):
             self.obj.attractor_regions[i].plot(ax, 'g') # Green
         
-        # global pareto regions
-        for i in range(self.nlp, self.nlp + self.ngp):
-            self.obj.attractor_regions[i].plot(ax, 'r')
-        
+              # TODO: do better, right now only for PO set type 2 and with 3 points.
+              # Find out why sometimes some of them are opposite of each other. say polygon 1 should be at polygon 2s place and polygon 2 at polygon 1. seems polygon 0 always correct. or its polygon 2 anyway
+        if self.pareto_set_type != 0:
+            for i in range(self.ngp):
+                path = [
+                    (self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]),
+                    (self.obj.bracketing_locations_lower[i][0],self.obj.bracketing_locations_lower[i][1]),
+                    (self.obj.bracketing_locations_upper[i][0],self.obj.bracketing_locations_upper[i][1]),
+                    (self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1])
+                ]
+                
+                from matplotlib.path import Path
+                import matplotlib.patches as patches
+                
+                path_lines = len(path) - 2
+                codes = [Path.MOVETO]
+                for p in range(path_lines):
+                    codes.append(Path.LINETO)
+                codes.append(Path.CLOSEPOLY)
+
+                ppath = Path(path, codes)
+                patch = patches.PathPatch(ppath, facecolor='red', lw=1)
+                ax.add_patch(patch)
+ 
+        else:
+            # global pareto regions
+            for i in range(self.nlp, self.nlp + self.ngp):
+                self.obj.attractor_regions[i].plot(ax, 'r')
+         
+
+
         # dominance resistance set regions
         for i in range(self.nlp + self.ngp, self.nlp + self.ngp + self.ndr):
             # attractor regions should take care of different cases
@@ -928,6 +960,15 @@ class DBMOPP_generator:
         plot_constraint_regions(self.obj.hard_constraint_regions, 'black')
         plot_constraint_regions(self.obj.soft_constraint_regions, 'grey')
         plot_constraint_regions(self.obj.neutral_regions, 'c')
+
+
+        # these actually seem to be the correct points. as [pivot_loc, lower, upper] counter clockwise
+        # TODO: plot them someway, which to be decided
+        #for i in range(self.nlp, self.nlp + self.ngp):
+        #    ax.plot(self.obj.bracketing_locations_lower[i][0], self.obj.bracketing_locations_lower[i][1], 'b+')
+        #    ax.plot(self.obj.bracketing_locations_upper[i][0], self.obj.bracketing_locations_upper[i][1], 'r+')
+        #    ax.plot(self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1], 'g+')
+
 
         # PLOT DISCONNECTED PENALTY
         #print("disconnected Pareto penalty regions not yet plotted. THIS IS NOT IMPLEMENTED IN MATLAB")
@@ -1290,16 +1331,16 @@ if __name__=="__main__":
     #import re
     #cProfile.run('re.compile("DBMOPP_generator")', 'stats')
 
-    n_objectives = 4 
-    n_variables = 5 
-    n_local_pareto_regions =2 
-    n_dominance_res_regions = 2 
+    n_objectives = 3 
+    n_variables = 3 
+    n_local_pareto_regions = 0 
+    n_dominance_res_regions = 0 
     n_global_pareto_regions = 3 
-    const_space = 0.10
+    const_space = 0.0
     pareto_set_type = 2 
-    constraint_type = 8 
+    constraint_type = 0 
     ndo = 0 #numberOfdiscontinousObjectiveFunctionRegions
-    neutral_space = 0.1
+    neutral_space = 0.
 
 
     # 0: No constraint, 1-4: Hard vertex, centre, moat, extended checker, 
@@ -1339,26 +1380,26 @@ if __name__=="__main__":
     #x, point = problem.get_Pareto_set_member()  
     #print("A pareto set member ", x)
     #print("A corresponding 2D point", point)
-    n_of_points = 150 
-    po_list = np.zeros((n_of_points, problem.n))
-    po_points = np.zeros((n_of_points, 2))
-    for i in range(n_of_points):
-        result = problem.get_Pareto_set_member()
-        po_list[i] = result[0]
-        po_points[i] = result[1]
+    #n_of_points = 150 
+    #po_list = np.zeros((n_of_points, problem.n))
+    #po_points = np.zeros((n_of_points, 2))
+    #for i in range(n_of_points):
+    #    result = problem.get_Pareto_set_member()
+    #    po_list[i] = result[0]
+    #    po_points[i] = result[1]
 
-    print(po_points.shape)
+    #print(po_points.shape)
     #po_list, po_points = problem.get_Pareto_set(50)
     #print(po_list)
     #print(po_points)
 
-    plt.scatter(x=po_points[:,0], y=po_points[:,1], s=5, c="r", label="Pareto set members")
-    plt.title(f"Pareto set members")
-    plt.xlabel("F1")
-    plt.xlim([-1,1])
-    plt.ylim([-1,1])
-    plt.ylabel("F2")
-    plt.legend()
+    #plt.scatter(x=po_points[:,0], y=po_points[:,1], s=5, c="r", label="Pareto set members")
+    #plt.title(f"Pareto set members")
+    #plt.xlabel("F1")
+    #plt.xlim([-1,1])
+    #plt.ylim([-1,1])
+    #plt.ylabel("F2")
+    #plt.legend()
 
 
     #x = np.array(np.random.rand(5, n_variables))
@@ -1368,7 +1409,7 @@ if __name__=="__main__":
     problem.plot_problem_instance()
 
     # need to get the population
-    po_set = problem.plot_pareto_set_members(500)
+    po_set = problem.plot_pareto_set_members(300)
     #print(po_set[:5])
     #problem.plot_landscape_for_single_objective(0, 500)
     #problem.plot_dominance_landscape(10)

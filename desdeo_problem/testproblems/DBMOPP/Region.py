@@ -65,7 +65,7 @@ class Region:
     def get_distance(self, x: np.ndarray):
         return euclidean_distance(self.centre, x)
     
-        # TODO: check, might be incorrect
+    # TODO: check, might be incorrect
     def calc_location(self, a, rotation): # this is also used in place attractors. so maybe move this so it's also accesible from there
         radiis = matlib.repmat(self.radius, 1, 2)
         return (
@@ -119,10 +119,11 @@ class AttractorRegion(Region):
             x, y = self.convhull.exterior.xy
             ax.plot(x, y, linewidth=1, color='black')
             ax.fill(x,y, color=color)
-            ax.scatter(x,y, s=1,  color = 'blue')
+            ax.scatter(x,y, s=5,  color = 'blue')
             #ax.annotate(0,(x,y))
-            for i in range(len(p)):
-                ax.scatter(p[i,0], p[i,1], s=1,  color = 'blue')
+            #for i in range(0,len(x)-1):
+            #    ax.scatter(p[i,0], p[i,1], s=1,  color = 'blue')
+                #ax.annotate(i, (x[i], y[i]))
                 #ax.annotate(i, (p[i,0], p[i,1]))
         else:
             # for points
