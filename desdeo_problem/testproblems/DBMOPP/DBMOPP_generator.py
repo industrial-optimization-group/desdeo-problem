@@ -10,7 +10,8 @@ from desdeo_problem.problem import MOProblem, ScalarObjective, variable_builder,
 from matplotlib import cm
 from desdeo_problem.testproblems.DBMOPP.Region import AttractorRegion, Attractor, Region
 import functools
-from shapely.geometry import MultiPoint, Point
+from shapely.geometry import MultiPoint, Point, Polygon
+from descartes import PolygonPatch
 
 
 class DBMOPP:
@@ -40,8 +41,6 @@ class DBMOPP:
         self.pivot_locations = None
         self.bracketing_locations_lower = None
         self.bracketing_locations_upper = None
-
-
 
 
 class DBMOPP_generator:
@@ -220,8 +219,7 @@ class DBMOPP_generator:
 
         constraints = []            
 
-        # eval wrapper seems promising... Finalyy!! 
-        # this must have cleaner way to do it but atleast it works
+        # this is wrapper to be able to call constraints for MOProblem. 
         def eval_wrapper(x, obj,region):
             x = x
             region = region
@@ -231,8 +229,6 @@ class DBMOPP_generator:
             for i, region in enumerate(self.obj.hard_constraint_regions):
                 const_evaluator = functools.partial(eval_wrapper, region=region)
                 constraints.append(ScalarConstraint(f"hard constraint {i}", self.n, self.k, evaluator=const_evaluator))
-            
-
         elif self.constraint_type in [5,6,7,8]:
             for i, region in enumerate(self.obj.soft_constraint_regions):
                 const_evaluator = functools.partial(eval_wrapper, region=region)
@@ -242,8 +238,6 @@ class DBMOPP_generator:
 
         if const_evaluator is None:
             return MOProblem(objectives, variables)
-
-
         return MOProblem(objectives, variables, constraints) 
 
 
@@ -263,7 +257,6 @@ class DBMOPP_generator:
             y = np.atleast_2d(x[i])
             z = get_2D_version(y, self.obj.pi1,self.obj.pi2)
             ret.append(self.get_objectives(z))
-
         return ret
     
 
@@ -275,9 +268,9 @@ class DBMOPP_generator:
             y = np.atleast_2d(x[i])
             z = get_2D_version(y, self.obj.pi1, self.obj.pi2)
             constr[i] = self.get_constraint_violation(z, region, False)
-
         return constr
 
+    # TODO: check if we need to use this anymore. Check if include_boundary needed.
     def get_constraint_violation(self, x, region, include_boundary):
         return self.distance_from_region(region.centre, x) - region.radius 
 
@@ -350,7 +343,6 @@ class DBMOPP_generator:
     def in_convex_hull_of_attractor_region(self, y: np.ndarray):
         """
             # Attractor region method? 
-            # TODO:
         """
         self.check_valid_length(y)
         x = get_2D_version(y, self.obj.pi1, self.obj.pi2)
@@ -551,23 +543,23 @@ class DBMOPP_generator:
             r_angles[1:n+1] = r 
 
         #until this should work
+        #print("not sorted r_ang",r_angles)
+        r_angles = np.sort(r_angles) # matlab has them sorted always
         k = self.nlp + self.ngp
         self.obj.pivot_locations = np.zeros((k, 2)) 
-        self.obj.bracketing_locations_lower = np.zeros((k,2))
-        self.obj.bracketing_locations_upper = np.zeros((k,2))
+        self.obj.bracketing_locations_lower = np.zeros((k, 2))
+        self.obj.bracketing_locations_upper = np.zeros((k ,2))
 
         def calc_location(ind, a):
             return self.obj.centre_regions[ind].calc_location(a, self.obj.rotations[ind])
 
         index = 0
-        # r_angles = np.sort(r_angles) # not sure if need to sort totally or just between the start and end.
 
+        # TODO: could make it a region here for ease of use
         # now for each Pareto set region, get the corresponding (rotated) locations
         # of the points defining each slice, and save
-
         for i in range(self.nlp, k): # verify indexing
             self.obj.pivot_locations[i,:] = calc_location(i, pivot_angle)
-            
             self.obj.bracketing_locations_lower[i,:] = calc_location(i, r_angles[index])
 
             if self.pareto_set_type == 0:
@@ -585,14 +577,6 @@ class DBMOPP_generator:
             index += 1
 
 
-        print(r_angles)
-        print("============================")
-        print(self.obj.pivot_locations)
-        print("============================")
-        print(self.obj.bracketing_locations_lower)
-        print("============================")
-        print(self.obj.bracketing_locations_upper)
-                    
 
     def place_vertex_constraint_locations(self):
         """
@@ -915,37 +899,32 @@ class DBMOPP_generator:
         # Plot local Pareto regions
         for i in range(self.nlp):
             self.obj.attractor_regions[i].plot(ax, 'g') # Green
-        
-              # TODO: do better, right now only for PO set type 2 and with 3 points.
-              # Find out why sometimes some of them are opposite of each other. say polygon 1 should be at polygon 2s place and polygon 2 at polygon 1. seems polygon 0 always correct. or its polygon 2 anyway
-        if self.pareto_set_type != 0:
-            for i in range(self.ngp):
-                path = [
-                    (self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]),
-                    (self.obj.bracketing_locations_lower[i][0],self.obj.bracketing_locations_lower[i][1]),
-                    (self.obj.bracketing_locations_upper[i][0],self.obj.bracketing_locations_upper[i][1]),
-                    (self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1])
-                ]
-                
-                from matplotlib.path import Path
-                import matplotlib.patches as patches
-                
-                path_lines = len(path) - 2
-                codes = [Path.MOVETO]
-                for p in range(path_lines):
-                    codes.append(Path.LINETO)
-                codes.append(Path.CLOSEPOLY)
 
-                ppath = Path(path, codes)
-                patch = patches.PathPatch(ppath, facecolor='red', lw=1)
-                ax.add_patch(patch)
- 
+        # if not type 0, we need to find the intersection between the connected pareto regions polygon and disconnected pareto regions polygon formed from pivot_locs and brackets in place_disconnected_pareto_elements.
+        if self.pareto_set_type != 0:
+            #for i in range(self.nlp, self.nlp + self.ngp):
+            for i in range(self.nlp, self.nlp + self.ngp):
+                poly1 = self.obj.attractor_regions[i].convhull
+                coords = np.array([
+                    [self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]],
+                    [self.obj.bracketing_locations_lower[i][0],self.obj.bracketing_locations_lower[i][1]],
+                    [self.obj.bracketing_locations_upper[i][0],self.obj.bracketing_locations_upper[i][1]],
+                    [self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]]
+                ])
+                poly2 = Polygon(coords)
+                inter = poly1.intersection(poly2)
+                intersect = PolygonPatch(inter, facecolor='red')
+                ax.add_patch(intersect)
+
+                # for testing
+                #patch_poly = PolygonPatch(poly1, facecolor='green')
+                #patch_poly2 = PolygonPatch(poly2, facecolor='red')
+                #ax.add_patch(patch_poly)
+                #ax.add_patch(patch_poly2)
         else:
             # global pareto regions
             for i in range(self.nlp, self.nlp + self.ngp):
                 self.obj.attractor_regions[i].plot(ax, 'r')
-         
-
 
         # dominance resistance set regions
         for i in range(self.nlp + self.ngp, self.nlp + self.ngp + self.ndr):
@@ -960,19 +939,6 @@ class DBMOPP_generator:
         plot_constraint_regions(self.obj.hard_constraint_regions, 'black')
         plot_constraint_regions(self.obj.soft_constraint_regions, 'grey')
         plot_constraint_regions(self.obj.neutral_regions, 'c')
-
-
-        # these actually seem to be the correct points. as [pivot_loc, lower, upper] counter clockwise
-        # TODO: plot them someway, which to be decided
-        #for i in range(self.nlp, self.nlp + self.ngp):
-        #    ax.plot(self.obj.bracketing_locations_lower[i][0], self.obj.bracketing_locations_lower[i][1], 'b+')
-        #    ax.plot(self.obj.bracketing_locations_upper[i][0], self.obj.bracketing_locations_upper[i][1], 'r+')
-        #    ax.plot(self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1], 'g+')
-
-
-        # PLOT DISCONNECTED PENALTY
-        #print("disconnected Pareto penalty regions not yet plotted. THIS IS NOT IMPLEMENTED IN MATLAB")
-        #plt.show()
 
 
     def plot_landscape_for_single_objective(self, index, res = 500):
@@ -1050,12 +1016,8 @@ class DBMOPP_generator:
 
         # TODO: there must be a way to optimize the code..
     def get_dominance_landscape_basins_from_matrix(self, z, x, y, moore_neighbourhood):
-        print(z.shape)
-        print(x.shape)
-        print(y.shape)
         num_obj, res, r = z.shape
 
-        print(num_obj, res, r)
         # some checks 
         assert res == r, "Second and third dimension of z must be the same size"
         assert self.k >= 2, "must have atleast two objectives"
@@ -1305,7 +1267,6 @@ class DBMOPP_generator:
                         invalid = False
                 
                 k += 1
-
             counter += 1
             # project to higher dims if needed
             if self.n > 2:
@@ -1315,12 +1276,9 @@ class DBMOPP_generator:
                 x = self.get_vectors_mapping_to_location(x)
             else:
                 point = x
-
             results.append(x)
             results2d.append(point)
-        
         return results, results2d 
-
 
 
 
@@ -1332,7 +1290,7 @@ if __name__=="__main__":
     #cProfile.run('re.compile("DBMOPP_generator")', 'stats')
 
     n_objectives = 3 
-    n_variables = 3 
+    n_variables = 5 
     n_local_pareto_regions = 0 
     n_dominance_res_regions = 0 
     n_global_pareto_regions = 3 
@@ -1361,22 +1319,6 @@ if __name__=="__main__":
     print("Initializing works!")
     
     # get Pareto set member works currently only when number of variables is 2.
-
-    #print("centres")
-    #for i in range(len(problem.obj.centre_regions)):
-    #    centre = problem.obj.centre_regions[i].centre
-    #    print(centre)
-    #    print(problem.is_pareto_2D(centre))
-
-    print("====")
-    #print(problem.obj.centre_regions)
-    #print(len(problem.obj.centre_regions))
-    
-    #print(problem.obj.attractor_regions)
-    #for i in problem.obj.attractor_regions:
-    #    print(i.convhull)
-        #plt.fill(i.convhull)
-
     #x, point = problem.get_Pareto_set_member()  
     #print("A pareto set member ", x)
     #print("A corresponding 2D point", point)
@@ -1409,7 +1351,7 @@ if __name__=="__main__":
     problem.plot_problem_instance()
 
     # need to get the population
-    po_set = problem.plot_pareto_set_members(300)
+    po_set = problem.plot_pareto_set_members(100)
     #print(po_set[:5])
     #problem.plot_landscape_for_single_objective(0, 500)
     #problem.plot_dominance_landscape(10)
