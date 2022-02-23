@@ -41,6 +41,7 @@ class DBMOPP:
         self.pivot_locations = None
         self.bracketing_locations_lower = None
         self.bracketing_locations_upper = None
+        self.disconnected_regions = []
 
 
 class DBMOPP_generator:
@@ -376,7 +377,8 @@ class DBMOPP_generator:
         # Assign radius
         self.place_region_radius(n, radius)
         # save indices of PO set locations
-        self.obj.pareto_set_indices = np.arange(self.nlp, self.nlp + self.ngp + 1)
+        #self.obj.pareto_set_indices = np.arange(self.nlp, self.nlp + self.ngp + 1)
+        self.obj.pareto_set_indices = np.arange(self.nlp, self.nlp + self.ngp)
     
 
     def place_region_radius(self, n, r):
@@ -501,27 +503,55 @@ class DBMOPP_generator:
                 self.obj.attractors[k].locations = np.vstack((attractor_loc,  locs[I[k], :]))
      
 
-    def place_disconnected_pareto_elements(self):
-        n = self.ngp - 1 # number of points to use to set up separete subregions
-        # first get base angles in region of interest on unrotated Pareto set
-        pivot_index = np.random.randint(self.k) # get attractor at random
-        #pivot_index = np.random.randint(0,self.k-1) #  check if this is the correct way
-        # sort from smallest to largest and get the indices
-        indices = np.argsort(self.obj.pareto_angles, axis = 0)
-
+    """
         offset_angle_1 = (self.obj.pareto_angles[indices[self.k - 1]] if pivot_index == 0
-            else self.obj.pareto_angles[indices[pivot_index - 1]]) # check this minus
+            else self.obj.pareto_angles[indices[pivot_index]]) # check this minus
         offset_angle_1 = offset_angle_1[0] 
         
         offset_angle_2 = (self.obj.pareto_angles[indices[0]] if pivot_index == self.k-1
             else self.obj.pareto_angles[indices[pivot_index + 1]]) # check plus
         
         offset_angle_2 = offset_angle_2[0] 
+
+    """
+
+
+    def place_disconnected_pareto_elements(self):
+        n = self.ngp - 1 # number of points to use to set up separete subregions
+        # first get base angles in region of interest on unrotated Pareto set
+        pivot_index = np.random.randint(self.k) # get attractor at random
+        #pivot_index = 0
+        print(pivot_index)
+        #pivot_index = np.random.randint(0,self.k-1) #  check if this is the correct way
+        # sort from smallest to largest and get the indices
+        print(self.obj.pareto_angles)
+        indices = np.argsort(self.obj.pareto_angles, axis = 0)
+        print("ff",indices)
+
+
+        if pivot_index == 0:
+            offset_angle_1 = self.obj.pareto_angles[indices[self.k - 1]] 
+        else:
+            offset_angle_1 = self.obj.pareto_angles[indices[pivot_index - 1]] # check this minus
+
+        offset_angle_1 = offset_angle_1[0] 
+        print(offset_angle_1)
+        
+        if pivot_index == self.k-1:
+            offset_angle_2 = self.obj.pareto_angles[indices[0]] 
+        else:
+            offset_angle_2 = self.obj.pareto_angles[indices[pivot_index + 1]] # check plus
+        
+        offset_angle_2 = offset_angle_2[0] 
+        print(offset_angle_2)
+
         pivot_angle = self.obj.pareto_angles[indices[pivot_index]][0] # dunno if needed to be 2d
+        print("piv",pivot_angle)
 
         if pivot_angle == (offset_angle_1 or offset_angle_2):
             raise Exception("Angle should not be duplicated!")
         
+        ## this should be correct now.
         if offset_angle_1 < offset_angle_2:
             range_covered = offset_angle_1 + 2 * np.pi - offset_angle_2
             p1 = offset_angle_1 / range_covered
@@ -532,8 +562,8 @@ class DBMOPP_generator:
             r = np.sort(r)
             r_angles = np.zeros(n+2)
             r_angles[0] = offset_angle_2
-            r_angles[n+1] = offset_angle_1
-            r_angles[1:n+1] = r
+            r_angles[n+1] = offset_angle_1 + 2*np.pi # adding 2*pi as shifted for sorting
+            r_angles[1:n+1] = r # cause python's lists [)
         else:
             r = np.random.rand(n) * (offset_angle_1 - offset_angle_2) + offset_angle_2
             r = np.sort(r)
@@ -542,9 +572,6 @@ class DBMOPP_generator:
             r_angles[n+1] = offset_angle_1
             r_angles[1:n+1] = r 
 
-        #until this should work
-        #print("not sorted r_ang",r_angles)
-        r_angles = np.sort(r_angles) # matlab has them sorted always
         k = self.nlp + self.ngp
         self.obj.pivot_locations = np.zeros((k, 2)) 
         self.obj.bracketing_locations_lower = np.zeros((k, 2))
@@ -554,8 +581,7 @@ class DBMOPP_generator:
             return self.obj.centre_regions[ind].calc_location(a, self.obj.rotations[ind])
 
         index = 0
-
-        # TODO: could make it a region here for ease of use
+        # TODO: could make it a region here for ease of use. Need to do the minusing regions here b4 rotations
         # now for each Pareto set region, get the corresponding (rotated) locations
         # of the points defining each slice, and save
         for i in range(self.nlp, k): # verify indexing
@@ -566,7 +592,81 @@ class DBMOPP_generator:
                 raise Exception('should not be calling this method with an instance with identical Pareto set regions')
             
             elif self.pareto_set_type == 2:
-                self.obj.bracketing_locations_upper[i] = calc_location(i, r_angles[index+1])
+                self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[index+1])
+
+                # make a function etc ? This works only for type 2. Type 1 needs somewhat different way
+                # TODO: this mess seems to do it correctly. Just make better, fix possible bugs, check more carefully.
+                # we need to check for all
+                piv = self.obj.pivot_locations[i]
+                lb = self.obj.bracketing_locations_lower[i]
+                ub = self.obj.bracketing_locations_upper[i]
+                vertices_between = []
+
+                x = np.asarray(self.obj.attractor_regions[i].convhull.exterior.coords)
+
+                for ii in range(len(x)-1):
+                    if between_lines_rooted_at_pivot(x[ii], piv, lb, ub):
+                        print("is between")
+                        print(x[ii])
+                        vertices_between.append(list(x[ii]))
+                    else: 
+                        print("not in between")
+                        print(x[ii])
+
+                print(vertices_between)
+                coords = None
+
+                if len(vertices_between) > 0:
+                    up = np.array([
+                            [self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]],
+                            [self.obj.bracketing_locations_lower[i][0],self.obj.bracketing_locations_lower[i][1]]])
+
+                    for j in range(len(vertices_between)):
+                        up = np.vstack((up, vertices_between[j]))
+
+                    print("upp",up)
+                    bottom = np.array([
+                            [self.obj.bracketing_locations_upper[i][0],self.obj.bracketing_locations_upper[i][1]],
+                            [self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]]
+                    ])
+                    print("bot",bottom)
+                    coords = np.vstack((up, bottom)) 
+
+                else:
+                    coords = np.array([
+                            [self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]],
+                            [self.obj.bracketing_locations_lower[i][0],self.obj.bracketing_locations_lower[i][1]],
+                            [self.obj.bracketing_locations_upper[i][0],self.obj.bracketing_locations_upper[i][1]],
+                            [self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]]
+                    ])
+
+                coords = np.unique(coords, axis=0)
+                print("coords,",coords)
+
+                self.obj.disconnected_regions.append(MultiPoint(coords))
+
+            elif self.pareto_set_type == 1:
+                if index == self.ngp - 1:
+                    self.obj.bracketing_locations_lower[i,:] = calc_location(i, r_angles[1]) # with some input this: IndexError: index 2 is out of bounds for axis 0 with size 2
+                    self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[n])
+                else:
+                    self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[index+2])
+
+
+            index += 1
+
+
+
+    """
+        for i in range(self.nlp, k): # verify indexing
+            self.obj.pivot_locations[i,:] = calc_location(i, pivot_angle)
+            self.obj.bracketing_locations_lower[i,:] = calc_location(i, r_angles[index])
+
+            if self.pareto_set_type == 0:
+                raise Exception('should not be calling this method with an instance with identical Pareto set regions')
+            
+            elif self.pareto_set_type == 2:
+                self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[index+1])
 
             elif self.pareto_set_type == 1:
                 if index == self.ngp - 1:
@@ -576,7 +676,7 @@ class DBMOPP_generator:
                     self.obj.bracketing_locations_upper[i,:] = calc_location(i, r_angles[index+2])
             index += 1
 
-
+            """
 
     def place_vertex_constraint_locations(self):
         """
@@ -901,26 +1001,26 @@ class DBMOPP_generator:
             self.obj.attractor_regions[i].plot(ax, 'g') # Green
 
         # if not type 0, we need to find the intersection between the connected pareto regions polygon and disconnected pareto regions polygon formed from pivot_locs and brackets in place_disconnected_pareto_elements.
+        colors = ['r', 'm', 'c']
         if self.pareto_set_type != 0:
             #for i in range(self.nlp, self.nlp + self.ngp):
             for i in range(self.nlp, self.nlp + self.ngp):
+                # TODO: maybe the bug with local fronts is here.
                 poly1 = self.obj.attractor_regions[i].convhull
-                coords = np.array([
-                    [self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]],
-                    [self.obj.bracketing_locations_lower[i][0],self.obj.bracketing_locations_lower[i][1]],
-                    [self.obj.bracketing_locations_upper[i][0],self.obj.bracketing_locations_upper[i][1]],
-                    [self.obj.pivot_locations[i][0], self.obj.pivot_locations[i][1]]
-                ])
-                poly2 = Polygon(coords)
-                inter = poly1.intersection(poly2)
-                intersect = PolygonPatch(inter, facecolor='red')
-                ax.add_patch(intersect)
+                poly2 = self.obj.disconnected_regions[i]
+                poly2 = Polygon(poly2.convex_hull)
 
                 # for testing
-                #patch_poly = PolygonPatch(poly1, facecolor='green')
-                #patch_poly2 = PolygonPatch(poly2, facecolor='red')
-                #ax.add_patch(patch_poly)
-                #ax.add_patch(patch_poly2)
+                patch_poly = PolygonPatch(poly1, facecolor='green')
+                patch_poly2 = PolygonPatch(poly2, facecolor='blue')
+                ax.add_patch(patch_poly)
+                ax.add_patch(patch_poly2)
+
+                inter = poly1.intersection(poly2)
+                intersect = PolygonPatch(inter, facecolor=colors[i])
+                ax.add_patch(intersect)
+
+
         else:
             # global pareto regions
             for i in range(self.nlp, self.nlp + self.ngp):
@@ -1289,7 +1389,7 @@ if __name__=="__main__":
     #import re
     #cProfile.run('re.compile("DBMOPP_generator")', 'stats')
 
-    n_objectives = 3 
+    n_objectives = 10 
     n_variables = 5 
     n_local_pareto_regions = 0 
     n_dominance_res_regions = 0 
