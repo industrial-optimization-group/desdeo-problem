@@ -803,6 +803,7 @@ class DBMOPP_generator:
 
         # print("TODO check discontinuity, not done in matlab")
 
+    # TODO: confirm this is correct
     def set_not_attractor_regions_as_proportion_of_space(
         self, S, proportion_to_attain, other_regions
     ):
@@ -846,7 +847,7 @@ class DBMOPP_generator:
 
             d = euclidean_distance(S, region.centre)
             Idx = d > r
-            covered_count = (Idx is False).sum() + 1
+            covered_count = 1 + np.sum(Idx)
             S = S[Idx, :]  # Remove covered points
 
             allocation += covered_count / self.nm
