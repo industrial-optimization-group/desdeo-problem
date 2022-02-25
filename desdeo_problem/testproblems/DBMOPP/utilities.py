@@ -12,13 +12,10 @@ def get_2D_version(x, pi1, pi2):
         np.ndarray: A 2-dimensional vector
     """
     if (x.shape[1] <= 2):
-        #print("Skipping projection, vector already 2 dimensional or less")
         return x
-    l = np.divide(np.dot(x, pi1), np.sum(pi1))  # Left side of vector
-    r = np.divide(np.dot(x, pi2), np.sum(pi2))  # Right side of vector
-    #print(pi1, pi2)
-    # should be [[]] still
-    return np.hstack((l, r))
+    left = np.divide(np.dot(x, pi1), np.sum(pi1))  # Left side of vector
+    right = np.divide(np.dot(x, pi2), np.sum(pi2))  # Right side of vector
+    return np.hstack((left, right))
 
 
 # X1 is a matrix or array, size n x number of design variables
@@ -30,10 +27,7 @@ def euclidean_distance(x1, x2):
     if x1 is None or x2 is None:
         print("euclidean distance supplied with nonetype")
         return None
-
-    #dist = np.sqrt(np.sum((x1 - x2)**2, axis=1 ))
-    dist = np.linalg.norm(x1-x2, axis=-1)
-    return dist
+    return np.linalg.norm(x1-x2, axis=-1)
 
 
 def get_random_angles(n):
@@ -50,7 +44,8 @@ def between_lines_rooted_at_pivot(x, pivot_loc, loc1, loc2) -> bool:
         loc2: another point on boundary of circle
 
     Returns:
-        bool: true if x on different side of line defined by pivot_loc and loc1, compared to the side of the line defined by pivot_loc and loc2.
+        bool: true if x on different side of line defined by pivot_loc and loc1, \
+        compared to the side of the line defined by pivot_loc and loc2.
         If x is also in the circle, then x is betweeen the two lines if return is true.
     """
     t = False
@@ -59,7 +54,7 @@ def between_lines_rooted_at_pivot(x, pivot_loc, loc1, loc2) -> bool:
     d2 = (x[0] - pivot_loc[0])*(loc2[1] - pivot_loc[1]) - \
         (x[1] - pivot_loc[1])*(loc2[0] - pivot_loc[0])
 
-    if d1 == 0: 
+    if d1 == 0:
         t = True
     elif d2 == 0:
         t = True
@@ -68,6 +63,7 @@ def between_lines_rooted_at_pivot(x, pivot_loc, loc1, loc2) -> bool:
 
     return t
 
+
 def assign_design_dimension_projection(n_variables, vary_sol_density):
     """
     if more than two design dimensions in problem, need to assign
@@ -75,17 +71,14 @@ def assign_design_dimension_projection(n_variables, vary_sol_density):
     which will be subsequantly evaluated
     """
     if n_variables <= 2:
-        #print(
-        #    "fNo need to assign dimension projections as number of variables is already {n_variables}")
         return None, None
-    mask = np.random.permutation(n_variables)  # Test againt matlab
+    mask = np.random.permutation(n_variables)
     if vary_sol_density:
         diff = np.random.randint(n_variables - 1)
         mask = mask[:diff]  # Take the diff first elements
     else:
         half = int(np.ceil(n_variables/2))
         mask = mask[:half]  # Take half first elements
-    
     pi1 = np.zeros(n_variables, dtype=bool)
     pi1[mask] = True
     pi2 = pi1
@@ -93,4 +86,3 @@ def assign_design_dimension_projection(n_variables, vary_sol_density):
     pi2[mask] = False
 
     return pi1, pi2
-
