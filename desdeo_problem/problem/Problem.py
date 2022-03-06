@@ -1003,6 +1003,7 @@ class MOProblem(ProblemBase):
         """
         self.__n_of_objectives = val
 
+    @property
     def n_of_fitnesses(self) -> int:
         """Property: number of dimensions of the fitness matrix.
         May be different than the number of objectives in inherited classes.
