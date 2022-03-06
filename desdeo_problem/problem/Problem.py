@@ -324,6 +324,7 @@ class ScalarMOProblem(ProblemBase):
             int: the number of constraints.
         """
         self.__n_of_constraints = val
+
     @property
     def objectives(self) -> List[ScalarObjective]:
         """Property: the list of objectives.
@@ -497,7 +498,7 @@ class ScalarMOProblem(ProblemBase):
 
         """
         return [obj.name for obj in self.objectives]
-    
+
     def get_uncertainty_names(self) -> List[str]:
         """Return the names of the objectives present in the problem in the
         order they were added.
@@ -844,7 +845,8 @@ class MOProblem(ProblemBase):
                 number of objectives.
 
     """
-    #TODO: use_surrogate : Union[bool, List[bool]]
+
+    # TODO: use_surrogate : Union[bool, List[bool]]
     def __init__(
         self,
         objectives: List[Union[ScalarObjective, VectorObjective]],
@@ -910,7 +912,6 @@ class MOProblem(ProblemBase):
         # Objective and variable names
         self.objective_names = self.get_objective_names()
         self.variable_names = self.get_variable_names()
-
 
     @property
     def n_of_constraints(self) -> int:
@@ -999,8 +1000,17 @@ class MOProblem(ProblemBase):
 
         Arguments:
             val (int): number of objectives
-        """    
+        """
         self.__n_of_objectives = val
+
+    def n_of_fitnesses(self) -> int:
+        """Property: number of dimensions of the fitness matrix.
+        May be different than the number of objectives in inherited classes.
+
+        Returns:
+            int: number of fitness dimensions.
+        """
+        return self.__n_of_objectives
 
     @property
     def n_of_variables(self) -> int:
@@ -1089,8 +1099,8 @@ class MOProblem(ProblemBase):
         """
         obj_list = [[(obj.name)] for obj in self.objectives]
         return reduce(iadd, obj_list, [])
-    
-    #TODO: add  get_uncertainty_names() for uncertainty values
+
+    # TODO: add  get_uncertainty_names() for uncertainty values
 
     def get_variable_lower_bounds(self) -> np.ndarray:
         """Get variable lower bounds.
@@ -1142,7 +1152,7 @@ class MOProblem(ProblemBase):
         if len(shape) == 1:
             decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
 
-        # Checking bounds; warn if bounds are breached. 
+        # Checking bounds; warn if bounds are breached.
         if np.any(self.get_variable_lower_bounds() > decision_vectors):
             warn("Some decision variable values violate lower bounds")
         if np.any(self.get_variable_upper_bounds() < decision_vectors):
@@ -1177,7 +1187,7 @@ class MOProblem(ProblemBase):
         )
 
     def evaluate_objectives(
-        self, decision_vectors: np.ndarray, use_surrogate: bool = False 
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
     ) -> Tuple[np.ndarray]:
         """Evaluate objective values of the problem
 
@@ -1514,7 +1524,7 @@ class ExperimentalProblem(MOProblem):
         variable_names: List[str],
         objective_names: List[str],
         uncertainity_names: List[str],
-        evaluators : Union[None, List[Callable]] = None,
+        evaluators: Union[None, List[Callable]] = None,
         dimensions_data: pd.DataFrame = None,
         data: pd.DataFrame = None,
         objective_functions: List[Tuple[List[str], Callable]] = None,
@@ -1522,7 +1532,7 @@ class ExperimentalProblem(MOProblem):
     ):
         # TODO: add the archiving here for true evaluations.
 
-        self.uncertainity_names = uncertainity_names #  will be removed later
+        self.uncertainity_names = uncertainity_names  #  will be removed later
         if not isinstance(data, pd.DataFrame):
             msg = "Please provide data in the pandas dataframe format"
             raise ProblemError(msg)
@@ -1534,12 +1544,16 @@ class ExperimentalProblem(MOProblem):
             raise ProblemError(msg)
         # TODO: Implement the rest
         objectives = []
-        self.archive = data # this is for model management to archive the solutions and decision variables
-        #check if evaluator is NOne in that case make a list of nones and the lenght of the list is the same as obj_names
-        #check if evaluator is the same lenght as obj_names if not rais a problem error
+        self.archive = (
+            data
+        )  # this is for model management to archive the solutions and decision variables
+        # check if evaluator is NOne in that case make a list of nones and the lenght of the list is the same as obj_names
+        # check if evaluator is the same lenght as obj_names if not rais a problem error
         for obj, evaluator in zip(objective_names, evaluators):
             objectives.append(
-                ScalarDataObjective(data=data[variable_names + [obj]], name=obj, evaluator = evaluator)
+                ScalarDataObjective(
+                    data=data[variable_names + [obj]], name=obj, evaluator=evaluator
+                )
             )
 
         variables = []
@@ -1587,7 +1601,7 @@ class ExperimentalProblem(MOProblem):
             ProblemError: If VectorDataObjective is used as one of the objective
                 instances. They are not supported yet.
         """
-        data = self.archive #for updating the data after updating the surrogates
+        data = self.archive  # for updating the data after updating the surrogates
         if not isinstance(models, list):
             models = [models] * len(self.get_objective_names())
             model_parameters = [model_parameters] * len(self.get_objective_names())
@@ -1638,15 +1652,17 @@ class ExperimentalProblem(MOProblem):
             msg = "Support for VectorDataObjective not supported yet"
             raise ProblemError(msg)
 
-    def evaluate(self, decision_vectors: np.ndarray, use_surrogate: bool) -> EvaluationResults:
+    def evaluate(
+        self, decision_vectors: np.ndarray, use_surrogate: bool
+    ) -> EvaluationResults:
 
-        names = np.hstack((self.variable_names,self.objective_names))
+        names = np.hstack((self.variable_names, self.objective_names))
         new_results = super().evaluate(decision_vectors, use_surrogate=use_surrogate)
 
         # The following is for achiving solutions with true function evaluations
         if use_surrogate == False:
             new_samples = np.hstack((decision_vectors, new_results.objectives))
-            new_data = pd.DataFrame(data = new_samples, columns = names)
+            new_data = pd.DataFrame(data=new_samples, columns=names)
             self.archive = self.archive.append(new_data)
         return new_results
 
