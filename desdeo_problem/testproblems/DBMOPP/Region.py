@@ -117,11 +117,11 @@ class AttractorRegion(Region):
             x, y = self.convhull.exterior.xy
             ax.plot(x, y, linewidth=1, color="black")
             ax.fill(x, y, color=color)
-            #ax.scatter(x, y, s=5, color="blue")           
+            # ax.scatter(x, y, s=5, color="blue")
 
             # annotate the objectives
-            #for i in range(0,n):
-                # ax.annotate(i, (float(x[i]), float(y[i]))) # annotating the points to draw the polygons for test
+            # for i in range(0,n):
+            # ax.annotate(i, (float(x[i]), float(y[i]))) # annotating the points to draw the polygons for test
             #    ax.scatter(p[i,0], p[i,1], s=0.5,  color='black')
             #    ax.annotate(i, (p[i,0], p[i,1]))
 
@@ -130,11 +130,11 @@ class AttractorRegion(Region):
             if p.shape[0] == 1:
                 for i in range(len(p)):
                     ax.scatter(self.locations[:, 0], self.locations[:, 1], color=color)
-                    #ax.scatter(p[i, 0], p[i, 1], s=1, color="blue")
-                    #ax.annotate(i, (p[i,0], p[i,1]))
+                    # ax.scatter(p[i, 0], p[i, 1], s=1, color="blue")
+                    # ax.annotate(i, (p[i,0], p[i,1]))
             else:
                 # for lines
                 for i in range(len(p)):
                     ax.plot(self.locations[:, 0], self.locations[:, 1], color=color)
-                    #ax.scatter(p[i, 0], p[i, 1], s=1, color="blue")
-                    #ax.annotate(i, (p[i,0], p[i,1]))
+                    # ax.scatter(p[i, 0], p[i, 1], s=1, color="blue")
+                    # ax.annotate(i, (p[i,0], p[i,1]))

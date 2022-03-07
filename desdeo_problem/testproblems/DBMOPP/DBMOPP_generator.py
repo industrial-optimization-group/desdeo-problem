@@ -5,13 +5,20 @@ from typing import Dict, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 from descartes import PolygonPatch
-from desdeo_problem.problem import (MOProblem, ScalarConstraint,
-                                    VectorObjective, variable_builder)
-from desdeo_problem.testproblems.DBMOPP.Region import (Attractor,
-                                                       AttractorRegion, Region)
+from desdeo_problem.problem import (
+    MOProblem,
+    ScalarConstraint,
+    VectorObjective,
+    variable_builder,
+)
+from desdeo_problem.testproblems.DBMOPP.Region import Attractor, AttractorRegion, Region
 from desdeo_problem.testproblems.DBMOPP.utilities import (
-    assign_design_dimension_projection, between_lines_rooted_at_pivot,
-    euclidean_distance, get_2D_version, get_random_angles)
+    assign_design_dimension_projection,
+    between_lines_rooted_at_pivot,
+    euclidean_distance,
+    get_2D_version,
+    get_random_angles,
+)
 from matplotlib import cm
 from numpy import matlib
 from shapely.geometry import MultiPoint, Point, Polygon
@@ -1014,10 +1021,7 @@ class DBMOPP_generator:
 
     def update_with_neutrality(self, x, y):
         return self.update(
-            self.obj.neutral_regions,
-            self.obj.neutral_region_objective_values,
-            x,
-            y,
+            self.obj.neutral_regions, self.obj.neutral_region_objective_values, x, y
         )
 
     def update(self, regions, offsets, x, y):
@@ -1405,7 +1409,9 @@ class DBMOPP_generator:
 
         while invalid:
 
-            k = np.random.randint(low, high+1)  # + self.nlp + self.ndr. +1 bc randint is [)
+            k = np.random.randint(
+                low, high + 1
+            )  # + self.nlp + self.ndr. +1 bc randint is [)
             angle = np.random.rand() * 2.0 * np.pi
 
             # 2D case
