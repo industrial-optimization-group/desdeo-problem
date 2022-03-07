@@ -28,13 +28,12 @@ jobs:
           black . --check
           isort .
   test:
-    #needs: linting
+    needs: linting
     strategy:
       fail-fast: true
       matrix:
         os: [ "ubuntu-latest" ]
         python-version: [ "3.8", "3.9" ]
-          #django-version: [ "2.2", "3.0", "3.1" ]
     runs-on: ${{ matrix.os }}
     steps:
       #----------------------------------------------

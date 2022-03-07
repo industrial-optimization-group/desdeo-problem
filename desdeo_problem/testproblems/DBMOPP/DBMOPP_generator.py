@@ -547,6 +547,10 @@ class DBMOPP_generator:
                 )
 
     def place_disconnected_pareto_elements(self):
+        # messy way of appending as many 0 as there is local fronts to start of disconnected_regions
+        # to make sure disconnected_regions and attractor_regions match
+        for i in range(self.nlp):
+            self.obj.disconnected_regions.append(i)
         n = self.ngp - 1  # number of points to use to set up separete subregions
         # first get base angles in region of interest on unrotated Pareto set
         pivot_index = np.random.randint(self.k)  # get attractor at random
@@ -1047,9 +1051,7 @@ class DBMOPP_generator:
         # if not type 0, we need to find the intersection between the connected pareto regions polygon and
         # disconnected pareto regions polygon formed from pivot_locs and brackets in place_disconnected_pareto_elements.
         if self.pareto_set_type != 0:
-            # for now lets assume we always have the inverted case. fix later
             for i in range(self.nlp, self.nlp + self.ngp):
-                # TODO: maybe the bug with local fronts is here.
                 poly1 = self.obj.attractor_regions[i].convhull
                 poly2 = self.obj.disconnected_regions[i]
                 poly2 = Polygon(poly2.convex_hull)
@@ -1062,10 +1064,10 @@ class DBMOPP_generator:
 
                 # if last region, in inverted case we have splitting
                 if self.pareto_set_type == 1 and i == self.nlp + self.ngp - 1:
-                    print(i)
                     diff = poly1.difference(poly2)
                     difference = PolygonPatch(diff, facecolor="r")
                     ax.add_patch(difference)
+                # otherwise just intersection
                 else:
                     inter = poly1.intersection(poly2)
                     intersect = PolygonPatch(inter, facecolor="r")
@@ -1498,19 +1500,16 @@ class DBMOPP_generator:
 
 
 if __name__ == "__main__":
-    # import cProfile
-    # import re
-    # cProfile.run('re.compile("DBMOPP_generator")', 'stats')
 
     n_objectives = 5
     n_variables = 5
-    n_local_pareto_regions = 0
-    n_dominance_res_regions = 0
-    n_global_pareto_regions = 3
+    n_local_pareto_regions = 4
+    n_dominance_res_regions = 2
+    n_global_pareto_regions = 5
     const_space = 0.0
-    pareto_set_type = 1
+    pareto_set_type = 2
     constraint_type = 0
-    ndo = 0  # numberOfdiscontinousObjectiveFunctionRegions
+    ndo = 2  # numberOfdiscontinousObjectiveFunctionRegions
     neutral_space = 0.0
 
     # 0: No constraint, 1-4: Hard vertex, centre, moat, extended checker,
@@ -1534,7 +1533,6 @@ if __name__ == "__main__":
     print(problem._print_params())
     print("Initializing works!")
 
-    # ignores last disconnected region right now. TODO: find the issue, most likely just index issue
     x, point = problem.get_Pareto_set_member()
     print("A pareto set member ", x)
     print("A corresponding 2D point", point)
