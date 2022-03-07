@@ -32,4 +32,4 @@ jobs:
         with:
           black: true
           flake8: true
-          isort: true
+          # isort: true # need to find out correct input for this

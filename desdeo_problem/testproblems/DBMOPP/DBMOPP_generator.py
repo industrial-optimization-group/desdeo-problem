@@ -233,7 +233,7 @@ class DBMOPP_generator:
             self.n, self.vary_sol_density
         )
 
-    def generate_problem(self):
+    def generate_problem(self) -> MOProblem:
         """
         Generate the test problem to use in DESDEO.
 
