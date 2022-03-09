@@ -1,6 +1,6 @@
+import pytest
 from desdeo_problem import MOProblem
 from desdeo_problem.testproblems.TestProblems import test_problem_builder
-import pytest
 
 # smh wrong with importing test_problem_builder..
 
@@ -11,11 +11,6 @@ import pytest
 def name():
     name = "ZDT1"
     return name
-
-
-def test_zdt(name):
-    prob = test_problem_builder(name)
-    assert type(prob) == MOProblem
 
 
 # problem_name = "DTLZ1"
@@ -39,6 +34,11 @@ def dtlz_params():
     vars = 12
     objs = 3
     return [name, vars, objs]
+
+
+def test_zdt(name):
+    prob = test_problem_builder(name)
+    assert type(prob) == MOProblem
 
 
 def test_dtlz(dtlz_params):

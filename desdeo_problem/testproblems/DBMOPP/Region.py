@@ -21,7 +21,6 @@ class Attractor:
     def locations(self, value):
         self._locations = value
 
-    # x atleast 2d here too?
     def get_minimum_distance(self, x):
         d = euclidean_distance(self.locations, x)
         return np.min(d)
@@ -73,6 +72,7 @@ class Region:
             (np.cos(a + rotation), np.sin(a + rotation))
         )
 
+    # used to plot Region Centre for debugging purposes
     def plot(self, color, ax):
         x = self.centre[0]
         y = self.centre[1]
