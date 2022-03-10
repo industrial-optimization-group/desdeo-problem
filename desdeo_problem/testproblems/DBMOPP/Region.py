@@ -64,13 +64,9 @@ class Region:
         return euclidean_distance(self.centre, x)
 
     # TODO: check, might be incorrect
-    def calc_location(
-        self, a, rotation
-    ):  # this is also used in place attractors. so maybe move this so it's also accesible from there
+    def calc_location(self, a, rotation):
         radiis = matlib.repmat(self.radius, 1, 2)
-        return self.centre + radiis * np.hstack(
-            (np.cos(a + rotation), np.sin(a + rotation))
-        )
+        return self.centre + radiis * np.hstack((np.cos(a + rotation), np.sin(a + rotation)))
 
     # used to plot Region Centre for debugging purposes
     def plot(self, color, ax):

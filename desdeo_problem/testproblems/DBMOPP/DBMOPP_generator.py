@@ -175,9 +175,7 @@ class DBMOPP_generator:
         if ndr < 0:
             msg += f"Number of dominance resistance regions should be greater than or equal to zero, was {ndr}.\n"
         if ngp < 1:
-            msg += (
-                f"Number of global Pareto sets should be greater than one, was {ngp}.\n"
-            )
+            msg += f"Number of global Pareto sets should be greater than one, was {ngp}.\n"
         if not 0 <= prop_constraint_checker <= 1:
             msg += f"Proportion of constrained 2D space should be between zero and one, \
             was {prop_constraint_checker}.\n"
@@ -210,9 +208,7 @@ class DBMOPP_generator:
         # place attractor centres for regions defining attractor points
         self.set_up_attractor_centres()
         # set up angles for attractors on regin cicumferences and arbitrary rotations for regions
-        self.obj.pareto_angles = get_random_angles(
-            self.k
-        )  # arbitrary angles for Pareto set
+        self.obj.pareto_angles = get_random_angles(self.k)  # arbitrary angles for Pareto set
         self.obj.rotations = get_random_angles(len(self.obj.centre_regions))
         # now place attractors
         self.place_attractors()
@@ -222,16 +218,12 @@ class DBMOPP_generator:
         self.place_discontinunities_neutral_and_checker_constraints()
 
         # set the neutral value to be the same in all neutral locations
-        self.obj.neutral_region_objective_values = (
-            np.ones((1, self.k)) * self.obj.neutral_region_objective_values
-        )
+        self.obj.neutral_region_objective_values = np.ones((1, self.k)) * self.obj.neutral_region_objective_values
         # CHECK
         self.place_vertex_constraint_locations()
         self.place_centre_constraint_locations()
         self.place_moat_constraint_locations()
-        self.obj.pi1, self.obj.pi2 = assign_design_dimension_projection(
-            self.n, self.vary_sol_density
-        )
+        self.obj.pi1, self.obj.pi2 = assign_design_dimension_projection(self.n, self.vary_sol_density)
 
     def generate_problem(self) -> MOProblem:
         """
@@ -243,17 +235,13 @@ class DBMOPP_generator:
         print("Generating MOProblem")
 
         obj_names = ["f" + str(i + 1) for i in range(self.k)]
-        objectives = [
-            VectorObjective(name=obj_names, evaluator=self.evaluate_objectives)
-        ]
+        objectives = [VectorObjective(name=obj_names, evaluator=self.evaluate_objectives)]
 
         var_names = [f"x{i}" for i in range(self.n)]
         initial_values = (np.random.rand(self.n, 1) * 2) - 1
         lower_bounds = np.ones(self.n) * -1
         upper_bounds = np.ones(self.n)
-        variables = variable_builder(
-            var_names, initial_values, lower_bounds, upper_bounds
-        )
+        variables = variable_builder(var_names, initial_values, lower_bounds, upper_bounds)
 
         constraints = []
 
@@ -407,14 +395,8 @@ class DBMOPP_generator:
         # number of local PO sets, global PO sets, dominance resistance regions
         n = self.nlp + self.ngp + self.ndr
         # Create the attractor objects
-        self.obj.centre_regions = np.array(
-            [Region() for _ in range(n)]
-        )  # Different objects
-        max_radius = (
-            1
-            / (2 * np.sqrt(n) + 1)
-            * (1 - (self.prop_neutral + self.prop_contraint_checker))
-        )  # prop 0 and 0.
+        self.obj.centre_regions = np.array([Region() for _ in range(n)])  # Different objects
+        max_radius = 1 / (2 * np.sqrt(n) + 1) * (1 - (self.prop_neutral + self.prop_contraint_checker))  # prop 0 and 0.
         # Assign centres
         radius = self.place_region_centres(n, max_radius)
         # Assign radius
@@ -432,9 +414,7 @@ class DBMOPP_generator:
             w = np.linspace(1, 0.5, self.nlp + 1)
             # linearly decrease local front radius
             for i in range(self.nlp + 1):
-                self.obj.centre_regions[i].radius = (
-                    self.obj.centre_regions[i].radius * w[i]
-                )
+                self.obj.centre_regions[i].radius = self.obj.centre_regions[i].radius * w[i]
 
     def place_region_centres(self, n: int, r: float):
         effective_bound = 1 - r
@@ -449,12 +429,7 @@ class DBMOPP_generator:
         for i in range(1, n):  # looping the objects would be nicer
             while True:
                 rand_coord = (np.random.rand(2) * 2 * effective_bound) - effective_bound
-                distances = np.array(
-                    [
-                        self.obj.centre_regions[i].get_distance(rand_coord)
-                        for i in range(i)
-                    ]
-                )
+                distances = np.array([self.obj.centre_regions[i].get_distance(rand_coord) for i in range(i)])
                 t = np.min(distances)
                 if t > threshold:
                     # print("assigned centre", i)
@@ -526,9 +501,7 @@ class DBMOPP_generator:
                 )
             )
 
-            n_include = (
-                np.random.permutation(self.k - 1) + 1
-            )  # Plus one as we want to include at least one?
+            n_include = np.random.permutation(self.k - 1) + 1  # Plus one as we want to include at least one?
             n_include = n_include[0]  # Take the first one
             Idxs = np.argsort(np.random.rand(self.k))
             j = Idxs[:n_include]
@@ -549,9 +522,7 @@ class DBMOPP_generator:
 
             for k in range(n_include):
                 attractor_loc = self.obj.attractors[k].locations
-                self.obj.attractors[k].locations = np.vstack(
-                    (attractor_loc, locs[Idxs[k], :])
-                )
+                self.obj.attractors[k].locations = np.vstack((attractor_loc, locs[Idxs[k], :]))
 
     def place_disconnected_pareto_elements(self):
         # messy way of appending as many 0 as there is local fronts to start of disconnected_regions
@@ -566,24 +537,18 @@ class DBMOPP_generator:
         if pivot_index == 0:
             offset_angle_1 = self.obj.pareto_angles[indices[self.k - 1]]
         else:
-            offset_angle_1 = self.obj.pareto_angles[
-                indices[pivot_index - 1]
-            ]  # check this minus
+            offset_angle_1 = self.obj.pareto_angles[indices[pivot_index - 1]]  # check this minus
 
         offset_angle_1 = offset_angle_1[0]
 
         if pivot_index == self.k - 1:
             offset_angle_2 = self.obj.pareto_angles[indices[0]]
         else:
-            offset_angle_2 = self.obj.pareto_angles[
-                indices[pivot_index + 1]
-            ]  # check plus
+            offset_angle_2 = self.obj.pareto_angles[indices[pivot_index + 1]]  # check plus
 
         offset_angle_2 = offset_angle_2[0]
 
-        pivot_angle = self.obj.pareto_angles[indices[pivot_index]][
-            0
-        ]  # dunno if needed to be 2d
+        pivot_angle = self.obj.pareto_angles[indices[pivot_index]][0]  # dunno if needed to be 2d
 
         if pivot_angle == (offset_angle_1 or offset_angle_2):
             raise Exception("Angle should not be duplicated!")
@@ -595,15 +560,11 @@ class DBMOPP_generator:
             r = np.random.rand(n)  # does this return vals to sum of 1 ??
             p1 = np.sum(r < p1)
             r[:p1] = 2 * np.pi + np.random.rand(p1) * offset_angle_1
-            r[p1:n] = (
-                np.random.rand(n - p1) * (2 * np.pi - offset_angle_2) + offset_angle_2
-            )
+            r[p1:n] = np.random.rand(n - p1) * (2 * np.pi - offset_angle_2) + offset_angle_2
             r = np.sort(r)
             r_angles = np.zeros(n + 2)
             r_angles[0] = offset_angle_2
-            r_angles[n + 1] = (
-                offset_angle_1 + 2 * np.pi
-            )  # adding 2*pi as shifted for sorting
+            r_angles[n + 1] = offset_angle_1 + 2 * np.pi  # adding 2*pi as shifted for sorting
             r_angles[1 : n + 1] = r  # cause python's lists [)
         else:
             r = np.random.rand(n) * (offset_angle_1 - offset_angle_2) + offset_angle_2
@@ -619,29 +580,19 @@ class DBMOPP_generator:
         self.obj.bracketing_locations_upper = np.zeros((k, 2))
 
         def calc_location(ind, a):
-            return self.obj.centre_regions[ind].calc_location(
-                a, self.obj.rotations[ind]
-            )
+            return self.obj.centre_regions[ind].calc_location(a, self.obj.rotations[ind])
 
         index = 0
         for i in range(self.nlp, k):  # verify indexing
             self.obj.pivot_locations[i, :] = calc_location(i, pivot_angle)
-            self.obj.bracketing_locations_lower[i, :] = calc_location(
-                i, r_angles[index]
-            )
+            self.obj.bracketing_locations_lower[i, :] = calc_location(i, r_angles[index])
 
             if self.pareto_set_type == 0:
-                raise Exception(
-                    "should not be calling this method with an instance with identical Pareto set regions"
-                )
+                raise Exception("should not be calling this method with an instance with identical Pareto set regions")
 
             elif self.pareto_set_type == 2:
-                self.obj.bracketing_locations_upper[i, :] = calc_location(
-                    i, r_angles[index + 1]
-                )
-                vertices = np.asarray(
-                    self.obj.attractor_regions[i].convhull.exterior.coords
-                )
+                self.obj.bracketing_locations_upper[i, :] = calc_location(i, r_angles[index + 1])
+                vertices = np.asarray(self.obj.attractor_regions[i].convhull.exterior.coords)
                 self.create_disconnected_po_regions(
                     self.obj.pivot_locations[i],
                     self.obj.bracketing_locations_lower[i],
@@ -652,15 +603,9 @@ class DBMOPP_generator:
             elif self.pareto_set_type == 1:
                 # inverted case
                 if index == self.ngp - 1:
-                    self.obj.bracketing_locations_lower[i, :] = calc_location(
-                        i, r_angles[1]
-                    )
-                    self.obj.bracketing_locations_upper[i, :] = calc_location(
-                        i, r_angles[n]
-                    )
-                    vertices = np.asarray(
-                        self.obj.attractor_regions[i].convhull.exterior.coords
-                    )
+                    self.obj.bracketing_locations_lower[i, :] = calc_location(i, r_angles[1])
+                    self.obj.bracketing_locations_upper[i, :] = calc_location(i, r_angles[n])
+                    vertices = np.asarray(self.obj.attractor_regions[i].convhull.exterior.coords)
                     self.create_disconnected_po_regions(
                         self.obj.pivot_locations[i],
                         self.obj.bracketing_locations_lower[i],
@@ -668,12 +613,8 @@ class DBMOPP_generator:
                         vertices,
                     )
                 else:
-                    self.obj.bracketing_locations_upper[i, :] = calc_location(
-                        i, r_angles[index + 2]
-                    )
-                    vertices = np.asarray(
-                        self.obj.attractor_regions[i].convhull.exterior.coords
-                    )
+                    self.obj.bracketing_locations_upper[i, :] = calc_location(i, r_angles[index + 2])
+                    vertices = np.asarray(self.obj.attractor_regions[i].convhull.exterior.coords)
                     self.create_disconnected_po_regions(
                         self.obj.pivot_locations[i],
                         self.obj.bracketing_locations_lower[i],
@@ -712,9 +653,7 @@ class DBMOPP_generator:
         print("Assigning any vertex soft/hard constraint regions\n")
         if self.constraint_type in [1, 5]:
             to_place = 0
-            for i in range(
-                len(self.obj.attractors)
-            ):  # or self.k as that should be the same...
+            for i in range(len(self.obj.attractors)):  # or self.k as that should be the same...
                 to_place += len(self.obj.attractors[i].locations)
 
             centres = np.zeros((to_place, 2))
@@ -724,28 +663,18 @@ class DBMOPP_generator:
             penalty_radius = np.random.rand(1) / 2
             for i, attractor_region in enumerate(self.obj.attractor_regions):
                 for j in range(len(attractor_region.objective_indices)):
-                    centres[k, :] = attractor_region.locations[
-                        j, :
-                    ]  # Could make an object here...
+                    centres[k, :] = attractor_region.locations[j, :]  # Could make an object here...
                     radii[k] = attractor_region.radius * penalty_radius
                     k += 1
 
             if self.constraint_type == 1:
-                self.obj.hard_constraint_regions = np.array(
-                    [Region() for _ in range(to_place)]
-                )
-                for i, hard_constraint_region in enumerate(
-                    self.obj.hard_constraint_regions
-                ):
+                self.obj.hard_constraint_regions = np.array([Region() for _ in range(to_place)])
+                for i, hard_constraint_region in enumerate(self.obj.hard_constraint_regions):
                     hard_constraint_region.centre = centres[i, :]
                     hard_constraint_region.radius = radii[i]
             else:
-                self.obj.soft_constraint_regions = np.array(
-                    [Region() for _ in range(to_place)]
-                )
-                for i, soft_constraint_region in enumerate(
-                    self.obj.soft_constraint_regions
-                ):
+                self.obj.soft_constraint_regions = np.array([Region() for _ in range(to_place)])
+                for i, soft_constraint_region in enumerate(self.obj.soft_constraint_regions):
                     soft_constraint_region.centre = centres[i, :]
                     soft_constraint_region.radius = radii[i]
 
@@ -768,20 +697,14 @@ class DBMOPP_generator:
         if self.constraint_type == 3:
             self.obj.hard_constraint_regions = self.obj.centre_regions
             for i in range(len(self.obj.hard_constraint_regions)):
-                self.obj.hard_constraint_regions[i].radius = (
-                    self.obj.hard_constraint_regions[i].radius * r
-                )
+                self.obj.hard_constraint_regions[i].radius = self.obj.hard_constraint_regions[i].radius * r
         elif self.constraint_type == 7:
             self.obj.soft_constraint_regions = self.obj.centre_regions
             for i in range(len(self.obj.soft_constraint_regions)):
-                self.obj.soft_constraint_regions[i].radius = (
-                    self.obj.soft_constraint_regions[i].radius * r
-                )
+                self.obj.soft_constraint_regions[i].radius = self.obj.soft_constraint_regions[i].radius * r
 
     def place_discontinunities_neutral_and_checker_constraints(self):
-        print(
-            "Assigning any checker soft/hard constraint regions and neutral regions\n"
-        )
+        print("Assigning any checker soft/hard constraint regions and neutral regions\n")
         S = (np.random.rand(self.nm, 2) * 2) - 1
         for centre_region in self.obj.centre_regions:
             to_remove = centre_region.is_inside(S, True)
@@ -793,31 +716,23 @@ class DBMOPP_generator:
             raise Exception(msg)
 
         if self.prop_contraint_checker > 0:
-            regions, S = self.set_not_attractor_regions_as_proportion_of_space(
-                S, self.prop_contraint_checker, []
-            )
+            regions, S = self.set_not_attractor_regions_as_proportion_of_space(S, self.prop_contraint_checker, [])
             if self.constraint_type == 4:
                 self.obj.hard_constraint_regions = regions
             elif self.constraint_type == 8:
                 self.obj.soft_constraint_regions = regions
             else:
-                raise Exception(
-                    f"constraintType should be 8 or 4 to reach here is {self.constraint_type}"
-                )
+                raise Exception(f"constraintType should be 8 or 4 to reach here is {self.constraint_type}")
 
         # Neutral space
         if self.prop_neutral > 0:
-            regions, _ = self.set_not_attractor_regions_as_proportion_of_space(
-                S, self.prop_neutral, regions
-            )
+            regions, _ = self.set_not_attractor_regions_as_proportion_of_space(S, self.prop_neutral, regions)
             self.obj.neutral_regions = regions
 
         # print("TODO check discontinuity, not done in matlab")
 
     # TODO: confirm this is correct
-    def set_not_attractor_regions_as_proportion_of_space(
-        self, S, proportion_to_attain, other_regions
-    ):
+    def set_not_attractor_regions_as_proportion_of_space(self, S, proportion_to_attain, other_regions):
         allocation = 0
         regions = []
         while allocation < proportion_to_attain:
@@ -837,11 +752,7 @@ class DBMOPP_generator:
                 other_centres[i] = other_region.centre
                 other_radii[i] = other_region.radius
 
-            both_centres = (
-                np.vstack((centre_list, other_centres))
-                if other_centres.shape[0] > 0
-                else centre_list
-            )
+            both_centres = np.vstack((centre_list, other_centres)) if other_centres.shape[0] > 0 else centre_list
 
             d = euclidean_distance(both_centres, S[-1, :])
             d = d - np.hstack((centre_radii, other_radii))
@@ -895,22 +806,16 @@ class DBMOPP_generator:
 
     # Matlab code has hard constraints as true or false
     def get_hard_constraint_violation(self, x) -> bool:
-        in_hard_constraint_region = self.check_region(
-            self.obj.hard_constraint_regions, x, False
-        )
+        in_hard_constraint_region = self.check_region(self.obj.hard_constraint_regions, x, False)
         return in_hard_constraint_region
 
     # gets contstraint violations for MOProblem
     def get_constraint_violations(self, x, include_boundary) -> np.ndarray:
         if include_boundary:
-            in_constraint_region, d = self.check_region_prob(
-                self.obj.soft_constraint_regions, x, True
-            )
+            in_constraint_region, d = self.check_region_prob(self.obj.soft_constraint_regions, x, True)
             constraint_regions = self.obj.soft_constraint_regions
         else:
-            in_constraint_region, d = self.check_region_prob(
-                self.obj.hard_constraint_regions, x, False
-            )
+            in_constraint_region, d = self.check_region_prob(self.obj.hard_constraint_regions, x, False)
             constraint_regions = self.obj.hard_constraint_regions
 
         violations = np.zeros_like(in_constraint_region, dtype=float)
@@ -923,9 +828,7 @@ class DBMOPP_generator:
         return violations
 
     def get_soft_constraint_violation(self, x) -> bool:
-        in_soft_constraint_region = self.check_region(
-            self.obj.soft_constraint_regions, x, True
-        )
+        in_soft_constraint_region = self.check_region(self.obj.soft_constraint_regions, x, True)
         return in_soft_constraint_region
 
     def get_minimun_distance_to_attractors(self, x: np.ndarray):
@@ -949,9 +852,7 @@ class DBMOPP_generator:
         if self.pareto_set_type == 0:
             y = self.get_minimun_distance_to_attractors(x)
         else:
-            y = self.get_minimum_distances_to_attractors_overlap_or_discontinuous_form(
-                x
-            )
+            y = self.get_minimum_distances_to_attractors_overlap_or_discontinuous_form(x)
 
         y = self.update_with_discontinuity(x, y)
         y = self.update_with_neutrality(x, y)
@@ -965,13 +866,7 @@ class DBMOPP_generator:
             # print(x)
             x = x[0]
         # can still be improved?
-        Idx = np.array(
-            [
-                i
-                for i in range(len(self.obj.centre_regions))
-                if self.obj.centre_regions[i].is_close(x, eps)
-            ]
-        )
+        Idx = np.array([i for i in range(len(self.obj.centre_regions)) if self.obj.centre_regions[i].is_close(x, eps)])
         if len(Idx) > 0:  # is not empty
             i = Idx[0]
 
@@ -1020,24 +915,16 @@ class DBMOPP_generator:
         )
 
     def update_with_neutrality(self, x, y):
-        return self.update(
-            self.obj.neutral_regions, self.obj.neutral_region_objective_values, x, y
-        )
+        return self.update(self.obj.neutral_regions, self.obj.neutral_region_objective_values, x, y)
 
     def update(self, regions, offsets, x, y):
         if regions is None:
             return y
         distances = np.zeros(len(regions))
         for i, region in enumerate(regions):
-            distances[i] = (
-                region.get_distance(x)
-                if region.is_inside(x, include_boundary=True)
-                else 0
-            )
+            distances[i] = region.get_distance(x) if region.is_inside(x, include_boundary=True) else 0
         if np.any(distances > 0):
-            index = np.argmin(
-                distances
-            )  # molst likely will return the index of the first 0
+            index = np.argmin(distances)  # molst likely will return the index of the first 0
             y = y + offsets[index, :]
         return y
 
@@ -1181,9 +1068,7 @@ class DBMOPP_generator:
             destination,
             dominating_neighbours,
             offset,
-        ) = self.get_dominance_landscape_basins_from_matrix(
-            z, x, y, moore_neighbourhood
-        )
+        ) = self.get_dominance_landscape_basins_from_matrix(z, x, y, moore_neighbourhood)
         # TODO: there must be a way to optimize the code..
 
     def get_dominance_landscape_basins_from_matrix(self, z, x, y, moore_neighbourhood):
@@ -1212,9 +1097,7 @@ class DBMOPP_generator:
                     dominating_neighbours[i, j, :],
                     neutral_neighbours[i, j, :],
                     dominated[i, j],
-                ) = self.identify_dominating_neighbours(
-                    z, i, j, res, moore_neighbourhood, offset
-                )
+                ) = self.identify_dominating_neighbours(z, i, j, res, moore_neighbourhood, offset)
 
         # dominating_neighbours now holds location of neigbours which dominate and dominated holds whether a particular
         # location is dominated by any neigbour
@@ -1241,9 +1124,7 @@ class DBMOPP_generator:
         basins = np.ones((res, res)) * -1
         basins[neutral_areas > 0] = 0
         processed = np.zeros((res, res))
-        number_distinct_neutral_regions = np.max(
-            np.max(neutral_areas)
-        )  # check if this is correct
+        number_distinct_neutral_regions = np.max(np.max(neutral_areas))  # check if this is correct
         destination = [[] for d in range(res)]
         for i in range(res):
             for j in range(res):
@@ -1266,9 +1147,7 @@ class DBMOPP_generator:
                 else:
                     if len(destination[i, j]) == 1:
                         # put between 0.25 and 0.75, graded by which basin it leads to
-                        basins[i, j] = 0.25 + destination[i, j] / (
-                            2 * number_distinct_neutral_regions
-                        )
+                        basins[i, j] = 0.25 + destination[i, j] / (2 * number_distinct_neutral_regions)
                     else:
                         basins[i, j] = 1
 
@@ -1290,18 +1169,11 @@ class DBMOPP_generator:
         neutral_neighbours = np.zeros((n, 1))
 
         for k in range(n):
-            if (
-                i + offset[k, 1] > 0
-                and i + offset[k, 1] <= res
-                and j + offset[k, 2] > 0
-                and j + offset[k, 2] <= res
-            ):
+            if i + offset[k, 1] > 0 and i + offset[k, 1] <= res and j + offset[k, 2] > 0 and j + offset[k, 2] <= res:
                 (
                     dominating_neighbours[k],
                     neutral_neighbours[k],
-                ) = self.vector_is_dominated_or_neutral(
-                    z[:, i, j], z[:, i + offset[k, 1] + offset[k, 2]]
-                )
+                ) = self.vector_is_dominated_or_neutral(z[:, i, j], z[:, i + offset[k, 1] + offset[k, 2]])
 
         dominated = np.any(dominating_neighbours)  # check its same as matlabs any
         return dominating_neighbours, neutral_neighbours, dominated
@@ -1319,9 +1191,7 @@ class DBMOPP_generator:
     ):
         pass
 
-    def update_destinations(
-        self, i, j, processed, destination, dominating_neighbours, neutral_areas, offset
-    ):
+    def update_destinations(self, i, j, processed, destination, dominating_neighbours, neutral_areas, offset):
         pass
         # TODO: make work on 0s and 1s instead of true and falses, since np arrays are using 0s as false and 1s as true
 
@@ -1409,9 +1279,7 @@ class DBMOPP_generator:
 
         while invalid:
 
-            k = np.random.randint(
-                low, high + 1
-            )  # + self.nlp + self.ndr. +1 bc randint is [)
+            k = np.random.randint(low, high + 1)  # + self.nlp + self.ndr. +1 bc randint is [)
             angle = np.random.rand() * 2.0 * np.pi
 
             # 2D case
@@ -1555,9 +1423,7 @@ if __name__ == "__main__":
     # print(po_list)
     # print(po_points)
 
-    plt.scatter(
-        x=po_points[:, 0], y=po_points[:, 1], s=5, c="r", label="Pareto set members"
-    )
+    plt.scatter(x=po_points[:, 0], y=po_points[:, 1], s=5, c="r", label="Pareto set members")
     plt.title("Pareto set members")
     plt.xlabel("F1")
     plt.xlim([-1, 1])
