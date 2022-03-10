@@ -33,5 +33,5 @@ jobs:
           black: true
           black_args: "--line-length 120"
           flake8: true
-          flake8_args: "--max-line-length 120 --extend_ignore=E203"
+          flake8_args: "--max-line-length 120 --extend-ignore=E203"
           # isort: true # need to find out correct input for this

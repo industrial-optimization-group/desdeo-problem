@@ -3,7 +3,7 @@ name: DESDEO-problem
 on: push
 
 jobs:
-  linting:
+  build:
     runs-on: ubuntu-latest
     steps:
       #----------------------------------------------
