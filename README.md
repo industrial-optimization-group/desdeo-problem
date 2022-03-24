@@ -4,7 +4,7 @@
 # desdeo-problem
 
 Contains modelling tools to model and define multiobjective optimization problems to be used in the DESDEO framework.
-This package is part of the DESDEO framework.
+This package is part of the [DESDEO framework](https://github.com/industrial-optimization-group/DESDEO).
 
 ## Installation
 
@@ -22,3 +22,7 @@ Requires [poetry](https://python-poetry.org/). See `pyproject.toml` for Python p
 ## Documentation
 
 Documentation for this package can be found [here](https://desdeo-problem.readthedocs.io/en/latest/)
+
+## Citation
+
+If you decide to use DESDEO is any of your works or research, we would appreciate you citing the appropiate paper published in [IEEE Access](https://doi.org/10.1109/ACCESS.2021.3123825) (open access).
