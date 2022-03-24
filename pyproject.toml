@@ -12,6 +12,9 @@ optproblems = "^1.2"
 diversipy = "^0.8.0"
 pandas = "^1.0"
 scikit-learn = ">=0.24.0"
+Shapely = "^1.8.0"
+pytest = "^7.0.0"
+descartes = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7"

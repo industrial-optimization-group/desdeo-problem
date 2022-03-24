@@ -5,9 +5,7 @@ from desdeo_problem.problem.Problem import MOProblem
 from desdeo_problem.problem.Problem import ProblemError
 
 
-def test_problem_builder(
-    name: str, n_of_variables: int = None, n_of_objectives: int = None
-) -> MOProblem:
+def test_problem_builder(name: str, n_of_variables: int = None, n_of_objectives: int = None) -> MOProblem:
     """Build test problems. Currently supported: ZDT1-4, ZDT6, and DTLZ1-7.
 
     Args:
@@ -41,10 +39,7 @@ def test_problem_builder(
     }
     num_var = {"ZDT1": 30, "ZDT2": 30, "ZDT3": 30, "ZDT4": 10, "ZDT6": 10}
     if not (name in problems.keys()):
-        msg = (
-            "Specified Problem not yet supported.\n The supported problems are:"
-            + str(problems.keys())
-        )
+        msg = "Specified Problem not yet supported.\n The supported problems are:" + str(problems.keys())
         raise ProblemError(msg)
     if "ZDT" in name:
         if n_of_variables is None:
@@ -62,18 +57,13 @@ def test_problem_builder(
             raise ProblemError(msg)
         if not (n_of_objectives == 2):
             msg = (
-                "ZDT problems can only have 2 objectives. "
-                + "Number of objectives recieved = "
-                + str(n_of_objectives)
+                "ZDT problems can only have 2 objectives. " + "Number of objectives recieved = " + str(n_of_objectives)
             )
             raise ProblemError(msg)
         obj_func = problems[name]()
     elif "DTLZ" in name:
         if (n_of_variables is None) or (n_of_objectives is None):
-            msg = (
-                "Please provide both number of variables and objectives"
-                + " for the DTLZ problems"
-            )
+            msg = "Please provide both number of variables and objectives" + " for the DTLZ problems"
             raise ProblemError(msg)
         obj_func = problems[name](n_of_objectives, n_of_variables)
     else:
