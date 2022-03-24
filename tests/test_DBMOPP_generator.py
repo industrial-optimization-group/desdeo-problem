@@ -131,6 +131,7 @@ def test_type_2_DBMOPP():
 
     x = np.array(np.random.rand(5, n_variables))
     moproblem = problem.generate_problem()
+    # moproblem.evaluate(x)
 
     assert moproblem is not None, "moproblem was not formed"
     return problem
