@@ -30,35 +30,27 @@ __all__ = [
     "classificationPISProblem",
 ]
 
-from desdeo_problem.problem.Variable import (
-    Variable,
-    VariableBuilderError,
-    VariableError,
-    variable_builder,
-)
-
-from desdeo_problem.problem.Objective import (
-    ObjectiveBase,
-    ObjectiveError,
-    ObjectiveEvaluationResults,
-    VectorDataObjective,
-    VectorObjective,
-    VectorObjectiveBase,
-    ScalarDataObjective,
-    ScalarObjective,
-    _ScalarDataObjective,
-    _ScalarObjective,
-)
-
 from desdeo_problem.problem.Constraint import (
     ConstraintError,
     ScalarConstraint,
     constraint_function_factory,
     supported_operators,
 )
-
+from desdeo_problem.problem.Objective import (
+    ObjectiveBase,
+    ObjectiveError,
+    ObjectiveEvaluationResults,
+    ScalarDataObjective,
+    ScalarObjective,
+    VectorDataObjective,
+    VectorObjective,
+    VectorObjectiveBase,
+    _ScalarDataObjective,
+    _ScalarObjective,
+)
 from desdeo_problem.problem.Problem import (
     DataProblem,
+    DiscreteDataProblem,
     EvaluationResults,
     ExperimentalProblem,
     MOProblem,
@@ -66,6 +58,6 @@ from desdeo_problem.problem.Problem import (
     ProblemError,
     ScalarDataProblem,
     ScalarMOProblem,
-    DiscreteDataProblem,
     classificationPISProblem,
 )
+from desdeo_problem.problem.Variable import Variable, VariableBuilderError, VariableError, variable_builder

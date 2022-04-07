@@ -46,7 +46,11 @@ class Variable:
     """
 
     def __init__(
-        self, name: str, initial_value: float, lower_bound: float = -np.inf, upper_bound: float = np.inf
+        self,
+        name: str,
+        initial_value: float,
+        lower_bound: float = -np.inf,
+        upper_bound: float = np.inf,
     ) -> None:
 
         self.__name: str = name

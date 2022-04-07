@@ -8,14 +8,11 @@ from typing import Callable, Dict, List, NamedTuple, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor, ModelError
 
 
 class ObjectiveError(Exception):
-    """Raised when an error related to the Objective class is encountered.
-
-    """
+    """Raised when an error related to the Objective class is encountered."""
 
 
 class ObjectiveEvaluationResults(NamedTuple):
@@ -42,9 +39,7 @@ class ObjectiveEvaluationResults(NamedTuple):
 
 
 class ObjectiveBase(ABC):
-    """The abstract base class for objectives.
-
-    """
+    """The abstract base class for objectives."""
 
     def evaluate(self, decision_vector: np.ndarray, use_surrogate: bool = False) -> ObjectiveEvaluationResults:
         """Evaluates the objective according to a decision variable vector.
@@ -92,9 +87,7 @@ class ObjectiveBase(ABC):
 
 
 class VectorObjectiveBase(ABC):
-    """The abstract base class for multiple objectives which are calculated at once.
-
-    """
+    """The abstract base class for multiple objectives which are calculated at once."""
 
     def evaluate(self, decision_vector: np.ndarray, use_surrogate: bool = False) -> ObjectiveEvaluationResults:
         """Evaluates the objective according to a decision variable vector.
@@ -242,8 +235,10 @@ class ScalarObjective(ObjectiveBase):
     def _surrogate_evaluate(self, decusuib_vector: np.ndarray):
         raise ObjectiveError("Surrogates not trained")
 
+
 class _ScalarObjective(ScalarObjective):
     pass
+
 
 # TODO: Rename to "Objective"
 class VectorObjective(VectorObjectiveBase):
@@ -420,7 +415,11 @@ class ScalarDataObjective(ScalarObjective):
         self._model = None
 
     def train(
-        self, model: BaseRegressor, model_parameters: Dict = None, index: List[int] = None, data: pd.DataFrame = None
+        self,
+        model: BaseRegressor,
+        model_parameters: Dict = None,
+        index: List[int] = None,
+        data: pd.DataFrame = None,
     ):
         """Train surrogate model for the objective.
 
@@ -482,8 +481,10 @@ class ScalarDataObjective(ScalarObjective):
         self.y = np.vstack((self.y, results.objectives))
         return results
 
+
 class _ScalarDataObjective(ScalarDataObjective):
     pass
+
 
 class VectorDataObjective(VectorObjective):
     """A Objective class for multi/valued objectives. Use when the an evaluator/
