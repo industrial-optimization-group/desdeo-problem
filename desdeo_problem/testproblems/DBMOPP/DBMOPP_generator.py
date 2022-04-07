@@ -245,13 +245,17 @@ class DBMOPP_generator:
 
         constraints = []
 
-        # this is wrapper to be able to call constraints for MOProblem.
         def eval_wrapper(x, obj, region):
-            return obj.evaluate_constraint(x, region)
+            res = np.zeros_like([])
+            if x.shape[0] <= 1:
+                return self.evaluate_constraint(x, region)
+            for i in range(x.shape[0]):
+                res = np.concatenate((res, self.evaluate_constraint(x[i], region)))
+            return res
 
         if self.constraint_type in [1, 2, 3, 4]:
             for i, region in enumerate(self.obj.hard_constraint_regions):
-                const_evaluator = functools.partial(eval_wrapper, region=region)
+                const_evaluator = functools.partial(eval_wrapper,  region=region)
                 constraints.append(
                     ScalarConstraint(
                         f"hard constraint {i}",
@@ -704,34 +708,42 @@ class DBMOPP_generator:
                 self.obj.soft_constraint_regions[i].radius = self.obj.soft_constraint_regions[i].radius * r
 
     def place_discontinunities_neutral_and_checker_constraints(self):
-        print("Assigning any checker soft/hard constraint regions and neutral regions\n")
-        S = (np.random.rand(self.nm, 2) * 2) - 1
-        for centre_region in self.obj.centre_regions:
-            to_remove = centre_region.is_inside(S, True)
-            not_to_remove = np.logical_not(to_remove)
-            S = S[not_to_remove, :]
+        print("Assigning any checker soft/hard constraint regions and neutral regions\n", self.prop_contraint_checker)
+        if (self.prop_contraint_checker + self.prop_neutral) > 0:
 
-        if S.shape[0] < self.nm * (self.prop_contraint_checker + self.prop_neutral):
-            msg = "Not enough space outside of attractor regions to match requirement of constrained+neural space"
-            raise Exception(msg)
+            S = (np.random.rand(self.nm, 2) * 2) - 1
+            print(S.shape)
+            for _i, centre_region in enumerate(self.obj.centre_regions):
+                to_remove = centre_region.is_inside(S, True)
+                not_to_remove = np.logical_not(to_remove)
+                S = S[not_to_remove, :]
 
-        if self.prop_contraint_checker > 0:
-            regions, S = self.set_not_attractor_regions_as_proportion_of_space(S, self.prop_contraint_checker, [])
-            if self.constraint_type == 4:
-                self.obj.hard_constraint_regions = regions
-            elif self.constraint_type == 8:
-                self.obj.soft_constraint_regions = regions
-            else:
-                raise Exception(f"constraintType should be 8 or 4 to reach here is {self.constraint_type}")
+            if S.shape[0] < self.nm * (self.prop_contraint_checker + self.prop_neutral):
+                msg = "Not enough space outside of attractor regions to match requirement of constrained+neural space"
+                raise Exception(msg)
 
-        # Neutral space
-        if self.prop_neutral > 0:
-            regions, _ = self.set_not_attractor_regions_as_proportion_of_space(S, self.prop_neutral, regions)
-            self.obj.neutral_regions = regions
+            # Now iteratively place a centre, check legality, and update
+            # proportion of space covered as estimated using the MC samples
+            # falling inside the neutral/penality region
+            # Note, by definition, all samples in S are legal centres
+            # outside of attractor regions, and are randomly ordered
+            # so whill just select from these to speed up the process
+            if self.prop_contraint_checker > 0:
+                regions, S = self.set_not_attractor_regions_as_proportion_of_space(S, self.prop_contraint_checker, [])
+                if self.constraint_type == 4:
+                    self.obj.hard_constraint_regions = regions
+                elif self.constraint_type == 8:
+                    self.obj.soft_constraint_regions = regions
+                else:
+                    raise Exception(f"constraintType should be 8 or 4 to reach here is {self.constraint_type}")
+
+            # Neutral space
+            if self.prop_neutral > 0:
+                regions, _ = self.set_not_attractor_regions_as_proportion_of_space(S, self.prop_neutral, regions)
+                self.obj.neutral_regions = regions
 
         # print("TODO check discontinuity, not done in matlab")
 
-    # TODO: confirm this is correct
     def set_not_attractor_regions_as_proportion_of_space(self, S, proportion_to_attain, other_regions):
         allocation = 0
         regions = []
@@ -744,7 +756,6 @@ class DBMOPP_generator:
             for i, centre_region in enumerate(self.obj.centre_regions):
                 centre_list[i] = centre_region.centre
                 centre_radii[i] = centre_region.radius
-
             other_centres = np.zeros((len(other_regions), 2))
             other_radii = np.zeros(len(other_regions))
 
@@ -768,9 +779,10 @@ class DBMOPP_generator:
             S = S[:-1, :]  # remove last row
 
             d = euclidean_distance(S, region.centre)
-            Idx = d > r
-            covered_count = 1 + np.sum(Idx)
+            Idx = d > r  # this was d > r before
             S = S[Idx, :]  # Remove covered points
+            # flake8 does not like this. TODO: fix but make sure logic won't change, will break constraints
+            covered_count = (Idx == False).sum() + 1
 
             allocation += covered_count / self.nm
 
@@ -1319,8 +1331,6 @@ class DBMOPP_generator:
         point = []
         low = np.min(self.obj.pareto_set_indices)
         high = np.max(self.obj.pareto_set_indices)
-        # print(self.obj.pareto_set_indices)
-        # print(low, high)
         centres = self.obj.centre_regions
 
         centre_list = []
@@ -1377,12 +1387,12 @@ if __name__ == "__main__":
 
     n_objectives = 5
     n_variables = 5
-    n_local_pareto_regions = 4
-    n_dominance_res_regions = 2
-    n_global_pareto_regions = 5
-    const_space = 0.0
+    n_local_pareto_regions = 2
+    n_dominance_res_regions = 0
+    n_global_pareto_regions = 4
+    const_space = 0.6
     pareto_set_type = 2
-    constraint_type = 0
+    constraint_type = 8
     ndo = 2  # numberOfdiscontinousObjectiveFunctionRegions
     neutral_space = 0.0
 
@@ -1407,38 +1417,41 @@ if __name__ == "__main__":
     print(problem._print_params())
     print("Initializing works!")
 
-    x, point = problem.get_Pareto_set_member()
-    print("A pareto set member ", x)
-    print("A corresponding 2D point", point)
-    n_of_points = 150
-    po_list = np.zeros((n_of_points, problem.n))
-    po_points = np.zeros((n_of_points, 2))
-    for i in range(n_of_points):
-        result = problem.get_Pareto_set_member()
-        po_list[i] = result[0]
-        po_points[i] = result[1]
+    # print(problem.)
+
+    # x, point = problem.get_Pareto_set_member()
+    # print("A pareto set member ", x)
+    # print("A corresponding 2D point", point)
+    # n_of_points = 10
+    # po_list = np.zeros((n_of_points, problem.n))
+    # po_points = np.zeros((n_of_points, 2))
+    # for i in range(n_of_points):
+    #    result = problem.get_Pareto_set_member()
+    #    po_list[i] = result[0]
+    #    po_points[i] = result[1]
 
     # print(po_points.shape)
     # po_list, po_points = problem.get_Pareto_set(50)
     # print(po_list)
     # print(po_points)
 
-    plt.scatter(x=po_points[:, 0], y=po_points[:, 1], s=5, c="r", label="Pareto set members")
-    plt.title("Pareto set members")
-    plt.xlabel("F1")
-    plt.xlim([-1, 1])
-    plt.ylim([-1, 1])
-    plt.ylabel("F2")
-    plt.legend()
+    # plt.scatter(x=po_points[:, 0], y=po_points[:, 1], s=5, c="r", label="Pareto set members")
+    # plt.title("Pareto set members
+    # plt.xlabel("F1")
+    # plt.xlim([-1, 1])
+    # plt.ylim([-1, 1])
+    # plt.ylabel("F2")
+    # plt.legend()hard_constraint_regions = None
 
-    x = np.array(np.random.rand(5, n_variables))
+    x = np.array(np.random.rand(3, n_variables))
+    print(x)
     # For desdeos MOProblem only
     moproblem = problem.generate_problem()
     print("\nFormed MOProblem: \n\n", moproblem.evaluate(x))
     problem.plot_problem_instance()
 
     # need to get the population
-    po_set = problem.plot_pareto_set_members(100)
+    # po_set = problem.plot_pareto_set_members(100)
     # print(po_set[:5])
     # problem.plot_landscape_for_single_objective(0, 500)
     # problem.plot_dominance_landscape(10)

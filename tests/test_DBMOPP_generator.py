@@ -51,6 +51,7 @@ def test_type_0_DBMOPP():
     x = np.array(np.random.rand(5, n_variables))
     moproblem = problem.generate_problem()
     assert moproblem is not None, "moproblem was not formed"
+    moproblem.evaluate(x)
 
 
 def test_type_1_DBMOPP():
@@ -90,6 +91,7 @@ def test_type_1_DBMOPP():
 
     x = np.array(np.random.rand(5, n_variables))
     moproblem = problem.generate_problem()
+    moproblem.evaluate(x)
 
     assert moproblem is not None, "moproblem was not formed"
 
@@ -100,7 +102,7 @@ def test_type_2_DBMOPP():
     n_local_pareto_regions = 2
     n_dominance_res_regions = 1
     n_global_pareto_regions = 3
-    const_space = 0.1
+    const_space = 0.4
     pareto_set_type = 2
     constraint_type = 4
     ndo = 1
@@ -131,7 +133,7 @@ def test_type_2_DBMOPP():
 
     x = np.array(np.random.rand(5, n_variables))
     moproblem = problem.generate_problem()
-    # moproblem.evaluate(x)
+    moproblem.evaluate(x)
 
     assert moproblem is not None, "moproblem was not formed"
     return problem
