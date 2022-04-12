@@ -129,6 +129,12 @@ class ScalarConstraint(ConstraintBase):
                 shape.
 
         """
+        if not isinstance(decision_vector, np.ndarray):
+            raise ConstraintError('Decision vector needs to be numpy array')
+
+        if not isinstance(objective_vector, np.ndarray):
+            raise ConstraintError('Objective vector needs to be numpy array')
+
         decision_l = len(decision_vector) if decision_vector.ndim == 1 else decision_vector.shape[1]
         if decision_l != self.__n_decision_vars:
             msg = ("Decision decision_vector {} is of wrong lenght: " "Should be {}, but is {}").format(
