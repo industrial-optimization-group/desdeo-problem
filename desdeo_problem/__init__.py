@@ -17,7 +17,6 @@ __all__ = [
     "ScalarMOProblem",
     "ScalarDataProblem",
     "MOProblem",
-    "ScalarMOProblem",
     "DataProblem",
     "ExperimentalProblem",
     "VariableError",
@@ -29,7 +28,6 @@ __all__ = [
     "LipschitzianRegressor",
     "ModelError",
     "DiscreteDataProblem",
-    "classificationPISProblem",
     "test_problem_builder",
 ]
 
@@ -55,9 +53,7 @@ from desdeo_problem.problem import (
     ScalarMOProblem,
     ProblemError,
     ScalarDataProblem,
-    ScalarMOProblem,
     DiscreteDataProblem,
-    classificationPISProblem,
     Variable,
     VariableBuilderError,
     VariableError,

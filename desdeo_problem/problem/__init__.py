@@ -33,7 +33,6 @@ __all__ = [
     "Variable",
     "variable_builder",
     "DiscreteDataProblem",
-    "classificationPISProblem",
 ]
 
 from desdeo_problem.problem.Variable import (
@@ -74,5 +73,4 @@ from desdeo_problem.problem.Problem import (
     ScalarDataProblem,
     ScalarMOProblem,
     DiscreteDataProblem,
-    classificationPISProblem,
 )
