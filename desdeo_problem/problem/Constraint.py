@@ -9,15 +9,11 @@ import numpy as np
 
 
 class ConstraintError(Exception):
-    """Raised when an error related to the Constraint class in encountered.
-
-    """
+    """Raised when an error related to the Constraint class in encountered."""
 
 
 class ConstraintBase(ABC):
-    """Base class for constraints.
-
-    """
+    """Base class for constraints."""
 
     @abstractmethod
     def evaluate(self, decision_vector: np.ndarray, objective_vector: np.ndarray) -> float:
@@ -65,7 +61,13 @@ class ScalarConstraint(ConstraintBase):
 
     """
 
-    def __init__(self, name: str, n_decision_vars: int, n_objective_funs: int, evaluator: Callable) -> None:
+    def __init__(
+        self,
+        name: str,
+        n_decision_vars: int,
+        n_objective_funs: int,
+        evaluator: Callable,
+    ) -> None:
         self.__name: str = name
         self.__n_decision_vars: int = n_decision_vars
         self.__n_objective_funs: int = n_objective_funs
@@ -130,10 +132,10 @@ class ScalarConstraint(ConstraintBase):
 
         """
         if not isinstance(decision_vector, np.ndarray):
-            raise ConstraintError('Decision vector needs to be numpy array')
+            raise ConstraintError("Decision vector needs to be numpy array")
 
         if not isinstance(objective_vector, np.ndarray):
-            raise ConstraintError('Objective vector needs to be numpy array')
+            raise ConstraintError("Objective vector needs to be numpy array")
 
         decision_l = len(decision_vector) if decision_vector.ndim == 1 else decision_vector.shape[1]
         if decision_l != self.__n_decision_vars:
