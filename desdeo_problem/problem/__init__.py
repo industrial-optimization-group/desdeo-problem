@@ -33,7 +33,6 @@ __all__ = [
     "Variable",
     "variable_builder",
     "DiscreteDataProblem",
-    "classificationPISProblem",
 ]
 
 from desdeo_problem.problem.Constraint import (
@@ -65,6 +64,5 @@ from desdeo_problem.problem.Problem import (
     ProblemError,
     ScalarDataProblem,
     ScalarMOProblem,
-    classificationPISProblem,
 )
 from desdeo_problem.problem.Variable import Variable, VariableBuilderError, VariableError, variable_builder

@@ -9,7 +9,7 @@ This file has following classes:
     MOProblem
     DataProblem
     ExperimentalProblem
-    classificationPISProblem
+    IOPISProblem
     DiscreteDataProblem
 """
 from abc import ABC, abstractmethod
@@ -17,7 +17,6 @@ from abc import ABC, abstractmethod
 # , TypedDict coming in py3.8
 from functools import reduce
 from operator import iadd
-from os import path
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 from warnings import warn
 
@@ -507,7 +506,7 @@ class ScalarMOProblem(ProblemBase):
             List[str]: Names of the objectives in the order they were added.
 
         """
-        return [unc.name for unc in self.uncertainty]
+        return [unc.name for unc in self.objectives]
 
     def get_variable_lower_bounds(self) -> np.ndarray:
         """Get variable lower bounds.
@@ -912,6 +911,7 @@ class MOProblem(ProblemBase):
         # Objective and variable names
         self.objective_names = self.get_objective_names()
         self.variable_names = self.get_variable_names()
+        self.fitness_names = self.objective_names
 
     @property
     def n_of_constraints(self) -> int:
@@ -1666,99 +1666,6 @@ class ExperimentalProblem(MOProblem):
             new_data = pd.DataFrame(data=new_samples, columns=names)
             self.archive = self.archive.append(new_data)
         return new_results
-
-
-class classificationPISProblem(MOProblem):
-    """A problem class for the IOPIS formulation for interactive optimization.
-
-    This variant uses the classification kind of preference information for 
-    the creation of the Preference incorporated space (PIS).
-
-    Arguments:
-        objectives (List[Union[ScalarObjective, VectorObjective]]): A list containing
-            the objectives of the problem.
-        variables (List[Variable]): A list containing the variables of the problem.
-        nadir (np.ndarray): Nadir point of the problem.
-        ideal (np.ndarray): Ideal point of the problem.
-        PIS: An instantiated classificationPIS class from desdeo-tools.
-        constraints (List[ScalarConstraint], optional): A list of the constraints of the problem. Defaults to None.
-    """
-
-    def __init__(
-        self,
-        objectives: List[Union[ScalarObjective, VectorObjective]],
-        variables: List[Variable],
-        nadir: np.ndarray,
-        ideal: np.ndarray,
-        PIS,
-        constraints: List[ScalarConstraint] = None,
-    ):
-        super().__init__(
-            objectives=objectives,
-            variables=variables,
-            constraints=constraints,
-            nadir=nadir,
-            ideal=ideal,
-        )
-        self.ideal_fitness = PIS(self.ideal * self._max_multiplier)
-        self.nadir_fitness = PIS(self.nadir * self._max_multiplier)
-        self.PIS = PIS
-
-        self.num_dim_fitness = len(PIS.scalarizers) + 1
-
-    def evaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
-        """Evaluate objective fitness.
-
-        Arguments:
-            objective_vectors (np.ndarray): objective vectors
-
-        Returns:
-            np.ndarray: Objective fitness
-        """
-        return self.PIS(objective_vectors * self._max_multiplier)
-
-    def reevaluate_fitness(self, objective_vectors: np.ndarray) -> np.ndarray:
-        """Re-evaluate objective fitness.
-
-        Calls update_ideal with objective_vectors.
-
-        Arguments:
-            objective_vectors (np.ndarray): objective vectors
-
-        Returns:
-            np.ndarray: Objective fitness
-        """
-        fitness = self.PIS(objective_vectors * self._max_multiplier)
-        self.ideal_fitness = self.PIS(self.ideal * self._max_multiplier)
-        self.update_ideal(objective_vectors, fitness)
-        return fitness
-
-    def update_preference(self, preference: Dict):
-        """Update PIS preference
-
-        Arguments:
-            preference (Dict): PIS preferences
-
-        """
-        self.PIS.update_preference(preference)
-
-    def update_ideal(self, objective_vectors: np.ndarray, fitness: np.ndarray):
-        """Update ideal vector.
-
-        Arguments:
-            objective_vectors (np.ndarray): Objective vectors
-            fitness (np.ndarray): Fitness values for objective vectors
-
-        """
-        self.ideal_fitness = np.amin(np.vstack((self.ideal_fitness, fitness)), axis=0)
-
-        self.ideal = (
-            np.amin(
-                np.vstack((self.ideal, objective_vectors)) * self._max_multiplier,
-                axis=0,
-            )
-            * self._max_multiplier
-        )
 
 
 class DiscreteDataProblem:
