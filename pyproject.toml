@@ -31,6 +31,7 @@ ipykernel = "^5.3.0"
 nb-clean = "^1.4.3"
 recommonmark = "^0.6.0"
 Jinja2 = "2.11"
+pytest = "^7.1.2"
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
