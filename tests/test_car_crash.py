@@ -1,0 +1,19 @@
+from desdeo_problem.testproblems.CarCrash import car_crash_problem
+from desdeo_problem.problem import MOProblem
+import pytest
+import numpy as np
+import numpy.testing as npt
+
+def test_car_crash():
+    problem = car_crash_problem()
+
+    # evaluate the problem with some variable values
+    xs = np.array([2, 2, 2, 2, 2])
+
+    objective_vectors = problem.evaluate(xs).objectives
+
+    assert objective_vectors.shape[0] == 1
+
+    expected_result = np.array([[1683.133345, 9.6266, 0.1233]])
+
+    npt.assert_allclose(objective_vectors, expected_result)
