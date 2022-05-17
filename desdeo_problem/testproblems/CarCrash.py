@@ -20,6 +20,9 @@ def car_crash_problem(var_iv: np.array = ([2, 2, 2, 2, 2])) -> MOProblem:
         MOProblem: a problem object.
     """
 
+    for x in var_iv:
+        if 3 < x or x < 1:
+            raise ValueError("Initial variable values need to be between lower and upper bounds")
 
     # Mass
     def f_1(x: np.ndarray) -> np.ndarray:
@@ -33,6 +36,7 @@ def car_crash_problem(var_iv: np.array = ([2, 2, 2, 2, 2])) -> MOProblem:
             + 4.4559504 * x[:, 4]
         )
 
+    # Ain
     def f_2(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
@@ -49,6 +53,7 @@ def car_crash_problem(var_iv: np.array = ([2, 2, 2, 2, 2])) -> MOProblem:
             + 0.1764 * x[:, 3] ** 2
         )
 
+    # Intrusion
     def f_3(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
