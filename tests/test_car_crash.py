@@ -21,17 +21,17 @@ def test_car_crash():
     p: MOProblem = car_crash_problem()
 
     # evaluate the problem with some variable values
-    xs = np.array([2, 2, 2, 2, 2])
+    xs = np.array([[2, 2, 2, 2, 2],[1, 2, 2, 2, 3]])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 1
+    assert objective_vectors.shape[0] == 2
 
-    expected_result = np.array([[1683.133345, 9.6266, 0.1233]])
+    expected_result = np.array([[1683.133345, 9.6266, 0.1233],[1685.231967, 9.4613, 0.1038]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
 @pytest.mark.car_crash
-def test_car_bounds_error():
+def test_variable_bounds_error():
     with pytest.raises(ValueError):
-        p: MOProblem = car_crash_problem(var_iv=([0, 0, 0.9, 4, 4]))
+        p: MOProblem = car_crash_problem(var_iv=([2, 3, 0.9, 2, 4]))

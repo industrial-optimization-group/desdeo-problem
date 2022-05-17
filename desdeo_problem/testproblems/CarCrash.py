@@ -79,7 +79,7 @@ def car_crash_problem(var_iv: np.array = ([2, 2, 2, 2, 2])) -> MOProblem:
     objectives = [objective_1, objective_2, objective_3]
 
     # TODO better name
-    x_1 = Variable("x_1", var_iv[0], 1, 3)
+    x_1 = Variable("x_1", var_iv[0], 1.0, 3.0)
     x_2 = Variable("x_2", var_iv[1], 1.0, 3.0)
     x_3 = Variable("x_3", var_iv[2], 1.0, 3.0)
     x_4 = Variable("x_4", var_iv[3], 1.0, 3.0)
