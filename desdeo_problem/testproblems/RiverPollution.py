@@ -1,4 +1,3 @@
-from xmlrpc.client import Boolean
 from desdeo_problem.problem.Variable import Variable
 from desdeo_problem.problem.Objective import ScalarObjective
 from desdeo_problem.problem.Problem import MOProblem, ProblemBase
@@ -14,7 +13,7 @@ def river_pollution_problem(five_obj: bool = True, var_iv: np.array = ([0.5, 0.5
 
     Arguments:
         five_obj (bool): If true utilize five objectives version and four objectives
-            version if false. 
+            version if false. Default is true. 
         var_iv (np.array): Optional, initial variable values. Must be between 0.3 and 1.0.
             Defaults are 0.5 and 0.5. 
 
@@ -54,7 +53,7 @@ def river_pollution_problem(five_obj: bool = True, var_iv: np.array = ([0.5, 0.5
         objective_5 = ScalarObjective(name="BOD removed form the water close to the ideal value of 0.65", evaluator=f_5, maximize=[False])
         objectives = [objective_1, objective_2, objective_3, objective_4, objective_5]
     else:
-        # 
+        # If five_obj is false, then problem is with 4 objectives. 
         objectives = [objective_1, objective_2, objective_3, objective_4]
 
     x_1 = Variable("the proportionate amount of BOD removed from water at the fishery", var_iv[0], 0.3, 1.0)
