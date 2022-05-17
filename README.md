@@ -14,10 +14,11 @@ You can install the `desdeo-problem` package from the Python package index using
 ### For developers
 Requires [poetry](https://python-poetry.org/). See `pyproject.toml` for Python package requirements. To install and use the this package with poetry, issue the following command:
 
-1. `git clone https://github.com/industrial-optimization-group/desdeo-problem`
-2. `cd desdeo-problem`
-3. `poetry init`
-4. `poetry install`
+1. (optional: fork the repo first)
+2. `git clone https://github.com/industrial-optimization-group/desdeo-problem`
+3. `cd desdeo-problem`
+4. `poetry init`
+5. `poetry install`
 
 ## Documentation
 
