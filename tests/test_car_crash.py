@@ -16,11 +16,11 @@ def test_number_of_objectives():
 
     assert p.n_of_objectives == 3
 
+# Evaluate the problem with some variable values
 @pytest.mark.car_crash
 def test_car_crash():
     p: MOProblem = car_crash_problem()
 
-    # evaluate the problem with some variable values
     xs = np.array([[2, 2, 2, 2, 2],[1, 2, 2, 2, 3]])
 
     objective_vectors = p.evaluate(xs).objectives
@@ -31,6 +31,7 @@ def test_car_crash():
 
     npt.assert_allclose(objective_vectors, expected_result)
 
+# Testing error if variable values are not in between of lower and upper bounds.
 @pytest.mark.car_crash
 def test_variable_bounds_error():
     with pytest.raises(ValueError):

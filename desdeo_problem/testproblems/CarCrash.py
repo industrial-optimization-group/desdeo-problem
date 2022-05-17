@@ -72,13 +72,12 @@ def car_crash_problem(var_iv: np.array = ([2, 2, 2, 2, 2])) -> MOProblem:
 
 
 
-    objective_1 = ScalarObjective(name="mass", evaluator=f_1, maximize=[False])
-    objective_2 = ScalarObjective(name="Ain", evaluator=f_2, maximize=[False])
-    objective_3 = ScalarObjective(name="intrusion", evaluator=f_3, maximize=[False])
+    objective_1 = ScalarObjective(name="the mass of the vehicle", evaluator=f_1, maximize=[False])
+    objective_2 = ScalarObjective(name="acceleration-induced biomechanical damage of occupants", evaluator=f_2, maximize=[False])
+    objective_3 = ScalarObjective(name="the toe board intrusion in the 'offset-frontal crash'", evaluator=f_3, maximize=[False])
 
     objectives = [objective_1, objective_2, objective_3]
 
-    # TODO better name
     x_1 = Variable("x_1", var_iv[0], 1.0, 3.0)
     x_2 = Variable("x_2", var_iv[1], 1.0, 3.0)
     x_3 = Variable("x_3", var_iv[2], 1.0, 3.0)
