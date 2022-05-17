@@ -4,16 +4,19 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
+@pytest.mark.car_crash
 def test_number_of_variables():
     p: MOProblem = car_crash_problem()
 
     assert p.n_of_variables == 5
 
+@pytest.mark.car_crash
 def test_number_of_objectives():
     p: MOProblem = car_crash_problem()
 
     assert p.n_of_objectives == 3
 
+@pytest.mark.car_crash
 def test_car_crash():
     p: MOProblem = car_crash_problem()
 
@@ -28,6 +31,7 @@ def test_car_crash():
 
     npt.assert_allclose(objective_vectors, expected_result)
 
+@pytest.mark.car_crash
 def test_car_bounds_error():
     with pytest.raises(ValueError):
         p: MOProblem = car_crash_problem(var_iv=([0, 0, 0.9, 4, 4]))
