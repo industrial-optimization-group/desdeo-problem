@@ -20,9 +20,8 @@ def car_crash_problem(var_iv: np.array = ([2, 2, 2, 2, 2])) -> MOProblem:
         MOProblem: a problem object.
     """
 
-    for x in var_iv:
-        if 3 < x or x < 1:
-            raise ValueError("Initial variable values need to be between lower and upper bounds")
+    if any(3 < var_iv) or any(var_iv < 1):
+        raise ValueError("Initial variable values need to be between lower and upper bounds")
 
     # Mass
     def f_1(x: np.ndarray) -> np.ndarray:
