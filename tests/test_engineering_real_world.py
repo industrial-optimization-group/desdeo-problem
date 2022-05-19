@@ -1,4 +1,6 @@
 from desdeo_problem.testproblems.EngineeringRealWorld import re21
+from desdeo_problem.testproblems.EngineeringRealWorld import re22
+# kysy importataanko kaikki re... funktiot samaan testitiedostoon
 from desdeo_problem.problem import MOProblem
 import pytest
 import numpy as np
@@ -23,3 +25,9 @@ def test_evaluate_problem():
     expected_result = np.array([[2048.528137, 0.02]])
 
     npt.assert_allclose(objective_vectors, expected_result)
+
+@pytest.mark.re22
+def test_number_of_variabls():
+    p: MOProblem = re22()
+
+    assert p.n_of_variables == 3
