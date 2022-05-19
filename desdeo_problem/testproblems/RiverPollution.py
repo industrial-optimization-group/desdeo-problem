@@ -21,7 +21,7 @@ def river_pollution_problem(five_obj: bool = True, var_iv: np.array = ([0.5, 0.5
         MOProblem: a problem object.
     """
     
-    if 1 <= var_iv[0] or var_iv[1] <= 0.3:
+    if any(1 < var_iv) or any(var_iv < 0.3):
         raise ValueError("Initial variable values need to be between lower and upper bounds")
 
     def f_1(x: np.ndarray) -> np.ndarray:
