@@ -22,6 +22,7 @@ def river_pollution_problem(five_obj: bool = True, var_iv: np.array = np.array([
     """
     
     if np.any(1 < var_iv) or np.any(var_iv < 0.3):
+
         raise ValueError("Initial variable values need to be between lower and upper bounds")
 
     def f_1(x: np.ndarray) -> np.ndarray:
