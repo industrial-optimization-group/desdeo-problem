@@ -4,7 +4,7 @@ from desdeo_problem.problem.Problem import MOProblem, ProblemBase
 
 import numpy as np
 
-def river_pollution_problem(five_obj: bool = True, var_iv: np.array = ([0.5, 0.5])) -> MOProblem:
+def river_pollution_problem(five_obj: bool = True, var_iv: np.array = np.array([0.5, 0.5])) -> MOProblem:
     """The river pollution problem with 4 or 5 objectives.
 
     NARULA, S. C. & WEISTROFFER, H. R. (1989). A flexible method for 
@@ -21,7 +21,8 @@ def river_pollution_problem(five_obj: bool = True, var_iv: np.array = ([0.5, 0.5
         MOProblem: a problem object.
     """
     
-    if any(1 < var_iv) or any(var_iv < 0.3):
+    if np.any(1 < var_iv) or np.any(var_iv < 0.3):
+
         raise ValueError("Initial variable values need to be between lower and upper bounds")
 
     def f_1(x: np.ndarray) -> np.ndarray:
