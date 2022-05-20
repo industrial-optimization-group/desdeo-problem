@@ -25,6 +25,16 @@ def test_evaluate_problem():
 
     npt.assert_allclose(objective_vectors, expected_result)
 
+@pytest.mark.re21
+def test_variable_bounds_error_1d():
+    with pytest.raises(ValueError):
+        p: MOProblem = re21(var_iv=np.array([1,2,3,4]))
+
+@pytest.mark.re21
+def test_variable_bounds_error_2d():
+    with pytest.raises(ValueError):
+        p: MOProblem = re21(var_iv=np.array([[1,2,2,2],[4,1,2,0]]))
+
 @pytest.mark.re22
 def test_number_of_variabls():
     p: MOProblem = re22()

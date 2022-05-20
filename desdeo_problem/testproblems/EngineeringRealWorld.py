@@ -15,10 +15,6 @@ def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
         MOProblem: a problem object.
     """
 
-
-    if any(3 < var_iv) or var_iv[0] < 1 or var_iv[1] < (np.sqrt(2.0)) or var_iv[2] < (np.sqrt(2.0)) or var_iv[3] < 1:
-        raise ValueError("Initial variable values need to be between lower and upper bounds")
-
     F = 10.0
     sigma = 10.0
     E = 2.0 * 1e5
@@ -26,6 +22,17 @@ def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
     
     # a selkeyttämään koodia
     a = F / sigma
+
+    # Lower bounds
+    lb = np.atleast_2d(np.array([a, np.sqrt(2) * a, np.sqrt(2) * a, a]))
+    # Upper bounds
+    ub = np.atleast_2d(np.array([3 * a, 3 * a, 3 * a, 3 * a]))
+
+    # Pitäisikö aikaisemmat muuttaa myös np.any?
+    # Check variable bounds
+    if np.any(lb > var_iv) or np.any(ub < var_iv):
+        raise ValueError("Initial variable values need to be between lower and upper bounds")
+
 
     def f_1(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
