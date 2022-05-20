@@ -45,4 +45,4 @@ def test_problem():
 @pytest.mark.river_pollution
 def test_variable_bounds_error():
     with pytest.raises(ValueError):
-        p: MOProblem = river_pollution_problem(var_iv=([0, 0]))
+        p: MOProblem = river_pollution_problem(var_iv=np.array([0, 0]))

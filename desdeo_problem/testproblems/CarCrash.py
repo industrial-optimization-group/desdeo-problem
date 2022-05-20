@@ -4,7 +4,7 @@ from desdeo_problem.problem.Problem import MOProblem, ProblemBase
 
 import numpy as np
 
-def car_crash_problem(var_iv: np.array = ([2, 2, 2, 2, 2])) -> MOProblem:
+def car_crash_problem(var_iv: np.array = np.array([2, 2, 2, 2, 2])) -> MOProblem:
     """The crash safety design problem with 3 objectives.
 
     Liao, X., Li, Q., Yang, X., Zhang, W. & Li, W. (2007).

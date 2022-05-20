@@ -1,5 +1,4 @@
-from desdeo_problem.testproblems.EngineeringRealWorld import re21
-from desdeo_problem.testproblems.EngineeringRealWorld import re22
+from desdeo_problem.testproblems.EngineeringRealWorld import *
 # kysy importataanko kaikki re... funktiot samaan testitiedostoon
 from desdeo_problem.problem import MOProblem
 import pytest

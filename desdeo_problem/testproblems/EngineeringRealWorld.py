@@ -4,7 +4,7 @@ from desdeo_problem.problem.Problem import MOProblem, ProblemBase
 
 import numpy as np
 
-def re21(var_iv: np.array = ([2, 2, 2, 2])) -> MOProblem:
+def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
     """ Four bar truss design problem
     
     Arguments:
@@ -15,10 +15,16 @@ def re21(var_iv: np.array = ([2, 2, 2, 2])) -> MOProblem:
         MOProblem: a problem object.
     """
 
+
+    if any(3 < var_iv) or var_iv[0] < 1 or var_iv[1] < (np.sqrt(2.0)) or var_iv[2] < (np.sqrt(2.0)) or var_iv[3] < 1:
+        raise ValueError("Initial variable values need to be between lower and upper bounds")
+
     F = 10.0
     sigma = 10.0
     E = 2.0 * 1e5
     L = 200.0
+    
+    # a selkeyttämään koodia
     a = F / sigma
 
     def f_1(x: np.ndarray) -> np.ndarray:
@@ -46,7 +52,7 @@ def re21(var_iv: np.array = ([2, 2, 2, 2])) -> MOProblem:
 
     return problem
 
-def re22(var_iv: np.array = ([7, 10, 20])) -> MOProblem:
+def re22(var_iv: np.array = np.array([7, 10, 20])) -> MOProblem:
     """ Reinforced concrete beam design problem.
     
     Arguments:
@@ -60,9 +66,12 @@ def re22(var_iv: np.array = ([7, 10, 20])) -> MOProblem:
         x = np.atleast_2d(x)
         return (29.4 * x[:, 0]) + (0.6 * x[:, 1] * x[:,2])
 
+    # todo rajoitefunktioiden summaus
     def f_2(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         return
+
+    # rajoitefunktiot g1 ja g2 määriteltävä ennen äffiä, jos haluaa esim summatta geet
 
     objective_1 = ScalarObjective(name="name", evaluator=f_1, maximize=[False])
     objective_2 = ScalarObjective(name="name", evaluator=f_2, maximize=[False])

@@ -35,4 +35,4 @@ def test_car_crash():
 @pytest.mark.car_crash
 def test_variable_bounds_error():
     with pytest.raises(ValueError):
-        p: MOProblem = car_crash_problem(var_iv=([2, 3, 0.9, 2, 4]))
+        p: MOProblem = car_crash_problem(var_iv=np.array([2, 3, 0.9, 2, 4]))
