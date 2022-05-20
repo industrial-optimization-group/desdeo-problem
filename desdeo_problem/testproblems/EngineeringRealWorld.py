@@ -1,6 +1,7 @@
 from desdeo_problem.problem.Variable import Variable
 from desdeo_problem.problem.Objective import ScalarObjective
 from desdeo_problem.problem.Problem import MOProblem, ProblemBase
+from desdeo_problem import ScalarConstraint
 
 import numpy as np
 
@@ -24,9 +25,9 @@ def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
     a = F / sigma
 
     # Lower bounds
-    lb = np.atleast_2d(np.array([a, np.sqrt(2) * a, np.sqrt(2) * a, a]))
+    lb = np.array([a, np.sqrt(2) * a, np.sqrt(2) * a, a])
     # Upper bounds
-    ub = np.atleast_2d(np.array([3 * a, 3 * a, 3 * a, 3 * a]))
+    ub = np.array([3 * a, 3 * a, 3 * a, 3 * a])
 
     # Pitäisikö aikaisemmat muuttaa myös np.any?
     # Check variable bounds
@@ -69,21 +70,42 @@ def re22(var_iv: np.array = np.array([7, 10, 20])) -> MOProblem:
         MOProblem: a problem object.
     """
 
+    def g_1(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return x[:, 0] * x[:, 2] - 7.735 * (x[:, 0]**2 / x[:, 1]) - 180
+
+    def g_2(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return 4 - x[:, 2] / x[:, 1]
+
     def f_1(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         return (29.4 * x[:, 0]) + (0.6 * x[:, 1] * x[:,2])
 
-    # todo rajoitefunktioiden summaus
+    # todo summaa max{g(i), 0}
+    # eli jos g_1 tai g_2 saa negatiivisen arvon summataan 0
+    # lopputulos oltava pos
     def f_2(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
-        return
-
-    # rajoitefunktiot g1 ja g2 määriteltävä ennen äffiä, jos haluaa esim summatta geet
+        sum = 0
+        if g_1(x) > 0:
+            sum =+ g_1(x)
+        if g_2(x) > 0:
+            sum =+ g_2(x) 
+        return sum
 
     objective_1 = ScalarObjective(name="name", evaluator=f_1, maximize=[False])
     objective_2 = ScalarObjective(name="name", evaluator=f_2, maximize=[False])
 
     objectives = [objective_1, objective_2]
+
+    cons_1 = ScalarConstraint("c_1", 3, 2, g_1)
+    cons_2 = ScalarConstraint("c_2", 3, 2, g_2)
+
+    constraints = [cons_1, cons_2]
+
+    # todo x_1:n arvot
+    # x_1 määritellyt arvot välillä 0.2 15. Löytyy koodista feasible_vals
 
     x_1 = Variable("x_1", 7, 0.2, 15)
     x_2 = Variable("x_2", 10, 0, 20)
@@ -91,6 +113,6 @@ def re22(var_iv: np.array = np.array([7, 10, 20])) -> MOProblem:
 
     variables = [x_1, x_2, x_3]
 
-    problem = MOProblem(variables=variables, objectives=objectives)
+    problem = MOProblem(variables=variables, objectives=objectives, constraints=constraints)
 
     return problem
