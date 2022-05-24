@@ -67,3 +67,35 @@ def test_variable_bounds_error_re22_1d():
 def test_variable_bounds_error_re22_2d():
     with pytest.raises(ValueError):
         p: MOProblem = re22(var_iv=np.array([[1,2,2],[0,1,2]]))
+
+@pytest.mark.re23
+def test_number_of_variables_re23():
+    p: MOProblem = re23()
+
+    assert p.n_of_variables == 4
+
+# Evaluating problem with some variable values
+@pytest.mark.re23
+def test_evaluate_re23():
+    p: MOProblem = re23()
+
+    # Variable values
+    xs = np.array([[50, 50, 10, 10]])
+
+    objective_vectors = p.evaluate(xs).objectives
+
+    assert objective_vectors.shape[0] == 1
+
+    expected_result = np.array([[2996.845703, 5.9616]])
+
+    npt.assert_allclose(objective_vectors, expected_result)
+
+@pytest.mark.re23
+def test_variable_bounds_error_re23_1d():
+    with pytest.raises(ValueError):
+        p: MOProblem = re23(var_iv=np.array([1, -2, 3, 4]))
+
+@pytest.mark.re23
+def test_variable_bounds_error_re23_2d():
+    with pytest.raises(ValueError):
+        p: MOProblem = re23(var_iv=np.array([[50, 50, 201, 120], [0, -1, 12, 111]]))
