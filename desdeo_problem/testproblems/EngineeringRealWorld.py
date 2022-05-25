@@ -29,6 +29,7 @@ def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
         MOProblem: a problem object.
     """
 
+    # Parameters
     F = 10.0
     sigma = 10.0
     E = 2.0 * 1e5
@@ -73,7 +74,7 @@ def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
 
 def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
     """ Reinforced concrete beam design problem.
-    Two objectives and three variables.
+    2 objectives, 3 variables and 2 constraints.
     
     Arguments:
         var_iv (np.array): Optional, initial variable values.
@@ -155,7 +156,7 @@ def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
 
 def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
     """ Pressure vesssel design problem.
-    Two objectives and four variables.
+    2 objectives, 4 variables and 3 constraints.
     
     Arguments:
         var_iv (np.array): Optional, initial variable values.
@@ -180,13 +181,13 @@ def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = x.astype(float)
-        x[:, 0] = 0.0625 * int(np.round(x[:,0]))
+        x[:, 0] = 0.0625 * (np.round(x[:,0]))
         return x[:, 0] - (0.0193 * x[:, 2])
 
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = x.astype(float)
-        x[:, 1] = 0.0625 * int(np.round(x[:,1]))
+        x[:, 1] = 0.0625 * (np.round(x[:,1]))
         return x[:, 1] - (0.00954 * x[:, 2])
 
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
@@ -197,8 +198,8 @@ def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
     def f_1(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         x = x.astype(float)
-        x[:, 0] = 0.0625 * int(np.round(x[:,0]))
-        x[:, 1] = 0.0625 * int(np.round(x[:,1]))
+        x[:, 0] = 0.0625 * (np.round(x[:,0]))
+        x[:, 1] = 0.0625 * (np.round(x[:,1]))
         return (
             (0.6224 * x[:, 0] * x[:, 2] * x[:, 3]) + (1.7781 * x[:, 1] * x[:, 2]**2) +
             (3.1661 * x[:, 0]**2 * x[:, 3]) + (19.84 * x[:, 0]**2 * x[:, 2])
@@ -231,6 +232,94 @@ def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
     x_4 = Variable("the length of the cylindrical section", 120, 10, 240)
 
     variables = [x_1, x_2, x_3, x_4]
+
+    problem = MOProblem(variables=variables, objectives=objectives, constraints=constraints)
+
+    return problem
+
+def re24(var_iv : np.array = np.array([2, 25])) -> MOProblem:
+    """ Hatch cover design problem.
+    2 objectives, 2 variables and 4 constraints.
+    
+    Arguments:
+        var_iv (np.array): Optional, initial variable values.
+            Defaults are [2, 25]. x1 ∈ [0.5, 4] and
+            x2 ∈ [4, 50].
+    Returns:
+        MOProblem: a problem object.
+    """
+
+    """ Parameters
+    E = 700000
+    sigma_b_max = 700
+    tau_max = 450
+    delta_max = 1.5
+    sigma_k = (E * x1 * x1) / 100
+    sigma_b = 4500 / (x1 * x2)
+    tau = 1800 / x2
+    delta = (56.2 * 10000) / (E * x1 * x2 * x2)
+    """
+
+    # Lower bounds
+    lb = np.array([0.5, 4])
+    
+    # Upper bounds
+    ub = np.array([4, 50])
+
+    # Check the variable bounds
+    if np.any(lb > var_iv) or np.any(ub < var_iv):
+        raise ValueError("Initial variable values need to be between lower and upper bounds")
+
+    # Constrain functions
+    def g_1(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return 1.0 - ((4500 / (x[:, 0] * x[:, 1])) / 700)
+
+    def g_2(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return 1.0 - ((1800 / x[:, 1]) / 450)
+
+    def g_3(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return 1.0 - (((56.2 * 10000) / (700000 * x[:, 0] * x[:, 1]**2)) / 1.5)
+
+    def g_4(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return 1.0 - ((4500 / (x[:,0] * x[:, 1])) / ((700000 * x[:, 0]**2) / 100))
+
+    # Objective functions
+    def f_1(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return x[:, 0] + 120 * x[:, 1]
+
+    def f_2(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        sum1 = g_1(x)
+        sum2 = g_2(x)
+        sum3 = g_3(x)
+        sum4 = g_4(x)
+        sum1 = np.where(sum1 > 0, sum1, 0)
+        sum2 = np.where(sum2 > 0, sum2, 0)
+        sum3 = np.where(sum3 > 0, sum3, 0)
+        sum4 = np.where(sum4 > 0, sum4, 0)
+        return sum1 + sum2 + sum3 + sum4
+    
+    objective_1 = ScalarObjective(name="to minimize the weight of the hatch cover", evaluator=f_1, maximize=[False])
+    objective_2 = ScalarObjective(name="the sum of the four constraint violations", evaluator=f_2, maximize=[False])
+
+    objectives = [objective_1, objective_2]
+
+    cons_1 = ScalarConstraint("c_1", 2, 2, g_1)
+    cons_2 = ScalarConstraint("c_2", 2, 2, g_2)
+    cons_3 = ScalarConstraint("c_3", 2, 2, g_3)
+    cons_4 = ScalarConstraint("c_4", 2, 2, g_4)
+
+    constraints = [cons_1, cons_2, cons_3, cons_4]
+
+    x_1 = Variable("the flange thickness", 2, 0.5, 4)
+    x_2 = Variable("the beam height", 25, 4, 50)
+
+    variables = [x_1, x_2]
 
     problem = MOProblem(variables=variables, objectives=objectives, constraints=constraints)
 
