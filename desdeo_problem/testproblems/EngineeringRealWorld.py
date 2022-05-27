@@ -1,10 +1,3 @@
-from desdeo_problem.problem.Variable import Variable
-from desdeo_problem.problem.Objective import ScalarObjective
-from desdeo_problem.problem.Problem import MOProblem, ProblemBase
-from desdeo_problem import ScalarConstraint, problem
-
-import numpy as np
-
 """
 A real-world multi-objective problem suite (the RE benchmark set)
 
@@ -15,6 +8,13 @@ https://doi.org/10.1016/j.asoc.2020.106078
 https://github.com/ryojitanabe/reproblems/blob/master/reproblem_python_ver/reproblem.py
 
 """
+
+from desdeo_problem.problem.Variable import Variable
+from desdeo_problem.problem.Objective import ScalarObjective
+from desdeo_problem.problem.Problem import MOProblem, ProblemBase
+from desdeo_problem import ScalarConstraint, problem
+
+import numpy as np
 
 def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
     """ Four bar truss design problem. 
@@ -111,12 +111,17 @@ def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
                             7.20, 7.80, 7.90, 8.0, 8.40, 8.69, 9.0, 9.48, 10.27, 11.0,
                             11.06, 11.85, 12.0, 13.0, 14.0, 15.0])
 
-    # Constrain functions
-    def g_1(x: np.ndarray, _ = None) -> np.ndarray:
-        x = np.atleast_2d(x)
+    # Returns discrete value for x1
+    def feas_val(x: np.ndarray) -> np.array:
         fv_2d = np.repeat(np.atleast_2d(feasible_vals), x.shape[0], axis=0)
         idx = np.abs(fv_2d.T - x[:, 0]).argmin(axis=0)
         x[:, 0] = feasible_vals[idx]
+        return x
+
+    # Constrain functions
+    def g_1(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        x = feas_val(x)
         return x[:, 0] * x[:, 2] - 7.735 * (x[:, 0]**2 / x[:, 1]) - 180
 
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
@@ -126,9 +131,7 @@ def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
     # Objective functions
     def f_1(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
-        fv_2d = np.repeat(np.atleast_2d(feasible_vals), x.shape[0], axis=0)
-        idx = np.abs(fv_2d.T - x[:, 0]).argmin(axis=0)
-        x[:, 0] = feasible_vals[idx]
+        x = feas_val(x)
         return (29.4 * x[:, 0]) + (0.6 * x[:, 1] * x[:,2])
 
     def f_2(x: np.ndarray) -> np.ndarray:
@@ -324,6 +327,147 @@ def re24(var_iv : np.array = np.array([2, 25])) -> MOProblem:
     x_2 = Variable("the beam height", 25, 4, 50)
 
     variables = [x_1, x_2]
+
+    problem = MOProblem(variables=variables, objectives=objectives, constraints=constraints)
+
+    return problem
+
+def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
+    """ Coil compression spring design problem.
+    2 objectives, 3 variables and 6 constraints.
+    
+    Arguments:
+        var_iv (np.array): Optional, initial variable values.
+            Defaults are [35, 15, 0.207]. x1 ∈ {1, ..., 70} and x2 ∈ [0.6, 30].
+            x3 has a pre-defined discrete value from 0.009 to 0.5.
+    Returns:
+        MOProblem: a problem object.
+    """
+
+    # Check the number of variables
+    if (np.shape(np.atleast_2d(var_iv)[0]) != (3,)):
+        raise RuntimeError("Number of variables must be three")
+
+    # Lower bounds
+    lb = np.array([1, 0.6, 0.009])
+    
+    # Upper bounds
+    ub = np.array([70, 30, 0.5])
+
+    # Check the variable bounds
+    if np.any(lb > var_iv) or np.any(ub < var_iv):
+        raise ValueError("Initial variable values need to be between lower and upper bounds")
+
+    # x3 pre-defined discrete values
+    feasible_vals = np.array([0.009, 0.0095, 0.0104, 0.0118, 0.0128, 0.0132, 0.014, 0.015, 
+                            0.0162, 0.0173, 0.018, 0.02, 0.023, 0.025, 0.028, 0.032, 0.035, 
+                            0.041, 0.047, 0.054, 0.063, 0.072, 0.08, 0.092, 0.105, 0.12, 
+                            0.135, 0.148, 0.162, 0.177, 0.192, 0.207, 0.225, 0.244, 0.263, 
+                            0.283, 0.307, 0.331, 0.362, 0.394, 0.4375, 0.5])
+
+    # Returns discrete value for x3
+    def feas_val(x: np.ndarray) -> np.array:
+        fv_2d = np.repeat(np.atleast_2d(feasible_vals), x.shape[0], axis=0)
+        idx = np.abs(fv_2d.T - x[:, 2]).argmin(axis=0)
+        x[:, 2] = feasible_vals[idx]
+        return x
+  
+    # Constrain functions
+    def g_1(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        x = feas_val(x)
+        return (-((8 * ((4.0 * (x[:,1] / x[:,2]) - 1) / 
+                (4.0 * (x[:,1] / x[:,2]) - 4)) + 
+                (0.615 * x[:,2] / x[:,1]) * 1000.0 * x[:,1]) 
+                / (np.pi * x[:,2]**3)) + 189000.0)
+
+    def g_2(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        x = feas_val(x)
+        return (-((1000.0 / (((11.5 * 1e+6) * x[:,2]**4) /
+                 (8 * (np.round(x[:,0])) * x[:,1]**3))) + 1.05 * 
+                 ((np.round(x[:,0])) + 2) * x[:,2]) + 14.0)
+
+    def g_3(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        x = feas_val(x)
+        return (-(300.0 / 
+                (((11.5 * 1e+6) * x[:,2]**4) /
+                (8 * (np.round(x[:,0])) * x[:,1]**3))) + 6)
+
+    def g_4(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (-(300.0 / (((11.5 * 1e+6) * x[:,2]**4) / 
+                (8 * (np.round(x[:,0])) * x[:,2]**3))) 
+                - ((1000.0 - 300.0) / 
+                (((11.5 * 1e+6) * x[:,2]**4) / 
+                (8 * (np.round(x[:,0])) * x[:,1]**3))) - 1.05 * ((np.round(x[:,0])) + 2) * x[:,2] + 
+                ((1000.0 / (((11.5 * 1e+6) * x[:,2]**4) / 
+                (8 * (np.round(x[:,0])) * x[:,1]**3))) 
+                + 1.05 *  ((np.round(x[:,0])) + 2) * x[:,2]))
+
+    def g_5(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        x = feas_val(x)
+        return (-(300.0 / (((11.5 * 1e+6) * x[:,2]**4) / 
+                (8 * (np.round(x[:,0])) * x[:,1]**3))) - ((1000.0 - 300.0) / 
+                (((11.5 * 1e+6) * x[:,2]**4) / 
+                (8 * (np.round(x[:,0])) * x[:,1]**3))) - 1.05 * 
+                ((np.round(x[:,0])) + 2) * x[:,2] + ((1000.0 / 
+                (((11.5 * 1e+6) * x[:,2]**4) / 
+                (8 * (np.round(x[:,0])) * x[:,1]**3))) + 1.05 *  ((np.round(x[:,0])) + 2) * x[:,2]))
+
+    def g_6(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        x = feas_val(x)
+        return (1.25- ((1000.0 - (300.0)) / 
+                (((11.5 * 1e+6) * x[:,2]**4) / 
+                (8 * (np.round(x[:,0])) * x[:,1]**3))))
+
+    # Objective functions
+    def f_1(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        x = feas_val(x)
+        return ((np.pi * np.pi * x[:,1] * x[:,2]**2 * ((np.round(x[:,0])) + 2)) / 4.0)
+
+    def f_2(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        sum1 = g_1(x)
+        sum2 = g_2(x)
+        sum3 = g_3(x)
+        sum4 = g_4(x)
+        sum5 = g_5(x)
+        sum6 = g_6(x)
+        sum1 = np.where(sum1 > 0, sum1, 0)
+        sum2 = np.where(sum2 > 0, sum2, 0)
+        sum3 = np.where(sum3 > 0, sum3, 0)
+        sum4 = np.where(sum4 > 0, sum4, 0)
+        sum5 = np.where(sum5 > 0, sum5, 0)
+        sum6 = np.where(sum6 > 0, sum6, 0)
+        return sum1 + sum2 + sum3 + sum4 + sum5 + sum6
+
+    objective_1 = ScalarObjective(name="minimize the volume of spring steel wire which is used to manufacture the spring",
+        evaluator=f_1, maximize=[False])
+
+    objective_2 = ScalarObjective(name="the sum of the four constraint violations", evaluator=f_2, maximize=[False])
+
+    objectives = [objective_1, objective_2]
+
+    cons_1 = ScalarConstraint("c_1", 3, 2, g_1)
+    cons_2 = ScalarConstraint("c_2", 3, 2, g_2)
+    cons_3 = ScalarConstraint("c_3", 3, 2, g_3)
+    cons_4 = ScalarConstraint("c_4", 3, 2, g_4)
+    cons_5 = ScalarConstraint("c_5", 3, 2, g_5)
+    cons_6 = ScalarConstraint("c_6", 3, 2, g_6)
+
+
+    constraints = [cons_1, cons_2, cons_3, cons_4, cons_5, cons_6]
+
+    x_1 = Variable("the number of spring coils", 35, 1, 70)
+    x_2 = Variable("the outside diameter of the spring", 15, 0.6, 30)
+    x_3 = Variable("the spring wire diameter", 0.207, 0.009, 0.5)
+
+    variables = [x_1, x_2, x_3]
 
     problem = MOProblem(variables=variables, objectives=objectives, constraints=constraints)
 
