@@ -1,4 +1,3 @@
-from cmath import pi
 from desdeo_problem.problem.Variable import Variable
 from desdeo_problem.problem.Objective import ScalarObjective
 from desdeo_problem.problem.Problem import MOProblem, ProblemBase
@@ -35,6 +34,10 @@ def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
     E = 2.0 * 1e5
     L = 200.0
     a = F / sigma
+
+    # Check the number of variables
+    if (np.shape(np.atleast_2d(var_iv)[0]) != (4,)):
+        raise ValueError("Number of variables must be four")
 
     # Lower bounds
     lb = np.array([a, np.sqrt(2) * a, np.sqrt(2) * a, a])
@@ -83,6 +86,10 @@ def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
     Returns:
         MOProblem: a problem object.
     """
+
+    # Check the number of variables
+    if (np.shape(np.atleast_2d(var_iv)[0]) != (3,)):
+        raise ValueError("Number of variables must be three")
 
     # Lower bounds
     lb = np.array([0.2, 0, 0])
@@ -167,6 +174,10 @@ def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
         MOProblem: a problem object.
     """
 
+    # Check the number of variables
+    if (np.shape(np.atleast_2d(var_iv)[0]) != (4,)):
+        raise ValueError("Number of variables must be four")
+
     # Lower bounds
     lb = np.array([1, 1, 10, 10])
     
@@ -249,16 +260,9 @@ def re24(var_iv : np.array = np.array([2, 25])) -> MOProblem:
         MOProblem: a problem object.
     """
 
-    """ Parameters
-    E = 700000
-    sigma_b_max = 700
-    tau_max = 450
-    delta_max = 1.5
-    sigma_k = (E * x1 * x1) / 100
-    sigma_b = 4500 / (x1 * x2)
-    tau = 1800 / x2
-    delta = (56.2 * 10000) / (E * x1 * x2 * x2)
-    """
+    # Check the number of variables
+    if (np.shape(np.atleast_2d(var_iv)[0]) != (2,)):
+        raise ValueError("Number of variables must be two")
 
     # Lower bounds
     lb = np.array([0.5, 4])
