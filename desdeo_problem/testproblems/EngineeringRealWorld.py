@@ -37,7 +37,7 @@ def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
 
     # Check the number of variables
     if (np.shape(np.atleast_2d(var_iv)[0]) != (4,)):
-        raise ValueError("Number of variables must be four")
+        raise RuntimeError("Number of variables must be four")
 
     # Lower bounds
     lb = np.array([a, np.sqrt(2) * a, np.sqrt(2) * a, a])
@@ -89,7 +89,7 @@ def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
 
     # Check the number of variables
     if (np.shape(np.atleast_2d(var_iv)[0]) != (3,)):
-        raise ValueError("Number of variables must be three")
+        raise RuntimeError("Number of variables must be three")
 
     # Lower bounds
     lb = np.array([0.2, 0, 0])
@@ -176,7 +176,7 @@ def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
 
     # Check the number of variables
     if (np.shape(np.atleast_2d(var_iv)[0]) != (4,)):
-        raise ValueError("Number of variables must be four")
+        raise RuntimeError("Number of variables must be four")
 
     # Lower bounds
     lb = np.array([1, 1, 10, 10])
@@ -262,7 +262,7 @@ def re24(var_iv : np.array = np.array([2, 25])) -> MOProblem:
 
     # Check the number of variables
     if (np.shape(np.atleast_2d(var_iv)[0]) != (2,)):
-        raise ValueError("Number of variables must be two")
+        raise RuntimeError("Number of variables must be two")
 
     # Lower bounds
     lb = np.array([0.5, 4])

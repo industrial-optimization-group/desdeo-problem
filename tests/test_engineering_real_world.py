@@ -38,12 +38,12 @@ def test_variable_bounds_error_re21_2d():
 
 @pytest.mark.re21
 def test_number_of_variables_error_re21_1d():
-    with pytest.raises(ValueError):
-        p: MOProblem = re21(var_iv=np.array([2,2,2,2,2]))
+    with pytest.raises(RuntimeError):
+        p: MOProblem = re21(var_iv=np.array([]))
 
 @pytest.mark.re21
 def test_number_of_variables_error_re21_2d():
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         p: MOProblem = re21(var_iv=np.array([[2,2,2],[2,2,2]]))
 
 
@@ -81,12 +81,12 @@ def test_variable_bounds_error_re22_2d():
 
 @pytest.mark.re22
 def test_number_of_variables_error_re22_1d():
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         p: MOProblem = re22(var_iv=np.array([10,12,20,20]))
 
 @pytest.mark.re22
 def test_number_of_variables_error_re22_2d():
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         p: MOProblem = re22(var_iv=np.array([[10,12,20,20],[10,12,20,20]]))
 
 @pytest.mark.re23
@@ -123,12 +123,12 @@ def test_variable_bounds_error_re23_2d():
 
 @pytest.mark.re23
 def test_number_of_variables_error_re23_1d():
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         p: MOProblem = re23(var_iv=np.array([10,12,20]))
 
 @pytest.mark.re23
 def test_number_of_variables_error_re23_2d():
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         p: MOProblem = re23(var_iv=np.array([[10,12,20],[10,12,20]]))
 
 @pytest.mark.re24
@@ -165,10 +165,10 @@ def test_variable_bounds_error_re24_2d():
 
 @pytest.mark.re24
 def test_number_of_variables_error_re24_1d():
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         p: MOProblem = re24(var_iv=np.array([2]))
 
 @pytest.mark.re24
 def test_number_of_variables_error_re24_2d():
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         p: MOProblem = re24(var_iv=np.array([[],[]]))
