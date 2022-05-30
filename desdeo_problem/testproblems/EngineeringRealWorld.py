@@ -371,58 +371,86 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
         idx = np.abs(fv_2d.T - x[:, 2]).argmin(axis=0)
         x[:, 2] = feasible_vals[idx]
         return x
-  
+
+    """
+    Cf = ((4.0 * (x2 / x3) - 1) / (4.0 * (x2 / x3) - 4)) + (0.615 * x3 / x2)
+
+    (((4.0 * (x[:, 1] / x[:, 2]) - 1) / 
+    (4.0 * (x[:, 1] / x[:, 2]) - 4)) + ((0.615 * x[:, 2]) / x[:, 1]))
+
+    Fmax = 1000.0
+    S = 189000.0
+    G = 11.5 * 1e+6
+    K  = (G * x3 * x3 * x3 * x3) / (8 * x1 * x2 * x2 * x2)
+
+    ((11.5 * 10**6 * x[:, 2]**4) / (8 * x[:, 0] * x[:, 1]**3))
+
+    lmax = 14.0
+    lf = (Fmax / K) + 1.05 *  (x1 + 2) * x3
+
+    ((1000 / ((11.5 * 10**6 * x[:, 2]**4) /
+    (8 * x[:, 0] * x[:, 1]))) + 1.05 * ( x[:, 0] + 2) * x[:, 2])
+
+    dmin = 0.2
+    Dmax = 3
+    Fp = 300.0
+    sigmaP = Fp / K
+
+    (300 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * x[:, 0] * x[:, 1])))
+
+    sigmaPM = 6
+    sigmaW = 1.25
+    """
     # Constrain functions
+    # -((8 * Cf * Fmax * x2) / (np.pi * x3 * x3 * x3)) + S
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (-((8 * ((4.0 * (x[:,1] / x[:,2]) - 1) / 
-                (4.0 * (x[:,1] / x[:,2]) - 4)) + 
-                (0.615 * x[:,2] / x[:,1]) * 1000.0 * x[:,1]) 
-                / (np.pi * x[:,2]**3)) + 189000.0)
+        return (
+            -((8 * (((4.0 * (x[:, 1] / x[:, 2]) - 1) / 
+            (4.0 * (x[:, 1] / x[:, 2]) - 4)) + 
+            ((0.615 * x[:, 2]) / x[:, 1])) * 1000 * x[:, 1]) 
+            / (np.pi * x[:, 2]**3 )) + 189000
+        )
 
+    # -lf + lmax
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (-((1000.0 / (((11.5 * 1e+6) * x[:,2]**4) /
-                 (8 * (np.round(x[:,0])) * x[:,1]**3))) + 1.05 * 
-                 ((np.round(x[:,0])) + 2) * x[:,2]) + 14.0)
+        return (
+            - ( 1000 / ( ( 11.5 * 10**6 * x[:, 2]**4) / ( 8 * np.round(x[:, 0]) * x[:, 1]**3 ) ) ) + 1.05 * ( np.round( x[:, 0]) + 2) * x[:, 2] + 14
+        )
 
+    # -3 + (x2 / x3)
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (-(300.0 / 
-                (((11.5 * 1e+6) * x[:,2]**4) /
-                (8 * (np.round(x[:,0])) * x[:,1]**3))) + 6)
+        return (
+            -3 + (x[:, 1] / x[:, 2])
+        )
 
+    # -sigmaP + sigmaPM
     def g_4(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (-(300.0 / (((11.5 * 1e+6) * x[:,2]**4) / 
-                (8 * (np.round(x[:,0])) * x[:,2]**3))) 
-                - ((1000.0 - 300.0) / 
-                (((11.5 * 1e+6) * x[:,2]**4) / 
-                (8 * (np.round(x[:,0])) * x[:,1]**3))) - 1.05 * ((np.round(x[:,0])) + 2) * x[:,2] + 
-                ((1000.0 / (((11.5 * 1e+6) * x[:,2]**4) / 
-                (8 * (np.round(x[:,0])) * x[:,1]**3))) 
-                + 1.05 *  ((np.round(x[:,0])) + 2) * x[:,2]))
+        return (
+            - (300 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) + 6
+        )
 
+    # -sigmaP - ((Fmax - Fp) / K) - 1.05 * (x1 + 2) * x3 + lf
     def g_5(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (-(300.0 / (((11.5 * 1e+6) * x[:,2]**4) / 
-                (8 * (np.round(x[:,0])) * x[:,1]**3))) - ((1000.0 - 300.0) / 
-                (((11.5 * 1e+6) * x[:,2]**4) / 
-                (8 * (np.round(x[:,0])) * x[:,1]**3))) - 1.05 * 
-                ((np.round(x[:,0])) + 2) * x[:,2] + ((1000.0 / 
-                (((11.5 * 1e+6) * x[:,2]**4) / 
-                (8 * (np.round(x[:,0])) * x[:,1]**3))) + 1.05 *  ((np.round(x[:,0])) + 2) * x[:,2]))
+        return (
+            -(300 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) - ((1000 - 300) / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) - (1.05 * (np.round(x[:, 0]) + 2) * x[:, 2]) + ((1000 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) + (1.05 * ( np.round(x[:, 0]) + 2) * x[:, 2]))
+        )
 
+    # sigmaW- ((Fmax - Fp) / K)
     def g_6(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (1.25- ((1000.0 - (300.0)) / 
-                (((11.5 * 1e+6) * x[:,2]**4) / 
-                (8 * (np.round(x[:,0])) * x[:,1]**3))))
+        return (
+            -1.25 + ((1000 - 300) / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3)))
+        )
 
     # Objective functions
     def f_1(x: np.ndarray) -> np.ndarray:
