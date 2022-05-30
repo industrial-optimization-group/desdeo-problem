@@ -183,8 +183,7 @@ def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
 
     # Lower bounds
     lb = np.array([1, 1, 10, 10])
-    
-    # Upper bounds
+    DTLZ
     ub = np.array([100, 100, 200, 240])
 
     # Check the variable bounds
@@ -372,37 +371,7 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
         x[:, 2] = feasible_vals[idx]
         return x
 
-    """
-    Cf = ((4.0 * (x2 / x3) - 1) / (4.0 * (x2 / x3) - 4)) + (0.615 * x3 / x2)
-
-    (((4.0 * (x[:, 1] / x[:, 2]) - 1) / 
-    (4.0 * (x[:, 1] / x[:, 2]) - 4)) + ((0.615 * x[:, 2]) / x[:, 1]))
-
-    Fmax = 1000.0
-    S = 189000.0
-    G = 11.5 * 1e+6
-    K  = (G * x3 * x3 * x3 * x3) / (8 * x1 * x2 * x2 * x2)
-
-    ((11.5 * 10**6 * x[:, 2]**4) / (8 * x[:, 0] * x[:, 1]**3))
-
-    lmax = 14.0
-    lf = (Fmax / K) + 1.05 *  (x1 + 2) * x3
-
-    ((1000 / ((11.5 * 10**6 * x[:, 2]**4) /
-    (8 * x[:, 0] * x[:, 1]))) + 1.05 * ( x[:, 0] + 2) * x[:, 2])
-
-    dmin = 0.2
-    Dmax = 3
-    Fp = 300.0
-    sigmaP = Fp / K
-
-    (300 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * x[:, 0] * x[:, 1])))
-
-    sigmaPM = 6
-    sigmaW = 1.25
-    """
     # Constrain functions
-    # -((8 * Cf * Fmax * x2) / (np.pi * x3 * x3 * x3)) + S
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
@@ -413,7 +382,6 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
             / (np.pi * x[:, 2]**3 )) + 189000
         )
 
-    # -lf + lmax
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
@@ -421,7 +389,6 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
             - ( 1000 / ( ( 11.5 * 10**6 * x[:, 2]**4) / ( 8 * np.round(x[:, 0]) * x[:, 1]**3 ) ) ) + 1.05 * ( np.round( x[:, 0]) + 2) * x[:, 2] + 14
         )
 
-    # -3 + (x2 / x3)
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
@@ -429,14 +396,12 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
             -3 + (x[:, 1] / x[:, 2])
         )
 
-    # -sigmaP + sigmaPM
     def g_4(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
             - (300 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) + 6
         )
 
-    # -sigmaP - ((Fmax - Fp) / K) - 1.05 * (x1 + 2) * x3 + lf
     def g_5(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
@@ -444,7 +409,6 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
             -(300 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) - ((1000 - 300) / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) - (1.05 * (np.round(x[:, 0]) + 2) * x[:, 2]) + ((1000 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) + (1.05 * ( np.round(x[:, 0]) + 2) * x[:, 2]))
         )
 
-    # sigmaW- ((Fmax - Fp) / K)
     def g_6(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
@@ -494,6 +458,100 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
     x_1 = Variable("the number of spring coils", 35, 1, 70)
     x_2 = Variable("the outside diameter of the spring", 15, 0.6, 30)
     x_3 = Variable("the spring wire diameter", 0.207, 0.009, 0.5)
+
+    variables = [x_1, x_2, x_3]
+
+    problem = MOProblem(variables=variables, objectives=objectives, constraints=constraints)
+
+    return problem
+
+def re31(var_iv: np.array = np.array([50.0, 50.0, 2.0])) -> MOProblem:
+    """ Two bar truss design problem.
+    
+    Arguments:
+        var_iv (np.array): Optional, initial variable values.
+            Defaults are [50.0, 50.0, 2.0]. x1 and x2 ∈ [0.00001, 100] 
+            and x3 ∈ [1.0, 3.0].
+    Returns:
+        MOProblem: a problem object.
+    """
+
+    # Check the number of variables
+    if (np.shape(np.atleast_2d(var_iv)[0]) != (3,)):
+        raise RuntimeError("Number of variables must be three")
+
+    # Lower bounds
+    lb = np.array([0.00001, 0.00001, 1.0])
+    
+    # Upper bounds
+    ub = np.array([100.0, 100.0, 3.0])
+
+    # Check the variable bounds
+    if np.any(lb > var_iv) or np.any(ub < var_iv):
+        raise ValueError("Initial variable values need to be between lower and upper bounds")
+
+    # Objective functions
+    def f_1(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            x[:, 0] * np.sqrt(16 + x[:, 2]**2 ) 
+            + x[:, 1] * np.sqrt(1 + x[:, 2]**2 )
+        )
+
+    def f_2(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            (20 * np.sqrt(16 + x[:, 2]**2 ) 
+            / ( x[:, 2] * x[:, 0] ))
+        )
+
+    # Constrain functions
+    def g_1(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            0.1 - f_1(x)
+        )
+
+    def g_2(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            10**5 - f_2(x)
+            )
+
+    def g_3(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            10**5 
+            - ((80 * np.sqrt(1 + x[:, 2]**2 ) 
+            / (x[:, 2] * x[:, 1])))
+        )
+
+    # Third objective
+    def f_3(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        sum1 = g_1(x)
+        sum2 = g_2(x)
+        sum3 = g_3(x)
+        sum1 = np.where(sum1 > 0, sum1, 0)
+        sum2 = np.where(sum2 > 0, sum2, 0)
+        sum3 = np.where(sum3 > 0, sum3, 0)
+        return sum1 + sum2 + sum3
+
+    objective_1 = ScalarObjective(name="minimize the structural weight", evaluator=f_1, maximize=[False])
+    objective_2 = ScalarObjective(name="minimize the resultant displacement of join", evaluator=f_2, maximize=[False])
+    objective_3 = ScalarObjective(name="the sum of the four constraint violations", evaluator=f_3, maximize=[False])
+
+    objectives = [objective_1, objective_2, objective_3]
+
+    cons_1 = ScalarConstraint("c_1", 3, 3, g_1)
+    cons_2 = ScalarConstraint("c_2", 3, 3, g_2)
+    cons_3 = ScalarConstraint("c_3", 3, 3, g_3)
+
+    constraints = [cons_1, cons_2, cons_3]
+
+    x_1 = Variable("the length of the bar", 50.0, 0.00001, 100)
+    x_2 = Variable("the length of the bar", 50.0, 0.00001, 100)
+    x_3 = Variable("the spring wire diameter", 2.0, 1.0, 3.0)
 
     variables = [x_1, x_2, x_3]
 

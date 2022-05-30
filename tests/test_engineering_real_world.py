@@ -214,3 +214,47 @@ def test_number_of_variables_error_re25_1d():
 def test_number_of_variables_error_re25_2d():
     with pytest.raises(RuntimeError):
         p: MOProblem = re25(var_iv=np.array([[],[]]))
+
+@pytest.mark.re31
+def test_number_of_variables_re31():
+    p: MOProblem = re31()
+
+    assert p.n_of_variables == 3
+
+# Evaluating problem with some variable values
+@pytest.mark.re31
+def test_evaluate_re31():
+    p: MOProblem = re31()
+
+    # Variable values
+    xs = np.array([[1.0, 2.0, 3.0], [62.3, 14.7, 1.2]])
+
+    objective_vectors = p.evaluate(xs).objectives
+
+    assert objective_vectors.shape[0] == 2
+
+    expected_result = np.array([[11.32455532, 33.3333333, 199924.503], 
+                                [283.1345722, 1.117207759, 199991.79866]])
+
+    npt.assert_allclose(objective_vectors, expected_result)
+
+@pytest.mark.re31
+def test_variable_bounds_error_re31_1d():
+    with pytest.raises(ValueError):
+        p: MOProblem = re31(var_iv=np.array([35, 0, 1.0]))
+
+@pytest.mark.re31
+def test_variable_bounds_error_re31_2d():
+    with pytest.raises(ValueError):
+        p: MOProblem = re31(var_iv=np.array([[10, 0.6, 2], [100, 13, 4]]))
+
+@pytest.mark.re31
+def test_number_of_variables_error_re31_1d():
+    with pytest.raises(RuntimeError):
+        p: MOProblem = re31(var_iv=np.array([2, 3]))
+
+@pytest.mark.re31
+def test_number_of_variables_error_re31_2d():
+    with pytest.raises(RuntimeError):
+        p: MOProblem = re31(var_iv=np.array([[],[]]))
+
