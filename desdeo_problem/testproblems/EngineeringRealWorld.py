@@ -183,7 +183,6 @@ def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
 
     # Lower bounds
     lb = np.array([1, 1, 10, 10])
-    DTLZ
     ub = np.array([100, 100, 200, 240])
 
     # Check the variable bounds
