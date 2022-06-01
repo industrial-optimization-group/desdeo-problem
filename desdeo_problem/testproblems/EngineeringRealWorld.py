@@ -584,32 +584,7 @@ def re32(var_iv: np.array = np.array([2.5, 5.0, 5.0, 2.5])) -> MOProblem:
     if np.any(lb > var_iv) or np.any(ub < var_iv):
         raise ValueError("Initial variable values need to be between lower and upper bounds")
 
-    """
-    tauDash = P / (np.sqrt(2) * x1 * x2)
-
-    (6000 / (np.sqrt(2) * x[:, 0] * x[:, 1]))
     
-    tauDashDash = 
-    
-    ((6000 * (14 + (x[:, 1] / 2))) * 
-    (np.sqrt( ( (x[:,1]**2) / 4.0) + 
-    ((x[:, 0] + x[:, 2]) / 2)**2 ))) / 
-    (2 * (np.sqrt(2) * x[:, 0] * x[:, 1] * 
-    ((x[:,1]**2)/12 + ((x[:,0] + x[:,2]) / 2)**2) ))
-
-    M = 
-    
-    (6000 * (14 + (x[:, 1] / 2)))
-    
-    R = 
-    
-    (np.sqrt( ( (x[:,1]**2) / 4.0) + ((x[:, 0] + x[:, 2]) / 2)**2 ))
-    
-    J = 
-    
-    (2 * (np.sqrt(2) * x[:, 0] * x[:, 1] * ((x[:,1]**2)/12 + ((x[:,0] + x[:,2]) / 2)**2) ))
-    """
-
     def tau(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
@@ -639,7 +614,10 @@ def re32(var_iv: np.array = np.array([2.5, 5.0, 5.0, 2.5])) -> MOProblem:
     def p_c(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
-            ((4.013 * 30 * 10**6 * np.sqrt((x[:, 2]**2 * x[:, 3]**6) / 36)) / (14**2) ) * (1 - (x[:, 2] / (2 * 14)) * np.sqrt((30 * 10**6) / (4 * 12 * 10**6)))
+            ((4.013 * 30 * 10**6 * np.sqrt((x[:, 2]**2 * 
+            x[:, 3]**6) / 36)) / (14**2) ) * 
+            (1 - (x[:, 2] / (2 * 14)) * np.sqrt((30 * 10**6) / 
+            (4 * 12 * 10**6)))
         )
 
     # Constrain functions

@@ -46,7 +46,6 @@ def test_number_of_variables_error_re21_2d():
     with pytest.raises(RuntimeError):
         p: MOProblem = re21(var_iv=np.array([[2,2,2],[2,2,2]]))
 
-
 @pytest.mark.re22
 def test_number_of_variables_re22():
     p: MOProblem = re22()
@@ -130,6 +129,7 @@ def test_number_of_variables_error_re23_1d():
 def test_number_of_variables_error_re23_2d():
     with pytest.raises(RuntimeError):
         p: MOProblem = re23(var_iv=np.array([[10,12,20],[10,12,20]]))
+
 
 @pytest.mark.re24
 def test_number_of_variables_re24():
