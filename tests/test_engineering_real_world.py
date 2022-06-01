@@ -300,3 +300,45 @@ def test_number_of_variables_error_re32_1d():
 def test_number_of_variables_error_re32_2d():
     with pytest.raises(RuntimeError):
         p: MOProblem = re32(var_iv=np.array([[],[]]))
+
+@pytest.mark.re33
+def test_number_of_variables_re33():
+    p: MOProblem = re33()
+
+    assert p.n_of_variables == 4
+
+# Evaluating problem with some variable values
+@pytest.mark.re33
+def test_evaluate_re33():
+    p: MOProblem = re33()
+
+    # Variable values
+    xs = np.array([60, 111.7, 2557, 12])
+
+    objective_vectors = p.evaluate(xs).objectives
+
+    assert objective_vectors.shape[0] == 1
+
+    expected_result = np.array([[4.7846437100000, 2.4123329644357, 107414.8247444483]])
+
+    npt.assert_allclose(objective_vectors, expected_result)
+
+@pytest.mark.re33
+def test_variable_bounds_error_re33_1d():
+    with pytest.raises(ValueError):
+        p: MOProblem = re33(var_iv=np.array([0.5, 0.5, 0, 5]))
+
+@pytest.mark.re33
+def test_variable_bounds_error_re33_2d():
+    with pytest.raises(ValueError):
+        p: MOProblem = re33(var_iv=np.array([[10, 0.6, 1, 0], [100, 13, 4, 1]]))
+
+@pytest.mark.re33
+def test_number_of_variables_error_re33_1d():
+    with pytest.raises(RuntimeError):
+        p: MOProblem = re33(var_iv=np.array([2, 3]))
+
+@pytest.mark.re33
+def test_number_of_variables_error_re33_2d():
+    with pytest.raises(RuntimeError):
+        p: MOProblem = re33(var_iv=np.array([[],[]]))

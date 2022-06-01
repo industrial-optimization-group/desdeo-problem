@@ -584,31 +584,6 @@ def re32(var_iv: np.array = np.array([2.5, 5.0, 5.0, 2.5])) -> MOProblem:
     if np.any(lb > var_iv) or np.any(ub < var_iv):
         raise ValueError("Initial variable values need to be between lower and upper bounds")
 
-    """
-    tauDash = P / (np.sqrt(2) * x1 * x2)
-
-    (6000 / (np.sqrt(2) * x[:, 0] * x[:, 1]))
-    
-    tauDashDash = 
-    
-    ((6000 * (14 + (x[:, 1] / 2))) * 
-    (np.sqrt( ( (x[:,1]**2) / 4.0) + 
-    ((x[:, 0] + x[:, 2]) / 2)**2 ))) / 
-    (2 * (np.sqrt(2) * x[:, 0] * x[:, 1] * 
-    ((x[:,1]**2)/12 + ((x[:,0] + x[:,2]) / 2)**2) ))
-
-    M = 
-    
-    (6000 * (14 + (x[:, 1] / 2)))
-    
-    R = 
-    
-    (np.sqrt( ( (x[:,1]**2) / 4.0) + ((x[:, 0] + x[:, 2]) / 2)**2 ))
-    
-    J = 
-    
-    (2 * (np.sqrt(2) * x[:, 0] * x[:, 1] * ((x[:,1]**2)/12 + ((x[:,0] + x[:,2]) / 2)**2) ))
-    """
 
     def tau(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
@@ -714,6 +689,110 @@ def re32(var_iv: np.array = np.array([2.5, 5.0, 5.0, 2.5])) -> MOProblem:
     x_2 = Variable("x_2", 5.0, 0.1, 10.0)
     x_3 = Variable("x_3", 5.0, 0.1, 10.0)
     x_4 = Variable("x_4", 2.5, 0.125, 5)
+
+    variables = [x_1, x_2, x_3, x_4]
+
+    problem = MOProblem(variables=variables, objectives=objectives, constraints=constraints)
+
+    return problem
+
+def re33(var_iv: np.array = np.array([67.5, 92.5, 2000, 15])) -> MOProblem:
+    """ Disc brake design problem.
+    
+    Arguments:
+        var_iv (np.array): Optional, initial variable values.
+            Defaults are [67.5, 92.5, 2000, 15]. x1 ∈ [55, 80], 
+            x2 ∈ [75, 110], x3 ∈ [1000, 3000] and x4 ∈ [11, 20].
+
+    Returns:
+        MOProblem: a problem object.
+    """
+
+    # Check the number of variables
+    if (np.shape(np.atleast_2d(var_iv)[0]) != (4,)):
+        raise RuntimeError("Number of variables must be four")
+
+    # Lower bounds
+    lb = np.array([55, 75, 1000, 11])
+    
+    # Upper bounds
+    ub = np.array([80, 110, 3000, 20])
+
+    # Check the variable bounds
+    if np.any(lb > var_iv) or np.any(ub < var_iv):
+        raise ValueError("Initial variable values need to be between lower and upper bounds")
+        
+    # Constrain functions
+    def g_1(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            (x[:, 1] - x[:, 0]) - 20
+        )
+
+    def g_2(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            0.4 - (x[:, 2] / (3.14 * (x[:, 1]**2 - x[:, 0]**2)))
+        )
+
+    def g_3(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            1 - ((2.22 * 10**-3 * x[:, 2] * (x[:, 1]**3 - x[:, 0]**3)) / 
+            (x[:, 1]**2 - x[:, 0]**2)**2)
+        )
+            
+
+    def g_4(x: np.ndarray, _ = None) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            ((2.66 * 10**-2 * x[:, 2] * x[:, 3] * (x[:, 1]**3 - x[:, 0]**3)) / 
+            (x[:, 1]**2 - x[:, 0]**2)) - 900
+        )
+
+    # Objective functions
+    def f_1(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            4.9 * 10**-5 * (x[:, 1]**2 - x[:, 0]**2) * (x[:, 3] -1)
+        )
+
+    def f_2(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return (
+            9.82 * 10**6 * ((x[:, 1]**2 - x[:, 0]**2) / 
+            (x[:, 2] * x[:, 3] * (x[:, 1]**3 - x[:, 0]**3)))
+        )
+
+    def f_3(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        sum1 = g_1(x)
+        sum2 = g_2(x)
+        sum3 = g_3(x)
+        sum4 = g_4(x)
+        sum1 = np.where(sum1 > 0, sum1, 0)
+        sum2 = np.where(sum2 > 0, sum2, 0)
+        sum3 = np.where(sum3 > 0, sum3, 0)
+        sum4 = np.where(sum4 > 0, sum4, 0)
+        return sum1 + sum2 + sum3 + sum4
+
+    objective_1 = ScalarObjective(name="minimize the mass of the brake", evaluator=f_1, maximize=[False])
+    objective_2 = ScalarObjective(name="the minimum stopping time", evaluator=f_2, maximize=[False])
+    objective_3 = ScalarObjective(name="the sum of the four constraint violations", evaluator=f_3, maximize=[False])
+
+    objectives = [objective_1, objective_2, objective_3]
+
+    cons_1 = ScalarConstraint("c_1", 4, 3, g_1)
+    cons_2 = ScalarConstraint("c_2", 4, 3, g_2)
+    cons_3 = ScalarConstraint("c_3", 4, 3, g_3)
+    cons_4 = ScalarConstraint("c_4", 4, 3, g_4)
+
+    constraints = [cons_1, cons_2, cons_3, cons_4]
+
+    x_1 = Variable("the inner radius of the discs", 67.5, 55, 80)
+    x_2 = Variable("the outer radius of the discs", 92.5, 75, 110)
+    x_3 = Variable("the engaging force", 2000, 1000, 3000)
+    x_4 = Variable("the number of friction surfaces", 15, 11, 20)
 
     variables = [x_1, x_2, x_3, x_4]
 
