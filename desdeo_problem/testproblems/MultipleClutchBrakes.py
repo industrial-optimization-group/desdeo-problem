@@ -64,13 +64,13 @@ def multiple_clutch_brakes(var_iv: np.array = np.array([67.5, 92.5, 2.25, 650, 6
     def f_1(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
-            np.pi * (x[:, 1]**2 - x[:, 0]**2) * (x[:, 2] * (np.round(x[:, 4]) + 1)) * 0.0000078
+            np.pi * ((x[:, 1]**2 - x[:, 0]**2)) * (x[:, 2] * (np.round(x[:, 4]) + 1)) * 0.0000078
         )
 
     def f_2(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
-            (55 * ((np.pi * 250) / 30)) / (m_h(x) + 3)
+            (55 * ((np.pi * 250) / 30)) / ((m_h(x)) + 3)
         )
     
     def f_3(x: np.ndarray) -> np.ndarray:
