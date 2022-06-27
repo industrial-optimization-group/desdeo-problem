@@ -66,41 +66,6 @@ def gaa(var_iv: np.array = np.array([
     if np.any(lb > var_iv) or np.any(ub < var_iv):
         raise ValueError("Initial variable values need to be between lower and upper bounds")
 
-    """
-    
-    # Scaled decision variables
-    var_iv[0] = (var_iv[0] - 0.36) / 0.12
-    var_iv[1] = (var_iv[1] - 9) / 2
-    var_iv[2] = (var_iv[2] - 3) / 3
-    var_iv[3] = (var_iv[3] - 5.734) / 0.234
-    var_iv[4] = (var_iv[4] - 22) / 3
-    var_iv[5] = (var_iv[5] - 97.5) / 12.5
-    var_iv[6] = (var_iv[6] - 17) / 3
-    var_iv[7] = (var_iv[7] - 3.375) / 0.375
-    var_iv[8] = (var_iv[8] - 0.73) / 0.27
-
-    var_iv[9] = (var_iv[9] - 0.36) / 0.12
-    var_iv[10] = (var_iv[10] - 9) / 2
-    var_iv[11] = (var_iv[11] - 3) / 3
-    var_iv[12] = (var_iv[12] - 5.734) / 0.234
-    var_iv[13] = (var_iv[13] - 22) / 3
-    var_iv[14] = (var_iv[14] - 97.5) / 12.5
-    var_iv[15] = (var_iv[15] - 17) / 3
-    var_iv[16] = (var_iv[16] - 3.375) / 0.375
-    var_iv[17] = (var_iv[17] - 0.73) / 0.27
-
-    var_iv[18] = (var_iv[18] - 0.36) / 0.12
-    var_iv[19] = (var_iv[19] - 9) / 2
-    var_iv[20] = (var_iv[20] - 3) / 3
-    var_iv[21] = (var_iv[21] - 5.734) / 0.234
-    var_iv[22] = (var_iv[22] - 22) / 3
-    var_iv[23] = (var_iv[23] - 97.5) / 12.5
-    var_iv[24] = (var_iv[24] - 17) / 3
-    var_iv[25] = (var_iv[25] - 3.375) / 0.375
-    
-    
-    """
-
     def scaled_variables(x: np.ndarray) -> np.ndarray:
         scaled_x = np.zeros(x.shape)
         scaled_x[:,0] = (x[:,0] - 0.36) / 0.12
@@ -131,8 +96,6 @@ def gaa(var_iv: np.array = np.array([
         scaled_x[:,25] = (x[:,25] - 3.375) / 0.375
         return scaled_x
 
-    
-
     # Response variables
     def noise_2(x: np.ndarray) -> np.ndarray:
         x = np.atleast_2d(x)
@@ -140,9 +103,10 @@ def gaa(var_iv: np.array = np.array([
         74.099998 - 0.0004 * x[:,0] - 0.0156 * x[:,1] 
         + 0.0003 * x[:,2] + 0.9684 * x[:,3] 
         + 0.0316 * x[:,4] - 0.0053 * x[:,5] - 0.0015 * x[:,6] - 0.0002 * x[:,7] 
-        + 0.0007 * x[:,8] - 0.0001 * x[:,0] * x[:,3] - 0.0001 * x[:,0] * x[:,4] - 0.0001 * x[:,0] * x[:,5] 
-        + 0 * x[:,0] * x[:,5] + 0.0001 * x[:,0] * x[:,7] 
-        + 0 * x[:,1] * x[:,2] - 0.0012 * x[:,1] * x[:,3] - 0.0014 * x[:,1] * x[:,4] - 0.0002 * x[:,1] * x[:,5] 
+        + 0.0007 * x[:,8] - 0.0001 * x[:,0] * x[:,3] - 0.0001 * x[:,0] * x[:,4] 
+        - 0.0001 * x[:,0] * x[:,5] + 0 * x[:,0] * x[:,5] 
+        + 0.0001 * x[:,0] * x[:,7] + 0 * x[:,1] * x[:,2] - 0.0012 * x[:,1] * x[:,3] 
+        - 0.0014 * x[:,1] * x[:,4] - 0.0002 * x[:,1] * x[:,5] 
         + 0 * x[:,1] * x[:,6] + 0.0003 * x[:,1] * x[:,7]
 		+ 0.0001 * x[:,1] * x[:,8] + 0 * x[:,2] * x[:,8] - 0.0003 * x[:,3]
 		* x[:,4] + 0.0058 * x[:,3] * x[:,5] - 0.0001 * x[:,3] * x[:,6]
@@ -1023,20 +987,6 @@ def gaa(var_iv: np.array = np.array([
         WFUEL6_CV = (wfuel_6(x) - 500) / 500
         RANGE6_CV = -(range_6(x) - 2000) / 2000
 
-        """
-        def f_2(x: np.ndarray) -> np.ndarray:
-        x = np.atleast_2d(x)
-        sum1 = g_1(x)
-        sum2 = g_2(x)
-        sum3 = g_3(x)
-        sum4 = g_4(x)
-        sum1 = np.where(sum1 > 0, sum1, 0)
-        sum2 = np.where(sum2 > 0, sum2, 0)
-        sum3 = np.where(sum3 > 0, sum3, 0)
-        sum4 = np.where(sum4 > 0, sum4, 0)
-        return sum1 + sum2 + sum3 + sum4
-        """
-
         NOISE2_CV = np.where(NOISE2_CV > 0, NOISE2_CV, 0)
         WEMP2_CV = np.where(WEMP2_CV > 0, WEMP2_CV, 0)
         DOC2_CV = np.where(DOC2_CV > 0, DOC2_CV, 0)
@@ -1057,47 +1007,6 @@ def gaa(var_iv: np.array = np.array([
         ROUGH6_CV = np.where(ROUGH6_CV > 0, ROUGH6_CV, 0)
         WFUEL6_CV = np.where(WFUEL6_CV > 0, WFUEL6_CV, 0)
         RANGE6_CV = np.where(RANGE6_CV > 0, RANGE6_CV, 0)
-
-        """
-        if (NOISE2_CV < 0):
-            NOISE2_CV = 0
-        if (WEMP2_CV < 0):
-            WEMP2_CV = 0
-        if (DOC2_CV < 0):
-            DOC2_CV = 0
-        if (ROUGH2_CV < 0):
-            ROUGH2_CV = 0
-        if (WFUEL2_CV < 0):
-            WFUEL2_CV = 0
-        if (RANGE2_CV < 0):
-            RANGE2_CV = 0
-
-        if (NOISE4_CV < 0):
-            NOISE4_CV = 0
-        if (WEMP4_CV < 0):
-            WEMP4_CV = 0
-        if (DOC4_CV < 0):
-            DOC4_CV = 0
-        if (ROUGH4_CV < 0):
-            ROUGH4_CV = 0
-        if (WFUEL4_CV < 0):
-            WFUEL4_CV = 0
-        if (RANGE4_CV < 0):
-            RANGE4_CV = 0
-
-        if (NOISE6_CV < 0):
-            NOISE6_CV = 0
-        if (WEMP6_CV < 0):
-            WEMP6_CV = 0
-        if (DOC6_CV < 0):
-            DOC6_CV = 0
-        if (ROUGH6_CV < 0):
-            ROUGH6_CV = 0
-        if (WFUEL6_CV < 0):
-            WFUEL6_CV = 0
-        if (RANGE6_CV < 0):
-            RANGE6_CV = 0
-        """
 
         return -(
         NOISE2_CV + WEMP2_CV + DOC2_CV + ROUGH2_CV
