@@ -45,6 +45,7 @@ def multiple_clutch_brakes(var_iv: np.array = np.array([67.5, 92.5, 2.25, 650, 6
         return (
             (2/3) * 0.5 * x[:,3] * (np.round(x[:,4])) * 
             ((x[:,1]**3 - x[:,0]**3) / (x[:,1]**2 - x[:,0]**2))
+            * 0.001
         )
 
     def p_rz(x: np.ndarray) -> np.ndarray:

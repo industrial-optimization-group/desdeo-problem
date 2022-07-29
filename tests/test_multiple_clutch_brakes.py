@@ -22,13 +22,21 @@ def test_evaluate_multiple_clutch_brakes():
     p: MOProblem = multiple_clutch_brakes()
 
     # Variable values
-    xs = np.array([80, 90, 2, 800, 8])
+    xs = np.array([
+        [80, 90, 2, 800, 8],
+        [65, 85, 1.5, 980, 8],
+        [73, 93, 1.5, 1000, 7]
+    ])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 1
+    assert objective_vectors.shape[0] == 3
 
-    expected_result = np.array([[0.74983533, 0.00528758059, 8, 90, 800]])
+    expected_result = np.array([
+        [0.74983533, 0.00528758059, 8, 90, 800],
+        [0.99, 4.92, 8, 85, 980],
+        [0.97, 4.98, 7, 93, 1000]
+        ])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
