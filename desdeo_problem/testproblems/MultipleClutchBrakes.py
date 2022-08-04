@@ -45,7 +45,9 @@ def multiple_clutch_brakes(var_iv: np.array = np.array([67.5, 92.5, 2.25, 650, 6
         return (
             (2/3) * 0.5 * x[:,3] * (np.round(x[:,4])) * 
             ((x[:,1]**3 - x[:,0]**3) / (x[:,1]**2 - x[:,0]**2))
-            * 0.001
+            * 0.001 # This line is from Jussi's Matlab code
+            
+            # Mh = (2/3) * mu* x(5-1) * x(6-1) * ((x(3-1)^3-x(2-1)^3)/(x(3-1)^2-x(2-1)^2)) * 0.001; %convert to Nm
         )
 
     def p_rz(x: np.ndarray) -> np.ndarray:
@@ -110,7 +112,7 @@ def multiple_clutch_brakes(var_iv: np.array = np.array([67.5, 92.5, 2.25, 650, 6
         return (
             x[:, 1] - x[:, 0] - 20 
         )
-            
+
     def g_4(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
@@ -140,19 +142,22 @@ def multiple_clutch_brakes(var_iv: np.array = np.array([67.5, 92.5, 2.25, 650, 6
         return (
             np.round(x[:, 4]) - 1
         )
-
+    
+    # isn't working like in the article
     def g_9(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
-            1 - p_rz(x)
+            10 - p_rz(x)
         )
 
+    # isn't working like in the article
     def g_10(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
-            10 - (p_rz(x) * v_sr(x))
+            100 - (p_rz(x) * v_sr(x))
         )
 
+    # isn't working like in the article 
     def g_11(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
