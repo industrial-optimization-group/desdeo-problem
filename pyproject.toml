@@ -6,10 +6,10 @@ authors = ["Bhupinder Saini <bhupinder.s.saini@jyu.fi>", "Giovanni Misitano <gio
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.7, <3.10"
+python = ">=3.8, <3.10"
 optproblems = "^1.2"
 diversipy = "^0.8.0"
-scikit-learn = ">=0.24.0"
+scikit-learn = "^1.1"
 desdeo-tools = "^1.7.0"
 Shapely = "^1.8.0"
 pytest = "^7.0.0"
