@@ -1,7 +1,20 @@
-Car side impact 
-==========================
+Car side impact design problem
+=================================
+The three objectives of the problem are: :math:`(f_1)` minimize the structural weight, 
+:math:`(f_2)` minimize the resultant displacement of joint and :math:`(f_3)` minimize 
+the sum of constraint violations.
 
-Car side impact design problem. 
+This problem aims at min-
+imizing the weight of car and at the same time minimize
+the pubic force experienced by a passenger and the average
+velocity of the V-Pillar responsible for withstanding the impact
+load. All the three objectives are conflicting, therefore, a
+three-dimensional trade-off front is expected. There are ten
+constraints involving limiting values of abdomen load, pubic
+force, velocity of V-Pillar, rib deflection, etc. There are 11
+design variables describing thickness of B-Pillars, floor, cross-
+members, door beam, roof rail, etc. Mathematical formulation
+for the problem is given in the Appendix
 
 **Definition**
 
