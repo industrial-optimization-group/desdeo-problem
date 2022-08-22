@@ -21,11 +21,6 @@ def test_number_of_objectives():
 def test_evaluate_multiple_clutch_brakes():
     p: MOProblem = multiple_clutch_brakes()
 
-    """
-    [80, 90, 2, 800, 8],
-        [65, 85, 1.5, 980, 8],
-        [73, 93, 1.5, 1000, 7]
-    """
     # Variable values
     xs = np.array([
         [70, 90, 1.5, 1000, 3],
@@ -36,11 +31,6 @@ def test_evaluate_multiple_clutch_brakes():
 
     assert objective_vectors.shape[0] == 2
 
-    """
-    [0.74983533, 0.00528758059, 8, 90, 800],
-        [0.99, 4.92, 8, 85, 980],
-        [0.97, 4.98, 7, 93, 1000]
-    """
     expected_result = np.array([
         [0.4704, 11.7617, 3, 90, 1000],
         [2.0948, 3.3505, 9, 110, 1000]
