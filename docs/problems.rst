@@ -10,3 +10,4 @@ Problems
    problems/vehicle_crashworthiness
    problems/engineering_real_world
    problems/gaa
+   problems/multiple_clutch_brakes
