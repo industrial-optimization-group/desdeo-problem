@@ -1,7 +1,11 @@
-River pollution
-====================
-
-The River pollution problem
+River pollution problem
+========================
+The problem is to improve the dissolved oxygen concentration in the city :math:`(f_1)`
+and at the municipality border :math:`(f_2)`, maximize the percent return on investment
+at the fishery :math:`(f_3)` and minimize addition to the city tax :math:`(f_4)`.
+Here is optional fifth object [1]_ to keeping to propotional amount of biomechanical
+oxygen demanding material (BOD) removed from the water close to the idal value :math:`(f_5)`.
+More details about the test problem can be found in [Narula1989]_.
 
 **Definition**
 
@@ -15,7 +19,10 @@ The River pollution problem
   \text{Optional fifth objective:}\\[2mm]
   \min \; f_5(x) = & \max \{ |x_1 - 0.65|, |x_2 - 0.65| \} \\
 
-**Variable bounds are given as follows:**
+The two variables represent the proportionate amount of BOD removed from water discharge
+at the fishery :math:`(x_1)` and at the city :math:`(x_2)`.
+
+Variable bounds are given as follows:
 
 .. math::
 
@@ -24,3 +31,7 @@ The River pollution problem
 .. [Narula1989] NARULA, S. C. & WEISTROFFER, H. R. (1989). A flexible method for 
   nonlinear multicriteria decisionmaking problems. IEEE transactions on systems, 
   man, and cybernetics, 19(4), 883-887.
+
+.. [1] Miettinen, K., Mäkelä, M.M. (1997). Interactive Method NIMBUS for Nondifferentiable 
+  Multiobjective Optimization Problems. In: Clímaco, J. (eds) Multicriteria Analysis. 
+  Springer, Berlin, Heidelberg. https://doi.org/10.1007/978-3-642-60667-0_30
