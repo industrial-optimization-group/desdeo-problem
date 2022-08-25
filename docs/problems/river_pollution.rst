@@ -3,7 +3,7 @@ River pollution problem
 The problem is to improve the dissolved oxygen concentration in the city :math:`(f_1)`
 and at the municipality border :math:`(f_2)`, maximize the percent return on investment
 at the fishery :math:`(f_3)` and minimize addition to the city tax :math:`(f_4)`.
-Here is optional fifth object [1]_ to keeping to propotional amount of biomechanical
+Here is optional fifth objective [1]_ to keeping to propotional amount of biomechanical
 oxygen demanding material (BOD) removed from the water close to the idal value :math:`(f_5)`.
 More details about the test problem can be found in [Narula1989]_.
 

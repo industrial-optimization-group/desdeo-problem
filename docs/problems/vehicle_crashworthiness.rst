@@ -2,12 +2,10 @@ Vehicle crashworthiness
 ==========================
 
 The crash safety design problem with three objectives, which have to be minimized.
-
-f1: the mass of the vehicle 
-f2: accelration-induced biomechanical damage of occupants
-f3: the toe board intrusion in the 'offset-frontal crash'
-
-More details about the problem can be found in [Liao2007]_
+Objectives are :math:`(f_1)` the mass of the vehicle, 
+:math:`(f_2)` accelration-induced biomechanical damage of occupants and
+:math:`(f_3)` the toe board intrusion in the 'offset-frontal crash'.
+More details about the problem can be found in [Liao2007]_.
 
 **Definition**
 

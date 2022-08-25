@@ -1,20 +1,10 @@
 Car side impact design problem
 =================================
-The three objectives of the problem are: :math:`(f_1)` minimize the structural weight, 
-:math:`(f_2)` minimize the resultant displacement of joint and :math:`(f_3)` minimize 
-the sum of constraint violations.
-
-This problem aims at min-
-imizing the weight of car and at the same time minimize
-the pubic force experienced by a passenger and the average
-velocity of the V-Pillar responsible for withstanding the impact
-load. All the three objectives are conflicting, therefore, a
-three-dimensional trade-off front is expected. There are ten
-constraints involving limiting values of abdomen load, pubic
-force, velocity of V-Pillar, rib deflection, etc. There are 11
-design variables describing thickness of B-Pillars, floor, cross-
-members, door beam, roof rail, etc. Mathematical formulation
-for the problem is given in the Appendix
+The three objectives of the problem are: :math:`(f_1)` minimize the weight of the car, 
+:math:`(f_2)` minimize the pubic force experienced by a passenger and :math:`(f_3)` 
+minimize the average velocity of the V-pillar responsible for whitstanding the impact load.
+Here is optional fourth objective [2]_ :math:`(f_4)` the sum of constraint violations.
+More details about the test problem can be found in [1]_.
 
 **Definition**
 
@@ -54,6 +44,10 @@ for the problem is given in the Appendix
   \quad & \quad \quad & \quad
   g_{10}(x) = & \; 15.7 - V_{FD}(x) \geq 0  \quad & \quad
 
+The seven variables represent the thickness of B-Pillar inner :math:`(x_1)`, B-Pillar reinforcement
+:math:`(x_2)`, floor side inner :math:`(x_3)`, cross members :math:`(x_4)`, door beam :math:`(x_5)`,
+door beltline reinforcement :math:`(x_6)` and roof rail :math:`(x_7)`.  
+
 Variable bound are given as follows:
 
 .. math::
@@ -62,12 +56,12 @@ Variable bound are given as follows:
   0.5 & \leq x_4 \leq 1.5 \quad & \quad 0.875 &\leq x_5 \leq 2.625 \quad & \quad 0.4 &\leq x_6 \leq 1.2 \\
   0.4 & \leq x_7 \leq 1.2
 
-.. [Jain2014] Jain, H. & Deb, K. (2014). An Evolutionary Many-Objective Optimization Algorithm 
+.. [1] Jain, H. & Deb, K. (2014). An Evolutionary Many-Objective Optimization Algorithm 
   Using Reference-Point Based Nondominated Sorting Approach, Part II: Handling Constraints 
   and Extending to an Adaptive Approach. IEEE transactions on evolutionary computation, 
   18(4), 602-622. https://doi.org/10.1109/TEVC.2013.2281534 
 
-.. [Tanabe2020] Tanabe, R. & Ishibuchi, H. (2020). An easy-to-use real-world 
+.. [2] Tanabe, R. & Ishibuchi, H. (2020). An easy-to-use real-world 
   multi-objective optimization problem suite. 
   Applied soft computing, 89, 106078. 
   https://doi.org/10.1016/j.asoc.2020.106078
