@@ -62,7 +62,6 @@ Then, create a new virtual environment for the project and install the package i
    api
    examples
    problems
-   
 
 Indices and tables
 ==================
