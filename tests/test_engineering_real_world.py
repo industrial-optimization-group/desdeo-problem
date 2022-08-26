@@ -313,13 +313,13 @@ def test_evaluate_re33():
     p: MOProblem = re33()
 
     # Variable values
-    xs = np.array([60, 111.7, 2557, 12])
+    xs = np.array([60, 110, 2557, 12])
 
     objective_vectors = p.evaluate(xs).objectives
 
     assert objective_vectors.shape[0] == 1
 
-    expected_result = np.array([[4.7846437100000, 2.4123329644357, 107414.8247444483]])
+    expected_result = np.array([[4.5815, 2.4397401, 106196.71729885972]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
