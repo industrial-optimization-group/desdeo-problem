@@ -293,7 +293,7 @@ class _ScalarObjective(ScalarObjective):
 
 # TODO: Rename to "Objective"
 class VectorObjective(VectorObjectiveBase):
-    """An objective object that calculated one or more objective functions.
+    """An objective function vector with one or more objective functions.
 
     To be renamed to Objective
 
