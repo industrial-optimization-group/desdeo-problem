@@ -2,7 +2,7 @@ Engineering real-world
 ===========================
 
 Collection of real-world multi-objective optimization test problems. More details about 
-the test problems can be found in [Tanabe2020]_
+the test problems can be found in [1]_
 
 RE-21: Four bar truss design problem
 ----------------------------------------
@@ -279,7 +279,7 @@ Variable bounds are given as follows:
   55 \leq x_1 \leq 80 \quad \quad 75 \leq x_2 \leq 110 \quad \quad 1000 \leq x_3 \leq 3000
   \quad \quad 11 \leq x_4 \leq 20
 
-.. [Tanabe2020] Tanabe, R. & Ishibuchi, H. (2020). An easy-to-use real-world 
+.. [1] Tanabe, R. & Ishibuchi, H. (2020). An easy-to-use real-world 
   multi-objective optimization problem suite. 
   Applied soft computing, 89, 106078. 
   https://doi.org/10.1016/j.asoc.2020.106078

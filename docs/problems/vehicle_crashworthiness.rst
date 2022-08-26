@@ -5,7 +5,7 @@ The crash safety design problem with three objectives, which have to be minimize
 Objectives are :math:`(f_1)` the mass of the vehicle, 
 :math:`(f_2)` accelration-induced biomechanical damage of occupants and
 :math:`(f_3)` the toe board intrusion in the 'offset-frontal crash'.
-More details about the problem can be found in [Liao2007]_.
+More details about the problem can be found in [1]_.
 
 **Definition**
 
@@ -25,7 +25,7 @@ More details about the problem can be found in [Liao2007]_.
 The thickness of the five reinforced members around the frontal structure is chosen as the design variables 
 which could significantly affect the crach safety.
 
-.. [Liao2007] Liao, X., Li, Q., Yang, X., Zhang, W. & Li, W. 
+.. [1] Liao, X., Li, Q., Yang, X., Zhang, W. & Li, W. 
   (2007). Multiobjective optimization for crash safety design of vehicles 
   using stepwise regression model. Structural and multidisciplinary 
   optimization, 35(6), 561-569. https://doi.org/10.1007/s00158-007-0163-x

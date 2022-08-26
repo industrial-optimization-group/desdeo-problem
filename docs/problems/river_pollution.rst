@@ -5,7 +5,7 @@ and at the municipality border :math:`(f_2)`, maximize the percent return on inv
 at the fishery :math:`(f_3)` and minimize addition to the city tax :math:`(f_4)`.
 Here is optional fifth objective [1]_ to keeping to propotional amount of biomechanical
 oxygen demanding material (BOD) removed from the water close to the idal value :math:`(f_5)`.
-More details about the test problem can be found in [Narula1989]_.
+More details about the test problem can be found in [2]_.
 
 **Definition**
 
@@ -28,10 +28,11 @@ Variable bounds are given as follows:
 
   0.3 \leq x_1 \leq 1.0 \quad \quad 0.3 \leq x_2 \leq 1.0
 
-.. [Narula1989] NARULA, S. C. & WEISTROFFER, H. R. (1989). A flexible method for 
-  nonlinear multicriteria decisionmaking problems. IEEE transactions on systems, 
-  man, and cybernetics, 19(4), 883-887.
 
 .. [1] Miettinen, K., Mäkelä, M.M. (1997). Interactive Method NIMBUS for Nondifferentiable 
   Multiobjective Optimization Problems. In: Clímaco, J. (eds) Multicriteria Analysis. 
   Springer, Berlin, Heidelberg. https://doi.org/10.1007/978-3-642-60667-0_30
+
+.. [2] NARULA, S. C. & WEISTROFFER, H. R. (1989). A flexible method for 
+  nonlinear multicriteria decisionmaking problems. IEEE transactions on systems, 
+  man, and cybernetics, 19(4), 883-887.

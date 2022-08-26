@@ -3,7 +3,7 @@ Multiple clutch brake design problem
 The five objectives of the problem are: :math:`(f_1)` minimize mass of the brake, 
 :math:`(f_2)` minimize stopping time, :math:`(f_3)` minimize number of friction surfaces,
 :math:`(f_4)` minimize outer radius and :math:`(f_5)` minimize actuating force. 
-More details about the test problem can be found in [Osyczka1992]_
+More details about the test problem can be found in [1]_
 
 **Definition**
 
@@ -65,6 +65,6 @@ Parameters are given as follows:
   s &= 1.5 \quad & \quad
   F_{max} &= 1000 \text{ N} \\
 
-.. [Osyczka1992] Osyczka, A. (1992). Computer Aided Multicriterion Optimization System (CAMOS): 
+.. [1] Osyczka, A. (1992). Computer Aided Multicriterion Optimization System (CAMOS): 
   Software Package in Fortran: with 32 Figures and a Diskette Containing 5526 Lines 
   of Source Version of Programs. International Software Publishers.

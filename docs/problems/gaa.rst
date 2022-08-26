@@ -51,12 +51,10 @@ and more details about the test problem can be found in [1]_, [2]_, [3]_ and [4]
   commonality within a product family using a multiobjective genetic algorithm," 
   Concurrent Engineering: Research and Applications, vol. 12, no. 2, pp. 119-130.
 
-.. [3]
-  R. Shah, P. M. Reed, and T. W. Simpson (2011), "Many-objective evolutionary optimization 
+.. [3] R. Shah, P. M. Reed, and T. W. Simpson (2011), "Many-objective evolutionary optimization 
   and visual analytics for product family design," Multiobjective Evolutionary Optimisation 
   for Product Design and Manufacturing, Springer, London, pp. 137-159.
 
-.. [4]
-  M. Woodruff, T. W. Simpson, P. M. Reed (2013), "Diagnostic Analysis of Metamodels' 
+.. [4] M. Woodruff, T. W. Simpson, P. M. Reed (2013), "Diagnostic Analysis of Metamodels' 
   Multivariate Dependencies and their Impacts in Many-Objective Design Optimization," 
   Proceedings of the ASME 2013 IDETC/CIE Conference, Paper No. DETC2013-13125.
