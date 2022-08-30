@@ -1,8 +1,9 @@
 General Aviation Aircraft (GAA) product family design problem
 ==============================================================
-With nine design variables per aircraft and three aircraft (2-seater, 4-seater and 6-seater) 
-in the family, there are 27 design variables [table_1]_. There are 10 objectives [table_2]_ and
-one constraint used in this formulation. The code is from https://github.com/matthewjwoodruff/generalaviation
+This problem has nine design variables described in [table_1]_. There are three aircraft types 
+(2-seater, 4-seater, and 6-seater), giving a total of 27 design variables. 
+There are 10 objectives [table_2]_ and one constraint used in this formulation.
+The code is from https://github.com/matthewjwoodruff/generalaviation
 and more details about the test problem can be found in [1]_, [2]_, [3]_ and [4]_.
 
 
@@ -30,17 +31,21 @@ and more details about the test problem can be found in [1]_, [2]_, [3]_ and [4]
   ----------------------------------------------------------------------
   No.  Objectives              Value                         Preference
   ===  =====================  =============================  ===========
-   1    Maximum NOISE         Max (NOISE2, NOISE4 NOISE6)    Minimise
-   2    Maximum WEMP          Max (WEMP2, WEMP4, WEMP6)      Minimise
-   3    Maximum DOC           Max (DOC2, DOC4, DOC6)         Minimise
-   4    Maximum ROUGH         Max (ROUGH2, ROUGH4, ROUGH6)   Minimise
-   5    Maximum WFUEL         Max (WFUEL2, WFUEL4, WFUEL6)   Minimise
-   6    Maximum PURCH         Max (PURCH2, PURCH4, PURCH6)   Minimise
-   7    Minimum RANGE         Min (RANGE2, RANGE4, RANGE6)   Maximise
-   8    Minimum max LDMAX     Min (LDMAX2, LDMAX4, LDMAX6)   Maximise
-   9    Minimum max VCMAX     Min (VCMAX2, VCMAX4, VCMAX6)   Maximise
-  10    PFPF                    -                            Minimise
+   1    Maximum NOISE         Max (NOISE2, NOISE4 NOISE6)    Minimize
+   2    Maximum WEMP          Max (WEMP2, WEMP4, WEMP6)      Minimize
+   3    Maximum DOC           Max (DOC2, DOC4, DOC6)         Minimize
+   4    Maximum ROUGH         Max (ROUGH2, ROUGH4, ROUGH6)   Minimize
+   5    Maximum WFUEL         Max (WFUEL2, WFUEL4, WFUEL6)   Minimize
+   6    Maximum PURCH         Max (PURCH2, PURCH4, PURCH6)   Minimize
+   7    Minimum RANGE         Min (RANGE2, RANGE4, RANGE6)   Maximize
+   8    Minimum max LDMAX     Min (LDMAX2, LDMAX4, LDMAX6)   Maximize
+   9    Minimum max VCMAX     Min (VCMAX2, VCMAX4, VCMAX6)   Maximize
+  10    PFPF                    -                            Minimize
   ===  =====================  =============================  ===========
+
+where Product Family Penalty Function (PFPF) [5]_ penalises the uniqueness within 
+the product family by measuring the percentage variation of the design variables 
+within the product family.
 
 .. [1] T. W. Simpson, W. Chen, J. K. Allen, and F. Mistree (1996), 
   "Conceptual design of a family of products through the use of the robust
@@ -58,3 +63,7 @@ and more details about the test problem can be found in [1]_, [2]_, [3]_ and [4]
 .. [4] M. Woodruff, T. W. Simpson, P. M. Reed (2013), "Diagnostic Analysis of Metamodels' 
   Multivariate Dependencies and their Impacts in Many-Objective Design Optimization," 
   Proceedings of the ASME 2013 IDETC/CIE Conference, Paper No. DETC2013-13125.
+
+.. [5] Messac, A., Martinez, M. P., and Simpson, T. W. (May 16, 2002). 
+  "Introduction of a Product Family Penalty Function Using Physical Programming ." 
+  ASME. J. Mech. Des. June 2002; 124(2): 164-172. https://doi.org/10.1115/1.1467602

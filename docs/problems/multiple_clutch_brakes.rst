@@ -2,7 +2,7 @@ Multiple clutch brake design problem
 =====================================
 The five objectives of the problem are: :math:`(f_1)` minimize mass of the brake, 
 :math:`(f_2)` minimize stopping time, :math:`(f_3)` minimize number of friction surfaces,
-:math:`(f_4)` minimize outer radius and :math:`(f_5)` minimize actuating force. 
+:math:`(f_4)` minimize outer radius, and :math:`(f_5)` minimize actuating force. 
 More details about the test problem can be found in [1]_
 
 **Definition**
@@ -11,26 +11,15 @@ More details about the test problem can be found in [1]_
 
   \min \; f_1(x) = & \; \pi \; (x_2^2 - x_1^2) \; x_3 \; (x_5 + 1) \; \rho \\[2mm]
   \min \; f_2(x) = & \; t_h = \frac{J_z \; \omega}{M_h + M_f} \\[2mm]
+  \min \; f_3(x) = & \; x_5 \\[2mm]
+  \min \; f_4(x) = & \; x_2 \\[2mm]
+  \min \; f_5(x) = & \; x_4 \\[2mm]
   \text{Where braking torque } M_h \text{ is:}\\[2mm]
   M_h = & \frac{2}{3} \mu \; x_4 \; x_5 \frac{x_2^3 - x_1^3}{x_2^2 - x_1^2} \\[2mm]
   \text{and input angular velocity } \omega \text{ is:}\\[2mm]
   \omega = & \frac{\pi \; n}{30} \\[2mm]
-  \min \; f_3(x) = & \; x_5 \\[2mm]
-  \min \; f_4(x) = & \; x_2 \\[2mm]
-  \min \; f_5(x) = & \; x_4
 
-The five variables represent inner radius :math:`(x_1)`,
-outer radius :math:`(x_2)`, thickness of the disc :math:`(x_3)`,
-actuating force :math:`(x_4)` and number of friction surfaces :math:`(x_5)`.
-
-Variable bounds are given as follows:
-
-.. math::
-
-  55 \leq x_1 \leq 80 \quad \quad 75 \leq x_2 \leq 110 \quad \quad 1.5 \leq x_3 \leq 3
-  \quad \quad 300 \leq x_4 \leq 1000 \quad \quad 2 \leq x_5 \leq 10 
-
-Constraints are given as follows:
+Constraints:
 
 .. math::
   g_1(x) = & \; x_1 - 55 \geq 0 \quad & \quad g_9(x) = & \; p_{max} - p_{rz} \geq 0 \\[2mm]
@@ -49,6 +38,17 @@ Constraints are given as follows:
   g_{15}(x) = & \; x_4 \geq 0 \\[2mm]
   \quad & \quad \quad & \quad
   g_{16}(x) = & \; F_{max} - x_4 \geq 0 \\[2mm]
+
+The five variables represent inner radius :math:`(x_1)`,
+outer radius :math:`(x_2)`, thickness of the disc :math:`(x_3)`,
+actuating force :math:`(x_4)`, and number of friction surfaces :math:`(x_5)`.
+
+Variable bounds are given as follows:
+
+.. math::
+
+  55 \leq x_1 \leq 80 \quad \quad 75 \leq x_2 \leq 110 \quad \quad 1.5 \leq x_3 \leq 3
+  \quad \quad 300 \leq x_4 \leq 1000 \quad \quad 2 \leq x_5 \leq 10 
 
 Parameters are given as follows:
 

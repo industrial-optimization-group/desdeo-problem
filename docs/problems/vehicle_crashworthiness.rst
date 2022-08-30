@@ -1,9 +1,9 @@
 Vehicle crashworthiness
 ==========================
 
-The crash safety design problem with three objectives, which have to be minimized.
+The crash safety design problem has three objectives, which need to be minimized.
 Objectives are :math:`(f_1)` the mass of the vehicle, 
-:math:`(f_2)` accelration-induced biomechanical damage of occupants and
+:math:`(f_2)` acceleration-induced biomechanical damage of occupants and
 :math:`(f_3)` the toe board intrusion in the 'offset-frontal crash'.
 More details about the problem can be found in [1]_.
 
@@ -22,8 +22,8 @@ More details about the problem can be found in [1]_.
   \\
   & s.t. \; 1mm \leq x \leq 3mm
 
-The thickness of the five reinforced members around the frontal structure is chosen as the design variables 
-which could significantly affect the crach safety.
+The design variables represent the thickness of the five reinforced members around 
+the frontal structure, which could significantly affect crash safety.
 
 .. [1] Liao, X., Li, Q., Yang, X., Zhang, W. & Li, W. 
   (2007). Multiobjective optimization for crash safety design of vehicles 
