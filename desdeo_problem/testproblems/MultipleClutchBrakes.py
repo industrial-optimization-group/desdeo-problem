@@ -146,19 +146,19 @@ def multiple_clutch_brakes(var_iv: np.array = np.array([67.5, 92.5, 2.25, 650, 6
     def g_9(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
-            1 - p_rz(x)
+            10 - p_rz(x)
         )
 
     def g_10(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
-            10 - (p_rz(x) * v_sr(x))
+            10 * 2000 - (p_rz(x) * v_sr(x))
         )
 
     def g_11(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         return (
-            10 - v_sr(x)
+            2000 - v_sr(x)
         )
 
     def g_12(x: np.ndarray, _ = None) -> np.ndarray:

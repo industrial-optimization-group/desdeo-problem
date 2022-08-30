@@ -59,8 +59,8 @@ Parameters are given as follows:
   M_f &= 3 \text{ Nm} \quad & \quad
   n &= 250 \text{ rev/min} \\[2mm]
   \mu &= 0.5 \quad & \quad
-  p_{max} &= 1 \text{ MPa} \\[2mm]
-  V_{srmax} &= 10 \text{ m/s} \quad & \quad
+  p_{max} &= 10 \text{ MPa} \\[2mm]
+  V_{srmax} &= 2000 \text{ m/s} \quad & \quad
   t_{max} &= 15 \text{ s} \\[2mm]
   s &= 1.5 \quad & \quad
   F_{max} &= 1000 \text{ N} \\
@@ -68,3 +68,7 @@ Parameters are given as follows:
 .. [1] Osyczka, A. (1992). Computer Aided Multicriterion Optimization System (CAMOS): 
   Software Package in Fortran: with 32 Figures and a Diskette Containing 5526 Lines 
   of Source Version of Programs. International Software Publishers.
+
+.. [2] Mackin, P.D., Roy, A. & Wallenius, J. An interactive weight space reduction 
+  procedure for nonlinear multiple objective mathematical programming. Math. Program. 
+  127, 425-444 (2011). https://doi.org/10.1007/s10107-009-0293-6
