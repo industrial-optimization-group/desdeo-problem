@@ -950,18 +950,6 @@ def gaa(var_iv: np.array = np.array([
             0.5)
         )
 
-    """
-        cspd    2 x[:,0] 4 x[:,9]       6 x[:,18]) 
-        ar      2 x[:,1] 4 x[:,10]      6 x[:,19]) 
-        sweep   2 x[:,2] 4 x[:,11]      6 x[:,20]) 
-        dprop   2 x[:,3] 4 x[:,12]      6 x[:,21]) 
-        wingld  2 x[:,4] 4 x[:,13]      6 x[:,22]) 
-        af      2 x[:,5] 4 x[:,14]      6 x[:,23]) 
-        seatw   2 x[:,6] 4 x[:,15]      6 x[:,24]) 
-        elodt   2 x[:,7] 4 x[:,16]      6 x[:,25]) 
-        taper   2 x[:,8] 4 x[:,17]      6 x[:,26]) 
-    """
-
     # Constraints
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)

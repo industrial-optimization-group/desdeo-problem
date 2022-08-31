@@ -22,25 +22,23 @@ def test_evaluate_multiple_clutch_brakes():
     p: MOProblem = multiple_clutch_brakes()
 
     # Variable values
+    # Values form Osyczka, A. (1992)
     xs = np.array([
-        [80, 110, 1.5, 1000, 9],
-        [70, 90, 1.5, 1000, 3],
-        [65, 85, 1.5, 980, 8],
-        [73, 93, 1.5, 1000, 7]
+        [.5854315e2, .7867608e2, .1499999e1, .9002973e3, .3000000e1],
+        [.5583733e2, .1057214e3, .2480044e1, .7716822e3, .3000000e1]
     ])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 4
+    assert objective_vectors.shape[0] == 2
 
     expected_result = np.array([
-        [2.0948, 3.3505, 9, 110, 1000],
-        [0.4704, 11.7617, 3, 90, 1000],
-        [0.99, 4.92, 8, 85, 980],
-        [0.97, 4.98, 7, 93, 1000]
+        [.4061785e0, .1495035e2, .3000000e1, .7867608e2, .9002973e3],
+        [.1959098e1, .1447586e2, .3000000e1, .1057214e3, .7716822e3]
         ])
 
-    npt.assert_allclose(objective_vectors, expected_result, rtol=1e-1)
+    # rtol because difference in floating point number calculation in old fortran 
+    npt.assert_allclose(objective_vectors, expected_result, rtol=1e-4)
 
 @pytest.mark.multiple_clutch_brakes
 def test_variable_bounds_error_1d():
