@@ -47,7 +47,7 @@ where Product Family Penalty Function (PFPF) [5]_ penalises the uniqueness withi
 the product family by measuring the percentage variation of the design variables 
 within the product family.
 
-Note that the PFPF value differs a bit from the values in the article [5]_. 
+Note that the PFPF value differs a bit from the values in the article [4]_. 
 The new version of PFPF that is used here, could explain the difference. 
 
 .. [1] T. W. Simpson, W. Chen, J. K. Allen, and F. Mistree (1996), 
