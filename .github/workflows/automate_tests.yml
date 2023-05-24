@@ -23,12 +23,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Add more steps here based on your build and test requirements for the problem repository
+      - name: Build DESDEO framework
+        run: |
+          # Build the DESDEO framework from the main repository
+          # Replace the build steps with the appropriate commands for building the framework
+
+      # Add more steps here based on your build requirements for the DESDEO framework
 
       - name: Trigger Main Repository Workflow
-        uses: peter-evans/trigger-workflow@v2
+        uses: peter-evans/repository-dispatch@v1
         with:
-          workflow: "Main Repository Workflow"
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
+          repository: Sepuliini/DESDEO
           event-type: update_main_branch
