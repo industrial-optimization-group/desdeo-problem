@@ -1,0 +1,29 @@
+name: Update DESDEO on pull request to desdeo-problem
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  update-desdeo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out DESDEO repository
+        uses: actions/checkout@v2
+        with:
+          repository: industrial-optimization-group/DESDEO
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+
+      - name: Update DESDEO repository
+        run: |
+          cd DESDEO
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git pull origin main
+          git checkout main
+          git merge --no-ff --no-commit ${{ github.event.pull_request.head.repo.full_name }}
+          git commit -m "Merge pull request #${{ github.event.pull_request.number }} from ${{ github.event.pull_request.head.repo.full_name }} into main"
+          git push origin main
