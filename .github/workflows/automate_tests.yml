@@ -1,29 +1,36 @@
-name: Update DESDEO on pull request to desdeo-problem
+name: Problem Repository Workflow
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
 jobs:
-  update-desdeo:
+  build_and_test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out DESDEO repository
+      - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          repository: industrial-optimization-group/DESDEO
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main
 
-      - name: Update DESDEO repository
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
         run: |
-          cd DESDEO
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git pull origin main
-          git checkout main
-          git merge --no-ff --no-commit ${{ github.event.pull_request.head.repo.full_name }}
-          git commit -m "Merge pull request #${{ github.event.pull_request.number }} from ${{ github.event.pull_request.head.repo.full_name }} into main"
-          git push origin main
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Add more steps here based on your build and test requirements
+
+      - name: Run tests
+        run: pytest
+
+      # Trigger the main repository workflow after the main repository is built
+      - name: Trigger Main Repository Workflow
+        uses: peter-evans/wait-on-checks@v1
+        with:
+          checks: Sepuliini/DESDEO/main
+
