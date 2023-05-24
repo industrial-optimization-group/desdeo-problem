@@ -25,13 +25,10 @@ jobs:
 
       # Add more steps here based on your build and test requirements for the problem repository
 
-      - name: Run problem tests
-        run: pytest
-
       - name: Trigger Main Repository Workflow
-        if: ${{ success() }}
-        uses: peter-evans/repository-dispatch@v1
+        uses: peter-evans/trigger-workflow@v2
         with:
+          workflow: "Main Repository Workflow"
           token: ${{ secrets.GITHUB_TOKEN }}
-          repository: Sepuliini/DESDEO
+          branch: main
           event-type: update_main_branch
