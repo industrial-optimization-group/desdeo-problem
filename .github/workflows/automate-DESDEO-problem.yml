@@ -1,5 +1,5 @@
 name: automate-DESDEO-problem 
-#test this file right now.
+#test file right now for automation of pull requests and tests
 on: issue_comment
 
 jobs:
