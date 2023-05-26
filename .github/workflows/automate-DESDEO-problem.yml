@@ -36,15 +36,18 @@ jobs:
           commit_message: 'Update main branch'
           branch: main
           
+
   update_desdeo:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger DESDEO workflow
-        uses: peter-evans/repository-dispatch@v1
+      - name: Trigger DESDEO-main workflow
+        uses: peter-evans/trigger-workflow@v2
         with:
+          workflow: DESDEO-main.yml
           token: ${{ secrets.PAT_DESDEO }}
           repository: DESDEO
-          event-type: update_main_branch
+          ref: main
+
 
 
