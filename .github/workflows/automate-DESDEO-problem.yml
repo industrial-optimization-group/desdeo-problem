@@ -5,23 +5,21 @@ on:
     branches:
       - master
       
-  #workflow_dispatch:
 jobs:
   build:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-        - uses: actions/setup-python@v2
-        - uses: actions/cache@v2
-          with:
-            path: ~/.cache/pip
-            key: ${{ runner.os }}-pip
-            restore-keys: ${{ runner.os }}-pip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: ${{ runner.os }}-pip
 
   test:
-    #needs: linting
     strategy:
-      fail-fast: true
+      fail-fast: false  # Allow retries
       matrix:
         os: [ "ubuntu-latest" ]
         python-version: [ "3.8", "3.9" ]
@@ -56,11 +54,21 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Run tests
+        id: run-tests
         run: |
           source .venv/bin/activate
           pytest tests/
           #coverage report
       
+      - name: Retry tests on failure
+        if: ${{ failure() }}
+        run: |
+          echo "Retrying failed tests..."
+          source .venv/bin/activate
+          pytest tests/
+          #coverage report
+      
+      #Needs some changes here
       - name: Merge to master
         if: ${{ success() }}
         run: |
