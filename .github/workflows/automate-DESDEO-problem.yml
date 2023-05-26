@@ -5,8 +5,7 @@ on:
     branches:
       - master
       
-  workflow_dispatch:
-  
+  #workflow_dispatch:
 jobs:
   build:
       runs-on: ubuntu-latest
@@ -67,19 +66,6 @@ jobs:
         with:
           commit_message: 'Update main branch'
           branch: master
-
-
-  update_desdeo:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger DESDEO-main workflow
-        uses: peter-evans/trigger-workflow@v2
-        with:
-          workflow: DESDEO-main.yml
-          token: ${{ secrets.PAT_DESDEO }}
-          repository: DESDEO
-          ref: main
 
 
 
