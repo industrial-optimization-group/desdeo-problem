@@ -29,12 +29,12 @@ jobs:
           pytest tests/
           # Add any additional test-related commands or steps here
       
-      - name: Update main branch
+      - name: Update master branch
         if: ${{ success() && matrix.python-version == '3.8' }}
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: 'Update main branch'
-          branch: main
+          branch: master
           
 
   update_desdeo:
