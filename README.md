@@ -1,6 +1,8 @@
 [![PyPI version](https://badge.fury.io/py/desdeo-problem.svg)](https://badge.fury.io/py/desdeo-problem)
 [![Documentation Status](https://readthedocs.org/projects/desdeo-problem/badge/?version=latest)](https://desdeo-problem.readthedocs.io/en/latest/?badge=latest)
 
+This is only here for testing purposes. add some more testing text.
+
 # desdeo-problem
 
 Contains modelling tools to model and define multiobjective optimization problems to be used in the DESDEO framework.
