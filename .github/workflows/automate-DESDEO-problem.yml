@@ -69,19 +69,19 @@ jobs:
           #coverage report
           
       #Some changes here too
-      - name: Fetch master branch
-        run: git fetch origin master
+     # - name: Fetch master branch
+     #   run: git fetch origin master
       
       #Needs some changes here
-      - name: Merge to master
-        if: ${{ success() }}
-        run: |
-          #These need to be changed later
-          git config user.name Severi_Nattila
-          git config user.email severi.nattila@gmail.com
-          git checkout master
-          git merge --no-ff ${{ github.head_ref }}
-          git push origin master
+     # - name: Merge to master
+     #   if: ${{ success() }}
+     #   run: |
+     #     #These need to be changed later
+     #     git config user.name Severi_Nattila
+     #     git config user.email severi.nattila@gmail.com
+     #     git checkout master
+     #     git merge --no-ff ${{ github.head_ref }}
+     #     git push origin master
 
 
 
