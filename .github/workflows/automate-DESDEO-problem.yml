@@ -67,6 +67,10 @@ jobs:
           source .venv/bin/activate
           pytest tests/
           #coverage report
+          
+      #Some changes here too
+      - name: Fetch master branch
+        run: git fetch origin master
       
       #Needs some changes here
       - name: Merge to master
