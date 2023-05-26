@@ -27,3 +27,5 @@ Documentation for this package can be found [here](https://desdeo-problem.readth
 ## Citation
 
 If you decide to use DESDEO is any of your works or research, we would appreciate you citing the appropiate paper published in [IEEE Access](https://doi.org/10.1109/ACCESS.2021.3123825) (open access).
+
+
