@@ -74,9 +74,10 @@ jobs:
     steps:
       - name: Auto merge
         uses: pascalgn/automerge-action@135f0bdb927d9807b5446f7ca9ecc2c51de03c4a
-        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+       # if: ${{ github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
           LOG: "TRACE"  # or "DEBUG"
-          MERGE_LABELS: ""
+          MERGE_LABELS: "" #Need to change this later
           MERGE_METHOD: rebase
+
