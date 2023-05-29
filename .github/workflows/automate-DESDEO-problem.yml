@@ -86,17 +86,6 @@ jobs:
     needs: autoapprove
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      
-      # Perform any necessary setup steps (e.g., installing dependencies)
-      # ...
-
-      - name: Run tests
-        run: |
-          # Run your tests here again to ensure they pass before merging
-          pytest
-
       - name: Auto merge
         uses: pascalgn/automerge-action@135f0bdb927d9807b5446f7ca9ecc2c51de03c4a
         if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
