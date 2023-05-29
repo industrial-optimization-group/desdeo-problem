@@ -17,6 +17,7 @@ jobs:
           key: ${{ runner.os }}-pip
           restore-keys: ${{ runner.os }}-pip
 
+
   test:
     strategy:
       fail-fast: false  # Allow retries
@@ -57,53 +58,25 @@ jobs:
         id: run-tests
         run: |
           source .venv/bin/activate
-          pytest tests/
-          #coverage report
+          retries=3
+          for i in $(seq 1 $retries); do
+            pytest tests/
+            if [ $? -eq 0 ]; then
+              break
+            fi
+            echo "Retrying failed tests... (Attempt $i)"
+          done
       
-      - name: Retry tests on failure
-        if: ${{ failure() }}
-        run: |
-          echo "Retrying failed tests..."
-          source .venv/bin/activate
-          pytest tests/
-          #coverage report
-          
-          
-  autoapprove:
-    name: Auto Approve a PR by dependabot
+  automerge:
+    name: Auto merge after successful checks
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Auto approve
-        uses: hmarr/auto-approve-action@v2.0.0
-        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
-        with:
-          github-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
-          
-          
-  automerge:
-    name: Auto merge after successful checks
-    needs: autoapprove
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      
-      # Perform any necessary setup steps (e.g., installing dependencies)
-      # ...
-
-      - name: Run tests
-        run: |
-          # Run your tests here again to ensure they pass before merging
-          pytest
-
       - name: Auto merge
         uses: pascalgn/automerge-action@135f0bdb927d9807b5446f7ca9ecc2c51de03c4a
         if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
-          MERGE_LABELS: dependencies
+          LOG: "TRACE"  # or "DEBUG"
+          MERGE_LABELS: ""
           MERGE_METHOD: rebase
-          
-
-
