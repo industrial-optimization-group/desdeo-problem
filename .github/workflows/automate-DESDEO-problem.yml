@@ -68,21 +68,42 @@ jobs:
           pytest tests/
           #coverage report
           
-      #Some changes here too
-     # - name: Fetch master branch
-     #   run: git fetch origin master
+          
+  autoapprove:
+    name: Auto Approve a PR by dependabot
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto approve
+        uses: hmarr/auto-approve-action@v2.0.0
+        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+        with:
+          github-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
+          
+          
+  automerge:
+    name: Auto merge after successful checks
+    needs: autoapprove
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
       
-      #Needs some changes here
-     # - name: Merge to master
-     #   if: ${{ success() }}
-     #   run: |
-     #     #These need to be changed later
-     #     git config user.name Severi_Nattila
-     #     git config user.email severi.nattila@gmail.com
-     #     git checkout master
-     #     git merge --no-ff ${{ github.head_ref }}
-     #     git push origin master
+      # Perform any necessary setup steps (e.g., installing dependencies)
+      # ...
 
+      - name: Run tests
+        run: |
+          # Run your tests here again to ensure they pass before merging
+          pytest
 
+      - name: Auto merge
+        uses: pascalgn/automerge-action@135f0bdb927d9807b5446f7ca9ecc2c51de03c4a
+        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
+          MERGE_LABELS: dependencies
+          MERGE_METHOD: rebase
+          
 
 
