@@ -76,7 +76,7 @@ jobs:
         uses: pascalgn/automerge-action@135f0bdb927d9807b5446f7ca9ecc2c51de03c4a
        # if: ${{ github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_MERGE }} #This needs to be created for automerge to work (For now it uses my own secret AUTO_MERGE)
+          AUTO_MERGE: ${{ secrets.AUTO_MERGE }} #This needs to be created for automerge to work (For now it uses my own secret: AUTO_MERGE)
           LOG: "TRACE"  # or "DEBUG"
           MERGE_LABELS: "" #Need to change this later
           MERGE_METHOD: rebase
