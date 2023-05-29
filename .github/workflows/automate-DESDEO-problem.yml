@@ -69,22 +69,15 @@ jobs:
       
       
   autoapprove:
-      name: Auto Approve a PR by dependabot
-      needs: test
-      runs-on: ubuntu-latest
-      steps:
-        - name: Wait for test completion
-          id: wait-for-test
-          uses: styfle/wait-for-activity@v0.3.1
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            check-name: "automate-DESDEO-problem / test"
-
-        - name: Auto approve
-          uses: hmarr/auto-approve-action@v2.0.0
-          if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
-          with:
-            github-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
+    name: Auto Approve a PR by dependabot
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto approve
+        uses: hmarr/auto-approve-action@v2.0.0
+        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+        with:
+          github-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
       
       
   automerge:
