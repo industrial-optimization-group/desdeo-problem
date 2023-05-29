@@ -71,6 +71,7 @@ jobs:
     name: Auto merge after successful checks
     needs: test
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == false && github.event.pull_request.state == 'open' && github.event.pull_request.base.ref == 'master'
     steps:
       - name: Auto merge
         uses: pascalgn/automerge-action@135f0bdb927d9807b5446f7ca9ecc2c51de03c4a
