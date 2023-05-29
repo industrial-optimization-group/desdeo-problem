@@ -3,54 +3,107 @@ name: automate-DESDEO-problem
 on:
   pull_request:
     branches:
-      - main
+      - master
       
-  workflow_dispatch:
-  
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: ${{ runner.os }}-pip
+
+  test:
     strategy:
+      fail-fast: false  # Allow retries
       matrix:
-        python-version: [3.8, 3.9]
+        os: [ "ubuntu-latest" ]
+        python-version: [ "3.8", "3.9" ]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+        
+      - name: Install library
+        run: poetry install --no-interaction
 
       - name: Run tests
+        id: run-tests
         run: |
+          source .venv/bin/activate
           pytest tests/
-          # Add any additional test-related commands or steps here
+          #coverage report
       
-      - name: Update main branch
-        if: ${{ success() && matrix.python-version == '3.8' }}
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: 'Update main branch'
-          branch: main
+      - name: Retry tests on failure
+        if: ${{ failure() }}
+        run: |
+          echo "Retrying failed tests..."
+          source .venv/bin/activate
+          pytest tests/
+          #coverage report
           
-
-  update_desdeo:
+          
+  autoapprove:
+    name: Auto Approve a PR by dependabot
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger DESDEO-main workflow
-        uses: peter-evans/trigger-workflow@v2
+      - name: Auto approve
+        uses: hmarr/auto-approve-action@v2.0.0
+        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
         with:
-          workflow: DESDEO-main.yml
-          token: ${{ secrets.PAT_DESDEO }}
-          repository: DESDEO
-          ref: main
+          github-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
+          
+          
+  automerge:
+    name: Auto merge after successful checks
+    needs: autoapprove
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      # Perform any necessary setup steps (e.g., installing dependencies)
+      # ...
 
+      - name: Run tests
+        run: |
+          # Run your tests here again to ensure they pass before merging
+          pytest
+
+      - name: Auto merge
+        uses: pascalgn/automerge-action@135f0bdb927d9807b5446f7ca9ecc2c51de03c4a
+        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
+          MERGE_LABELS: dependencies
+          MERGE_METHOD: rebase
+          
 
 
