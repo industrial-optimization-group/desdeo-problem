@@ -66,8 +66,6 @@ jobs:
             fi
             echo "Retrying failed tests... (Attempt $i)"
           done
-    
-      
       
   automerge:
     name: Auto merge after successful checks
@@ -79,5 +77,6 @@ jobs:
         if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
-          MERGE_LABELS: dependencies
+          LOG: "TRACE"  # or "DEBUG"
+          MERGE_LABELS: auto
           MERGE_METHOD: rebase
