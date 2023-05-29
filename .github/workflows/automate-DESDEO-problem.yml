@@ -17,6 +17,7 @@ jobs:
           key: ${{ runner.os }}-pip
           restore-keys: ${{ runner.os }}-pip
 
+
   test:
     strategy:
       fail-fast: false  # Allow retries
@@ -66,6 +67,7 @@ jobs:
             echo "Retrying failed tests... (Attempt $i)"
           done
       
+      
   autoapprove:
       name: Auto Approve a PR by dependabot
       needs: test
@@ -83,7 +85,8 @@ jobs:
           if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
           with:
             github-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
-          
+      
+      
   automerge:
     name: Auto merge after successful checks
     needs: autoapprove
