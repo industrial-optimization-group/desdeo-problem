@@ -66,8 +66,27 @@ jobs:
             fi
             echo "Retrying failed tests... (Attempt $i)"
           done
-    
-      
+          
+  labeler:
+    name: Add label to pull request
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add label
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labelsToAdd = ['auto'];
+            const { data: pullRequest } = await github.pulls.get(context.issue);
+            const currentLabels = pullRequest.labels.map(label => label.name);
+            const labelsToAddFiltered = labelsToAdd.filter(label => !currentLabels.includes(label));
+            if (labelsToAddFiltered.length > 0) {
+              await github.issues.addLabels({
+                ...context.issue,
+                labels: labelsToAddFiltered
+              });
+            }
       
   automerge:
     name: Auto merge after successful checks
@@ -79,5 +98,6 @@ jobs:
         if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
-          MERGE_LABELS: dependencies
+          LOG: "TRACE"  # or "DEBUG"
+          MERGE_LABELS: auto
           MERGE_METHOD: rebase
