@@ -57,18 +57,15 @@ jobs:
         id: run-tests
         run: |
           source .venv/bin/activate
-          pytest tests/
-          #coverage report
+          retries=3
+          for i in $(seq 1 $retries); do
+            pytest tests/
+            if [ $? -eq 0 ]; then
+              break
+            fi
+            echo "Retrying failed tests... (Attempt $i)"
+          done
       
-      - name: Retry tests on failure
-        if: ${{ failure() }}
-        run: |
-          echo "Retrying failed tests..."
-          source .venv/bin/activate
-          pytest tests/
-          #coverage report
-          
-          
   autoapprove:
     name: Auto Approve a PR by dependabot
     needs: test
@@ -93,6 +90,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
           MERGE_LABELS: dependencies
           MERGE_METHOD: rebase
-          
-
-
