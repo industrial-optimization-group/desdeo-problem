@@ -66,23 +66,12 @@ jobs:
             fi
             echo "Retrying failed tests... (Attempt $i)"
           done
-      
-      
-  autoapprove:
-    name: Auto Approve a PR by dependabot
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Auto approve
-        uses: hmarr/auto-approve-action@v2.0.0
-        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
-        with:
-          github-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
+    
       
       
   automerge:
     name: Auto merge after successful checks
-    needs: autoapprove
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Auto merge
