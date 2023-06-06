@@ -1,6 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/desdeo-problem.svg)](https://badge.fury.io/py/desdeo-problem)
 [![Documentation Status](https://readthedocs.org/projects/desdeo-problem/badge/?version=latest)](https://desdeo-problem.readthedocs.io/en/latest/?badge=latest)
-
+[![automate-DESDEO-problem](https://github.com/Sepuliini/desdeo-problem/actions/workflows/automate-DESDEO-problem.yml/badge.svg)](https://github.com/Sepuliini/desdeo-problem/actions/workflows/automate-DESDEO-problem.yml)
 
 # desdeo-problem
 
