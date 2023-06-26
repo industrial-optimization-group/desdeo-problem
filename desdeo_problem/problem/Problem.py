@@ -22,7 +22,7 @@ from warnings import warn
 
 import numpy as np
 import pandas as pd
-
+import polars as pl
 from desdeo_problem.problem.Constraint import ScalarConstraint
 from desdeo_problem.problem.Objective import (
     VectorDataObjective,
@@ -1712,3 +1712,163 @@ class DiscreteDataProblem:
             int: The index of the closest point in the data computed for x.
         """
         return np.argmin(np.linalg.norm(x - self.decision_variables, axis=1))
+
+
+
+class PolarsMOProblem(MOProblem):
+    def __init__(self,json_data):
+
+        self.__var_names: List[str]
+        self.__variables: List[Variable]
+        self.__objectives: List[Union[ScalarObjective, VectorObjective]]
+        self.__constraints: List[ScalarConstraint]
+
+        self.__var_names, self.__variables,self.__objectives,self.__constraints = \
+        self.json_to_problem(json_data)
+
+    @property
+    def var_names(self) -> List[str]:
+        """Property: list of objectives.
+
+        Returns:
+            List[ScalarObjective]: list of objectives
+        """
+        return self.__var_names
+
+    @property
+    def objectives(self) -> List[ScalarObjective]:
+        """Property: list of objectives.
+
+        Returns:
+            List[ScalarObjective]: list of objectives
+        """
+        return self.__objectives
+    @property
+    def constraints(self) -> List[ScalarConstraint]:
+        """Property: list of constraints.
+
+        Returns:
+            List[ScalarConstraint]: list of constraints
+        """
+        return self.__constraints
+    
+    def parser(self,textlist):
+        if isinstance(textlist, str):
+            # Handle variable symbols
+            return pl.col(textlist) 
+        elif isinstance(textlist, int) or isinstance(textlist, float):
+            # Handle numeric constants
+            return textlist
+        elif isinstance(textlist, list):
+            # Handle function expressions
+            op = textlist[0]
+            if op == "Add":
+                result = self.parser(textlist[1]) 
+                for sub_expr in textlist[2:]:
+                    result = result + self.parser(sub_expr)
+                return result
+            if op == "Substract":
+                result = self.parser(textlist[1]) 
+                for sub_expr in textlist[2:]:
+                    result = result - self.parser(sub_expr)
+                return result
+            if op == "Multiply":
+                result = self.parser(textlist[1]) 
+                for sub_expr in textlist[2:]:
+                    result = result * self.parser(sub_expr)
+                return result
+            if op == "Divide":
+                result = self.parser(textlist[1]) 
+                for sub_expr in textlist[2:]:
+                    result = result / self.parser(sub_expr)
+                return result
+            if op == "Sqrt":
+                return pl.Expr.sqrt(self.parser(textlist[1]))
+
+        else:
+            raise ValueError("Invalid JSON expression")
+    
+    def json_to_problem(self, json_data: dict):
+        #constants_list = data["constants"]
+
+        #Get DESDEO Variables
+        variables_list = json_data["variables"]
+        var_names = []
+        desdeo_vars = []
+        for var in variables_list:
+            name = var["shortname"]
+            lower_bound = var["lowerbound"]
+            upper_bound = var["upperbound"]
+            initial_value = var["initialvalue"] 
+            if initial_value is None: initial_value = (lower_bound+upper_bound)/2
+            desdeo_var = Variable(name, 
+                            initial_value,
+                            lower_bound,
+                            upper_bound)
+            desdeo_vars.append(desdeo_var)
+            var_names.append(name)
+
+        #Get DESDEO Objectives
+        objectives_list = json_data["objectives"]
+        desdeo_objs = []
+
+        for obj in objectives_list:
+            name = obj["shortname"]
+            lower_bound = obj["lowerbound"]
+            upper_bound = obj["upperbound"]
+            is_maximize = obj["max"]
+            polars_func = self.parser(obj["func"])
+            if lower_bound is None: lower_bound = -np.inf
+            if upper_bound is None: upper_bound = np.inf
+            desdeo_obj = ScalarObjective(name,polars_func,lower_bound,upper_bound,
+                                 maximize=[is_maximize])
+            desdeo_objs.append(desdeo_obj)
+
+
+        constraints_list = json_data["constraints"]
+        desdeo_csts = []
+        if constraints_list is None: desdeo_csts = None
+        else:
+            for cst in constraints_list:
+                name = cst["shortname"]  
+                polars_func = self.parser(cst["func"])     
+                desdeo_cst = ScalarConstraint(name,len(variables_list),len(objectives_list),
+                                    polars_func)
+                desdeo_csts.append(desdeo_cst)   
+
+        return var_names,desdeo_vars,desdeo_objs,desdeo_csts
+
+    def evaluate(
+        self, decision_vectors: np.ndarray, use_surrogate: bool = False
+    ) -> EvaluationResults:
+        
+        #TODO: generalize the variable's name.
+        d = {}
+        var_name = self.var_names
+        for i in range(len(var_name)):
+            d[var_name[i]] = decision_vectors[:,i]
+        polars_dataframe = pl.DataFrame(d)
+        objs = []
+        i = 1
+        for obj in self.objectives:
+            objs.append(obj.evaluator.alias("obj{}".format(i)))
+            i +=1
+        result = polars_dataframe.select(objs)
+        objective_vectors = result.to_numpy()
+        # print(objective_vectors)
+
+        i = 1
+        cons = []
+        constraint_values = np.nan
+        if self.constraints is not None:
+            for con in self.constraints:
+                cons.append(con.evaluator.alias("Constraint {}".format(i)))
+                i +=1
+            result = polars_dataframe.select(cons)
+            constraint_values = result.to_numpy()
+        # print(constraint_values)
+
+        fitness = np.nan
+        return EvaluationResults(
+                objective_vectors, fitness, constraint_values
+        )
