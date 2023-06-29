@@ -1717,41 +1717,9 @@ class DiscreteDataProblem:
 
 class PolarsMOProblem(MOProblem):
     def __init__(self,json_data):
-
-        self.__var_names: List[str]
-        self.__variables: List[Variable]
-        self.__objectives: List[Union[ScalarObjective, VectorObjective]]
-        self.__constraints: List[ScalarConstraint]
-
-        self.__var_names, self.__variables,self.__objectives,self.__constraints = \
+        self.var_names, variables,objectives,constraints = \
         self.json_to_problem(json_data)
-
-    @property
-    def var_names(self) -> List[str]:
-        """Property: list of objectives.
-
-        Returns:
-            List[ScalarObjective]: list of objectives
-        """
-        return self.__var_names
-
-    @property
-    def objectives(self) -> List[ScalarObjective]:
-        """Property: list of objectives.
-
-        Returns:
-            List[ScalarObjective]: list of objectives
-        """
-        return self.__objectives
-    @property
-    def constraints(self) -> List[ScalarConstraint]:
-        """Property: list of constraints.
-
-        Returns:
-            List[ScalarConstraint]: list of constraints
-        """
-        return self.__constraints
-    
+        super().__init__(objectives, variables, constraints) 
     def parser(self,textlist):
         if isinstance(textlist, str):
             # Handle variable symbols
@@ -1784,13 +1752,12 @@ class PolarsMOProblem(MOProblem):
                 return result
             if op == "Sqrt":
                 return pl.Expr.sqrt(self.parser(textlist[1]))
-
+            if op == "Square":
+                return self.parser(textlist[1])**2
         else:
-            raise ValueError("Invalid JSON expression")
-    
+            raise ValueError("Invalid JSON expression")   
     def json_to_problem(self, json_data: dict):
         #constants_list = data["constants"]
-
         #Get DESDEO Variables
         variables_list = json_data["variables"]
         var_names = []
@@ -1807,24 +1774,21 @@ class PolarsMOProblem(MOProblem):
                             upper_bound)
             desdeo_vars.append(desdeo_var)
             var_names.append(name)
-
         #Get DESDEO Objectives
         objectives_list = json_data["objectives"]
         desdeo_objs = []
-
         for obj in objectives_list:
             name = obj["shortname"]
             lower_bound = obj["lowerbound"]
             upper_bound = obj["upperbound"]
             is_maximize = obj["max"]
             polars_func = self.parser(obj["func"])
+            print(polars_func)
             if lower_bound is None: lower_bound = -np.inf
             if upper_bound is None: upper_bound = np.inf
             desdeo_obj = ScalarObjective(name,polars_func,lower_bound,upper_bound,
                                  maximize=[is_maximize])
             desdeo_objs.append(desdeo_obj)
-
-
         constraints_list = json_data["constraints"]
         desdeo_csts = []
         if constraints_list is None: desdeo_csts = None
@@ -1835,13 +1799,10 @@ class PolarsMOProblem(MOProblem):
                 desdeo_cst = ScalarConstraint(name,len(variables_list),len(objectives_list),
                                     polars_func)
                 desdeo_csts.append(desdeo_cst)   
-
         return var_names,desdeo_vars,desdeo_objs,desdeo_csts
-
     def evaluate(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
-    ) -> EvaluationResults:
-        
+    ) -> EvaluationResults:    
         #TODO: generalize the variable's name.
         d = {}
         var_name = self.var_names
@@ -1856,11 +1817,11 @@ class PolarsMOProblem(MOProblem):
         result = polars_dataframe.select(objs)
         objective_vectors = result.to_numpy()
         # print(objective_vectors)
-
-        i = 1
+   
         cons = []
         constraint_values = np.nan
         if self.constraints is not None:
+            i = 1
             for con in self.constraints:
                 cons.append(con.evaluator.alias("Constraint {}".format(i)))
                 i +=1
