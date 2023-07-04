@@ -1791,18 +1791,51 @@ class PolarsMOProblem(MOProblem):
             #raise error message:
             text_type = type(textlist)
             msg = (f"the type of {text_type} is not found;")
-            raise ProblemError(msg)   
+            raise ProblemError(msg)
+        
+    def replace_values(self,lst,constants):
+        if isinstance(lst, list):
+            return [self.replace_values(item,constants) for item in lst]
+        elif lst in constants:
+            return constants[lst]
+        else:
+            return lst
+    def to_value(self, func, constants:dict):
+        if func is None:
+            return None
+        result = 0 
+        if isinstance(func,(int, float)):
+            result = func
+        elif isinstance(func, str):
+            result = constants[func]
+        elif isinstance(func,list):
+            new_list = self.replace_values(func,constants)
+            result = self.parser(new_list)
+        else:
+            #raise error message:
+            text_type = type(func)
+            msg = (f"the type of {text_type} is not found;")
+            raise ProblemError(msg)
+        return result
     def json_to_problem(self, json_data: dict):
-        #constants_list = data["constants"]
+        #CONSTANTS
+        constants_list = json_data["constants"]
+        constants = {}
+        if (constants_list is not None) or ( not constants_list.empty()):
+            for d in constants_list:
+                shortname = d["shortname"]
+                value = d["value"]
+                constants[shortname] = value
+        
         #Get DESDEO Variables
         variables_list = json_data["variables"]
         var_names = []
         desdeo_vars = []
-        for var in variables_list:
-            name = var["shortname"]
-            lower_bound = var["lowerbound"]
-            upper_bound = var["upperbound"]
-            initial_value = var["initialvalue"] 
+        for d in variables_list:
+            name = d["shortname"] 
+            lower_bound = self.to_value(d["lowerbound"],constants)           
+            upper_bound = self.to_value(d["upperbound"],constants)   
+            initial_value = d["initialvalue"] 
             if initial_value is None: initial_value = (lower_bound+upper_bound)/2
             desdeo_var = Variable(name, 
                             initial_value,
@@ -1815,11 +1848,12 @@ class PolarsMOProblem(MOProblem):
         desdeo_objs = []
         for obj in objectives_list:
             name = obj["shortname"]
-            lower_bound = obj["lowerbound"]
-            upper_bound = obj["upperbound"]
+            lower_bound = self.to_value(obj["lowerbound"],constants) 
+            upper_bound = self.to_value(obj["upperbound"],constants)
             is_maximize = obj["max"]
-            polars_func = self.parser(obj["func"])
-            print(polars_func)
+            new_list = self.replace_values(obj["func"],constants)
+            polars_func = self.parser(new_list)
+            #print(polars_func)
             if lower_bound is None: lower_bound = -np.inf
             if upper_bound is None: upper_bound = np.inf
             desdeo_obj = ScalarObjective(name,polars_func,lower_bound,upper_bound,
@@ -1876,3 +1910,4 @@ class PolarsMOProblem(MOProblem):
         return EvaluationResults(
                 objective_vectors, fitness, constraint_values
         )
+
