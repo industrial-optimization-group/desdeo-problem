@@ -1747,7 +1747,7 @@ class PolarsMOProblem(MOProblem):
         if isinstance(textlist, str):
             # Handle variable symbols
             return pl.col(textlist) 
-        elif isinstance(textlist, int) or isinstance(textlist, float):
+        elif isinstance(textlist, (int,float)):
             # Handle numeric constants
             return textlist
         elif isinstance(textlist, list):
@@ -1821,7 +1821,7 @@ class PolarsMOProblem(MOProblem):
         #CONSTANTS
         constants_list = json_data["constants"]
         constants = {}
-        if (constants_list is not None) or ( not constants_list.empty()):
+        if constants_list is not None:
             for d in constants_list:
                 shortname = d["shortname"]
                 value = d["value"]
