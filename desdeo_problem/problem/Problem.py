@@ -1716,10 +1716,33 @@ class DiscreteDataProblem:
 
 
 class PolarsMOProblem(MOProblem):
-    def __init__(self,json_data):
-        self.var_names, variables,objectives,constraints = \
-        self.json_to_problem(json_data)
-        super().__init__(objectives, variables, constraints) 
+    #MATH JSON PARSER 
+    functions:dict = {
+        #TRIGONOMETRIC OPERATION
+        "Arccos":                 lambda x: pl.Expr.arccos(x),#  x ∊ [−1, 1] 
+        "Arccosh":                lambda x: pl.Expr.arccosh(x),
+        "Arcsin":                 lambda x: pl.Expr.arcsin(x),
+        "Arcsinh":                lambda x: pl.Expr.arcsinh(x),
+        "Arctan":                 lambda x: pl.Expr.arctan(x),#
+        "Arctanh":                lambda x: pl.Expr.arctanh(x),# # x ∊ [−1, 1] 
+        "Cos":                    lambda x: pl.Expr.cos(x),
+        "Cosh":                   lambda x: pl.Expr.cosh(x),
+        "Sin":                    lambda x: pl.Expr.sin(x),
+        "Sinh":                   lambda x: pl.Expr.sinh(x),
+        "Tan":                    lambda x: pl.Expr.tan(x),
+        "Tanh":                   lambda x: pl.Expr.tanh(x),
+        #ROUDING OPERATION
+        "Abs":                    lambda x: pl.Expr.abs(x),       
+        "Ceil":                   lambda x: pl.Expr.ceil(x),# 
+        "Floor":                  lambda x: pl.Expr.floor(x),#
+        #EXPONENTS AND LOGARITHMS
+        "Exp":                    lambda x: pl.Expr.exp(x),
+        "Ln":                     lambda x: pl.Expr.log(x),#30
+        #"Log":                    lambda x,base: pl.Expr.log(x,base=base),#base must be a number
+        "Lb":                     lambda x: pl.Expr.log(x,2),
+        "Lg":                     lambda x: pl.Expr.log10(x),
+        "LogOnePlus":             lambda x: pl.Expr.log1p(x),   
+    }
     def parser(self,textlist):
         if isinstance(textlist, str):
             # Handle variable symbols
@@ -1730,7 +1753,7 @@ class PolarsMOProblem(MOProblem):
         elif isinstance(textlist, list):
             # Handle function expressions
             op = textlist[0]
-            if op == "Add":
+            if op == "Add" or op == "Sum":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result + self.parser(sub_expr)
@@ -1740,7 +1763,7 @@ class PolarsMOProblem(MOProblem):
                 for sub_expr in textlist[2:]:
                     result = result - self.parser(sub_expr)
                 return result
-            if op == "Multiply":
+            if op == "Multiply" or op == "Product":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result * self.parser(sub_expr)
@@ -1754,8 +1777,21 @@ class PolarsMOProblem(MOProblem):
                 return pl.Expr.sqrt(self.parser(textlist[1]))
             if op == "Square":
                 return self.parser(textlist[1])**2
+            if op == "Power":
+                return self.parser(textlist[1])**self.parser(textlist[2])
+            if op == "Negate":
+                return -self.parser(textlist[1])
+            if op in self.functions:
+                return self.functions[op](self.parser(textlist[1]))
+            else:
+                #raise error message:
+                msg = (f"{op} is not found")
+                raise ProblemError(msg)
         else:
-            raise ValueError("Invalid JSON expression")   
+            #raise error message:
+            text_type = type(textlist)
+            msg = (f"the type of {text_type} is not found;")
+            raise ProblemError(msg)   
     def json_to_problem(self, json_data: dict):
         #constants_list = data["constants"]
         #Get DESDEO Variables
@@ -1800,12 +1836,19 @@ class PolarsMOProblem(MOProblem):
                                     polars_func)
                 desdeo_csts.append(desdeo_cst)   
         return var_names,desdeo_vars,desdeo_objs,desdeo_csts
+    
+    # MULTIOBJECTIVE PROBLEM 
+    def __init__(self,json_data):
+        self.var_names, variables,objectives,constraints = \
+        self.json_to_problem(json_data)
+        super().__init__(objectives, variables, constraints) 
+    
     def evaluate(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
     ) -> EvaluationResults:    
         #TODO: generalize the variable's name.
         d = {}
-        var_name = self.var_names
+        var_name = self.variable_names #call super 
         for i in range(len(var_name)):
             d[var_name[i]] = decision_vectors[:,i]
         polars_dataframe = pl.DataFrame(d)
