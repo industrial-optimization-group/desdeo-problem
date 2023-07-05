@@ -1743,7 +1743,18 @@ class PolarsMOProblem(MOProblem):
         "Lg":                     lambda x: pl.Expr.log10(x),
         "LogOnePlus":             lambda x: pl.Expr.log1p(x),   
     }
+    
     def parser(self,textlist):
+        """
+        it will parse Polish Notation, and return polars expression.
+        Arguments:
+            textlist, It is a Polish notation that describe a function in list e.g.
+            ["Multiply", ["Sqrt", 2], "x2"]
+        Raises:
+            ProblemError: If the type of the text neither str,list nor int,float, it will 
+            raise type error; If the operation in textlist not found, it means we currently
+            don't support such function operation.
+        """
         if isinstance(textlist, str):
             # Handle variable symbols
             return pl.col(textlist) 
@@ -1753,7 +1764,7 @@ class PolarsMOProblem(MOProblem):
         elif isinstance(textlist, list):
             # Handle function expressions
             op = textlist[0]
-            if op == "Add" or op == "Sum":
+            if op == "Add":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result + self.parser(sub_expr)
@@ -1790,7 +1801,7 @@ class PolarsMOProblem(MOProblem):
         else:
             #raise error message:
             text_type = type(textlist)
-            msg = (f"the type of {text_type} is not found;")
+            msg = (f"The type of {text_type} is not found.")
             raise ProblemError(msg)
         
     def replace_values(self,lst,constants):
@@ -1801,6 +1812,10 @@ class PolarsMOProblem(MOProblem):
         else:
             return lst
     def to_value(self, func, constants:dict):
+        """
+        In json file, some values are described as a function using constants;
+        to_value will calculate the function with constants and return value.
+        """
         if func is None:
             return None
         result = 0 
@@ -1818,6 +1833,15 @@ class PolarsMOProblem(MOProblem):
             raise ProblemError(msg)
         return result
     def json_to_problem(self, json_data: dict):
+        """
+        it will parse json data that decribe in multi-objective optimization format.
+        , and return desdeo Variables, Objectives, and Constraints.
+        Arguments:
+            json_data(dict), it is a json file that contains muti-objective optimization
+            information. 
+        Raises:
+            ProblemError: TODO.
+        """
         #CONSTANTS
         constants_list = json_data["constants"]
         constants = {}
@@ -1829,7 +1853,6 @@ class PolarsMOProblem(MOProblem):
         
         #Get DESDEO Variables
         variables_list = json_data["variables"]
-        var_names = []
         desdeo_vars = []
         for d in variables_list:
             name = d["shortname"] 
@@ -1842,7 +1865,6 @@ class PolarsMOProblem(MOProblem):
                             lower_bound,
                             upper_bound)
             desdeo_vars.append(desdeo_var)
-            var_names.append(name)
         #Get DESDEO Objectives
         objectives_list = json_data["objectives"]
         desdeo_objs = []
@@ -1869,18 +1891,18 @@ class PolarsMOProblem(MOProblem):
                 desdeo_cst = ScalarConstraint(name,len(variables_list),len(objectives_list),
                                     polars_func)
                 desdeo_csts.append(desdeo_cst)   
-        return var_names,desdeo_vars,desdeo_objs,desdeo_csts
+        return desdeo_vars,desdeo_objs,desdeo_csts
     
     # MULTIOBJECTIVE PROBLEM 
     def __init__(self,json_data):
-        self.var_names, variables,objectives,constraints = \
+        variables,objectives,constraints = \
         self.json_to_problem(json_data)
         super().__init__(objectives, variables, constraints) 
     
+    #Override the evaluate function . 
     def evaluate(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
     ) -> EvaluationResults:    
-        #TODO: generalize the variable's name.
         d = {}
         var_name = self.variable_names #call super 
         for i in range(len(var_name)):
@@ -1910,4 +1932,3 @@ class PolarsMOProblem(MOProblem):
         return EvaluationResults(
                 objective_vectors, fitness, constraint_values
         )
-
