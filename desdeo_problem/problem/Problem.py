@@ -1756,7 +1756,7 @@ class PolarsMOProblem(MOProblem):
         else:
             return lst
 
-    def parse_sum(self,textlist):
+    def parse_sum(self,textlist,extra_funcs):
         expr = textlist[1]
         #pl_expr = parser(expr)
         #print(pl_expr)
@@ -1766,7 +1766,7 @@ class PolarsMOProblem(MOProblem):
         pl_list = []
         for i in range(start,end+1):
             new_fun = 'g_'+str(i)
-            l = self.replace_str(expr,'g_i',new_fun)
+            l = self.replace_str(expr,'g_i',extra_funcs[new_fun])
             pl_list.append(l)
 
         new_expr = ["Add"]
@@ -1774,7 +1774,7 @@ class PolarsMOProblem(MOProblem):
             new_expr.append(e)
         return new_expr
     
-    def parser(self,textlist):
+    def parser(self,textlist,extra_funcs:dict={}):
         """
         it will parse Polish Notation, and return polars expression.
         Arguments:
@@ -1821,7 +1821,7 @@ class PolarsMOProblem(MOProblem):
             elif op == "Max":
                 return pl.max(self.parser(textlist[1]),self.parser(textlist[2]))
             elif op == "Sum":
-                new_expr = self.parse_sum(textlist)
+                new_expr = self.parse_sum(textlist,extra_funcs)
                 return self.parser(new_expr)
             else:
                 #raise error message:
@@ -1894,6 +1894,14 @@ class PolarsMOProblem(MOProblem):
                             lower_bound,
                             upper_bound)
             desdeo_vars.append(desdeo_var)
+        extra_func = json_data["extra_func"]
+        extra_funcs = {}
+        if extra_func:
+            for f in extra_func:
+                name = f["shortname"]
+                textlist = f['func']
+                extra_funcs[name] = textlist
+
         #Get DESDEO Objectives
         objectives_list = json_data["objectives"]
         desdeo_objs = []
@@ -1903,7 +1911,7 @@ class PolarsMOProblem(MOProblem):
             upper_bound = self.to_value(obj["upperbound"],constants)
             is_maximize = obj["max"]
             new_list = self.replace_values(obj["func"],constants)
-            polars_func = self.parser(new_list)
+            polars_func = self.parser(new_list,extra_funcs)
             #print(polars_func)
             if lower_bound is None: lower_bound = -np.inf
             if upper_bound is None: upper_bound = np.inf
@@ -1912,8 +1920,7 @@ class PolarsMOProblem(MOProblem):
             desdeo_objs.append(desdeo_obj)
         constraints_list = json_data["constraints"]
         desdeo_csts = []
-        if constraints_list is None: desdeo_csts = None
-        else:
+        if constraints_list:
             for cst in constraints_list:
                 name = cst["shortname"]  
                 polars_func = self.parser(cst["func"])     
