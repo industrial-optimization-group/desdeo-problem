@@ -1741,8 +1741,38 @@ class PolarsMOProblem(MOProblem):
         #"Log":                    lambda x,base: pl.Expr.log(x,base=base),#base must be a number
         "Lb":                     lambda x: pl.Expr.log(x,2),
         "Lg":                     lambda x: pl.Expr.log10(x),
-        "LogOnePlus":             lambda x: pl.Expr.log1p(x),   
+        "LogOnePlus":             lambda x: pl.Expr.log1p(x),
+
+        "Sqrt":                   lambda x: pl.Expr.sqrt(x),
+        "Square":                 lambda x: x**2,
+        "Negate":                 lambda x: -x,   
     }
+
+    def replace_str(self,lst,target,rpc):
+        if isinstance(lst, list):
+            return [self.replace_str(item,target,rpc) for item in lst]
+        elif lst == target:
+            return rpc
+        else:
+            return lst
+
+    def parse_sum(self,textlist):
+        expr = textlist[1]
+        #pl_expr = parser(expr)
+        #print(pl_expr)
+        logic_expr = textlist[2]
+        end = logic_expr.pop()
+        start = logic_expr.pop()
+        pl_list = []
+        for i in range(start,end+1):
+            new_fun = 'g_'+str(i)
+            l = self.replace_str(expr,'g_i',new_fun)
+            pl_list.append(l)
+
+        new_expr = ["Add"]
+        for e in pl_list:
+            new_expr.append(e)
+        return new_expr
     
     def parser(self,textlist):
         """
@@ -1764,36 +1794,35 @@ class PolarsMOProblem(MOProblem):
         elif isinstance(textlist, list):
             # Handle function expressions
             op = textlist[0]
-            if op == "Add":
+            if op in self.functions:
+                return self.functions[op](self.parser(textlist[1]))
+            elif op == "Add":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result + self.parser(sub_expr)
                 return result
-            if op == "Substract":
+            elif op == "Substract":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result - self.parser(sub_expr)
                 return result
-            if op == "Multiply" or op == "Product":
+            elif op == "Multiply" or op == "Product":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result * self.parser(sub_expr)
                 return result
-            if op == "Divide":
+            elif op == "Divide":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result / self.parser(sub_expr)
                 return result
-            if op == "Sqrt":
-                return pl.Expr.sqrt(self.parser(textlist[1]))
-            if op == "Square":
-                return self.parser(textlist[1])**2
-            if op == "Power":
+            elif op == "Power":
                 return self.parser(textlist[1])**self.parser(textlist[2])
-            if op == "Negate":
-                return -self.parser(textlist[1])
-            if op in self.functions:
-                return self.functions[op](self.parser(textlist[1]))
+            elif op == "Max":
+                return pl.max(self.parser(textlist[1]),self.parser(textlist[2]))
+            elif op == "Sum":
+                new_expr = self.parse_sum(textlist)
+                return self.parser(new_expr)
             else:
                 #raise error message:
                 msg = (f"{op} is not found")
@@ -1845,7 +1874,7 @@ class PolarsMOProblem(MOProblem):
         #CONSTANTS
         constants_list = json_data["constants"]
         constants = {}
-        if constants_list is not None:
+        if constants_list:
             for d in constants_list:
                 shortname = d["shortname"]
                 value = d["value"]
@@ -1919,7 +1948,7 @@ class PolarsMOProblem(MOProblem):
    
         cons = []
         constraint_values = np.nan
-        if self.constraints is not None:
+        if self.constraints:
             i = 1
             for con in self.constraints:
                 cons.append(con.evaluator.alias("Constraint {}".format(i)))
@@ -1932,3 +1961,4 @@ class PolarsMOProblem(MOProblem):
         return EvaluationResults(
                 objective_vectors, fitness, constraint_values
         )
+
