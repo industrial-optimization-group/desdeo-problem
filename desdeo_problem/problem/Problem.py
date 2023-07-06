@@ -1916,7 +1916,7 @@ class PolarsMOProblem(MOProblem):
         if constants_list:
             for d in constants_list:
                 name = d[self.NAME]
-                value = d[self.MAX]
+                value = d[self.VALUE]
                 constants[name] = value
         
         #DESDEO VARIABLES
