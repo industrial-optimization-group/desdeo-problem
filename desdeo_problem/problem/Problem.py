@@ -1758,14 +1758,13 @@ class PolarsMOProblem(MOProblem):
 
     def parse_sum(self,textlist,extra_funcs):
         expr = textlist[1]
-        #pl_expr = parser(expr)
-        #print(pl_expr)
         logic_expr = textlist[2]
         end = logic_expr.pop()
         start = logic_expr.pop()
         pl_list = []
         for i in range(start,end+1):
             new_fun = 'g_'+str(i)
+            #TODO:target should be abstract.
             l = self.replace_str(expr,'g_i',extra_funcs[new_fun])
             pl_list.append(l)
 
@@ -1806,12 +1805,12 @@ class PolarsMOProblem(MOProblem):
                 for sub_expr in textlist[2:]:
                     result = result - self.parser(sub_expr)
                 return result
-            elif op == "Multiply" or op == "Product":
+            elif op == "Multiply":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result * self.parser(sub_expr)
                 return result
-            elif op == "Divide":
+            elif op == "Divide" or op == "Rational":
                 result = self.parser(textlist[1]) 
                 for sub_expr in textlist[2:]:
                     result = result / self.parser(sub_expr)
@@ -1894,8 +1893,9 @@ class PolarsMOProblem(MOProblem):
                             lower_bound,
                             upper_bound)
             desdeo_vars.append(desdeo_var)
-        extra_func = json_data["extra_func"]
-        extra_funcs = {}
+
+        extra_funcs = {}    
+        extra_func = json_data["extra_func"]     
         if extra_func:
             for f in extra_func:
                 name = f["shortname"]
@@ -1912,7 +1912,7 @@ class PolarsMOProblem(MOProblem):
             is_maximize = obj["max"]
             new_list = self.replace_values(obj["func"],constants)
             polars_func = self.parser(new_list,extra_funcs)
-            #print(polars_func)
+            print(polars_func)
             if lower_bound is None: lower_bound = -np.inf
             if upper_bound is None: upper_bound = np.inf
             desdeo_obj = ScalarObjective(name,polars_func,lower_bound,upper_bound,
@@ -1923,7 +1923,8 @@ class PolarsMOProblem(MOProblem):
         if constraints_list:
             for cst in constraints_list:
                 name = cst["shortname"]  
-                polars_func = self.parser(cst["func"])     
+                polars_func = self.parser(cst["func"])
+                #print(polars_func)     
                 desdeo_cst = ScalarConstraint(name,len(variables_list),len(objectives_list),
                                     polars_func)
                 desdeo_csts.append(desdeo_cst)   
@@ -1968,4 +1969,3 @@ class PolarsMOProblem(MOProblem):
         return EvaluationResults(
                 objective_vectors, fitness, constraint_values
         )
-
