@@ -1748,24 +1748,50 @@ class PolarsMOProblem(MOProblem):
         "Negate":                 lambda x: -x,   
     }
 
-    def replace_str(self,lst,target,rpc):
+
+    def replace_str(self,lst,target:str,sub)->list:
         if isinstance(lst, list):
-            return [self.replace_str(item,target,rpc) for item in lst]
-        elif lst == target:
-            return rpc
+            return [self.replace_str(item,target,sub) for item in lst]
+        elif isinstance(lst,str):
+            if target in lst :
+                if isinstance(sub,str):
+                    s = lst.replace(target,sub)
+                    return s
+                else:
+                    return sub
+            else:
+                return lst
         else:
             return lst
 
     def parse_sum(self,textlist,extra_funcs):
+        if not textlist or len(textlist) != 3:
+            msg = ("The Sum Expression List is either empty or wrong format")
+            raise ProblemError(msg)
+        
+        #GET ITERATER
+        logic_list = textlist[2]
+        if logic_list[0] != "Triple":
+            msg = (f"The Control Operation is not recognizable,No keyword:Triple is found")
+            raise ProblemError(msg)
+        hold_list = logic_list[1]
+        if hold_list[0] != "Hold":
+            msg = ("The Control Operation is not recognizable,No keyword:Hold is found")
+            raise ProblemError(msg)
+        holder:str = hold_list[1]
+        start = logic_list[2]
+        end = logic_list[3]
+
+        #REPLACE ITERATER IN EXPRESSION WITH HODLER
         expr = textlist[1]
-        logic_expr = textlist[2]
-        end = logic_expr.pop()
-        start = logic_expr.pop()
         pl_list = []
         for i in range(start,end+1):
-            new_fun = 'g_'+str(i)
-            #TODO:target should be abstract.
-            l = self.replace_str(expr,'g_i',extra_funcs[new_fun])
+            it_name = '_'+holder
+            new_it  = '_'+str(i)
+            l = self.replace_str(expr,it_name,new_it)
+            for func in extra_funcs:
+                if new_it in func:
+                    l = self.replace_str(l,func,extra_funcs[func])
             pl_list.append(l)
 
         new_expr = ["Add"]
@@ -1832,7 +1858,7 @@ class PolarsMOProblem(MOProblem):
             msg = (f"The type of {text_type} is not found.")
             raise ProblemError(msg)
         
-    def replace_values(self,lst,constants):
+    def replace_values(self,lst,constants:dict):
         if isinstance(lst, list):
             return [self.replace_values(item,constants) for item in lst]
         elif lst in constants:
@@ -1870,23 +1896,36 @@ class PolarsMOProblem(MOProblem):
         Raises:
             ProblemError: TODO.
         """
-        #CONSTANTS
-        constants_list = json_data["constants"]
+
+        #GET DATA FROM JSON
+        constants_list      = json_data[self.CONSTANTS]
+        variables_list      = json_data[self.VARIABLES]
+        extra_func          = json_data[self.EXTRA]
+        objectives_list     = json_data[self.OBJECTIVES]
+        constraints_list    = json_data[self.CONSTRAINTS]
+        #VARIABLES AND OBJECTIVES ARE MANDITORY
+        if not variables_list :
+            msg = ("Decision Variable is empty.")
+            raise ProblemError(msg)
+        if not objectives_list:
+            msg = ("Objective Functions is empty.")
+            raise ProblemError(msg)
+        
+        #CONSTANTS     
         constants = {}
         if constants_list:
             for d in constants_list:
-                shortname = d["shortname"]
-                value = d["value"]
-                constants[shortname] = value
+                name = d[self.NAME]
+                value = d[self.MAX]
+                constants[name] = value
         
-        #Get DESDEO Variables
-        variables_list = json_data["variables"]
+        #DESDEO VARIABLES
         desdeo_vars = []
         for d in variables_list:
-            name = d["shortname"] 
-            lower_bound = self.to_value(d["lowerbound"],constants)           
-            upper_bound = self.to_value(d["upperbound"],constants)   
-            initial_value = d["initialvalue"] 
+            name = d[self.NAME] 
+            lower_bound = self.to_value(d[self.LB],constants)           
+            upper_bound = self.to_value(d[self.UB],constants)   
+            initial_value = d[self.IV] 
             if initial_value is None: initial_value = (lower_bound+upper_bound)/2
             desdeo_var = Variable(name, 
                             initial_value,
@@ -1894,23 +1933,23 @@ class PolarsMOProblem(MOProblem):
                             upper_bound)
             desdeo_vars.append(desdeo_var)
 
-        extra_funcs = {}    
-        extra_func = json_data["extra_func"]     
+        #if objectives function will use constraints 
+        # or other functions in advance, then get those functions
+        extra_funcs = {}            
         if extra_func:
             for f in extra_func:
-                name = f["shortname"]
-                textlist = f['func']
+                name = f[self.NAME]
+                textlist = f[self.FUNC]
                 extra_funcs[name] = textlist
 
-        #Get DESDEO Objectives
-        objectives_list = json_data["objectives"]
+        #DESDEO OBJECTIVES
         desdeo_objs = []
         for obj in objectives_list:
-            name = obj["shortname"]
-            lower_bound = self.to_value(obj["lowerbound"],constants) 
-            upper_bound = self.to_value(obj["upperbound"],constants)
-            is_maximize = obj["max"]
-            new_list = self.replace_values(obj["func"],constants)
+            name = obj[self.NAME]
+            lower_bound = self.to_value(obj[self.LB],constants) 
+            upper_bound = self.to_value(obj[self.UB],constants)
+            is_maximize = obj[self.MAX]
+            new_list = self.replace_values(obj[self.FUNC],constants)
             polars_func = self.parser(new_list,extra_funcs)
             print(polars_func)
             if lower_bound is None: lower_bound = -np.inf
@@ -1918,13 +1957,13 @@ class PolarsMOProblem(MOProblem):
             desdeo_obj = ScalarObjective(name,polars_func,lower_bound,upper_bound,
                                  maximize=[is_maximize])
             desdeo_objs.append(desdeo_obj)
-        constraints_list = json_data["constraints"]
+
+        #DESDEO CONSTRAINTS
         desdeo_csts = []
         if constraints_list:
             for cst in constraints_list:
-                name = cst["shortname"]  
-                polars_func = self.parser(cst["func"])
-                #print(polars_func)     
+                name = cst[self.NAME]  
+                polars_func = self.parser(cst[self.FUNC])   
                 desdeo_cst = ScalarConstraint(name,len(variables_list),len(objectives_list),
                                     polars_func)
                 desdeo_csts.append(desdeo_cst)   
@@ -1932,6 +1971,24 @@ class PolarsMOProblem(MOProblem):
     
     # MULTIOBJECTIVE PROBLEM 
     def __init__(self,json_data):
+       
+        #DEFINE KEYWORDS
+        #Whenever the keyword in the json file has been altered,
+        #change the name here instead of going into the functions.
+        self.CONSTANTS:str          = "constants"
+        self.VARIABLES:str          = "variables"
+        self.EXTRA:str              = "extra_func"
+        self.OBJECTIVES:str         = "objectives"
+        self.CONSTRAINTS:str        = "constraints"
+        self.NAME:str               = "shortname"
+        self.VALUE:str              = "value"
+        self.FUNC:str               = "func"
+        self.LB:str                 = "lowerbound"
+        self.UB:str                 = "upperbound"
+        self.IV:str                 = "initialvalue"
+        self.MAX:str                = "max"
+
+        #GET DESDEO PROBLEM
         variables,objectives,constraints = \
         self.json_to_problem(json_data)
         super().__init__(objectives, variables, constraints) 
@@ -1946,10 +2003,8 @@ class PolarsMOProblem(MOProblem):
             d[var_name[i]] = decision_vectors[:,i]
         polars_dataframe = pl.DataFrame(d)
         objs = []
-        i = 1
         for obj in self.objectives:
-            objs.append(obj.evaluator.alias("obj{}".format(i)))
-            i +=1
+            objs.append(obj.evaluator.alias(obj.name))
         result = polars_dataframe.select(objs)
         objective_vectors = result.to_numpy()
         # print(objective_vectors)
@@ -1957,15 +2012,13 @@ class PolarsMOProblem(MOProblem):
         cons = []
         constraint_values = np.nan
         if self.constraints:
-            i = 1
             for con in self.constraints:
-                cons.append(con.evaluator.alias("Constraint {}".format(i)))
-                i +=1
+                cons.append(con.evaluator.alias(con.name))
             result = polars_dataframe.select(cons)
             constraint_values = result.to_numpy()
         # print(constraint_values)
-
         fitness = np.nan
         return EvaluationResults(
                 objective_vectors, fitness, constraint_values
         )
+    
