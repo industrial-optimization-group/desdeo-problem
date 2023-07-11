@@ -1716,167 +1716,169 @@ class DiscreteDataProblem:
 
 
 class PolarsMOProblem(MOProblem):
+
     #MATH JSON PARSER 
-    functions:dict = {
-        #TRIGONOMETRIC OPERATION
-        "Arccos":                 lambda x: pl.Expr.arccos(x),#  x ∊ [−1, 1] 
-        "Arccosh":                lambda x: pl.Expr.arccosh(x),
-        "Arcsin":                 lambda x: pl.Expr.arcsin(x),
-        "Arcsinh":                lambda x: pl.Expr.arcsinh(x),
-        "Arctan":                 lambda x: pl.Expr.arctan(x),#
-        "Arctanh":                lambda x: pl.Expr.arctanh(x),# # x ∊ [−1, 1] 
-        "Cos":                    lambda x: pl.Expr.cos(x),
-        "Cosh":                   lambda x: pl.Expr.cosh(x),
-        "Sin":                    lambda x: pl.Expr.sin(x),
-        "Sinh":                   lambda x: pl.Expr.sinh(x),
-        "Tan":                    lambda x: pl.Expr.tan(x),
-        "Tanh":                   lambda x: pl.Expr.tanh(x),
-        #ROUDING OPERATION
-        "Abs":                    lambda x: pl.Expr.abs(x),       
-        "Ceil":                   lambda x: pl.Expr.ceil(x),# 
-        "Floor":                  lambda x: pl.Expr.floor(x),#
-        #EXPONENTS AND LOGARITHMS
-        "Exp":                    lambda x: pl.Expr.exp(x),
-        "Ln":                     lambda x: pl.Expr.log(x),#30
-        #"Log":                    lambda x,base: pl.Expr.log(x,base=base),#base must be a number
-        "Lb":                     lambda x: pl.Expr.log(x,2),
-        "Lg":                     lambda x: pl.Expr.log10(x),
-        "LogOnePlus":             lambda x: pl.Expr.log1p(x),
+    class MathParser:
+        def __init__(self):
+            # Environment model:
+            # It provides a way to represent and track the association between variables and their corresponding
+            self.env:dict = {
+                #TRIGONOMETRIC OPERATION
+                "Arccos":                 lambda x: pl.Expr.arccos(x),#  x ∊ [−1, 1] 
+                "Arccosh":                lambda x: pl.Expr.arccosh(x),
+                "Arcsin":                 lambda x: pl.Expr.arcsin(x),
+                "Arcsinh":                lambda x: pl.Expr.arcsinh(x),
+                "Arctan":                 lambda x: pl.Expr.arctan(x),#
+                "Arctanh":                lambda x: pl.Expr.arctanh(x),# # x ∊ [−1, 1] 
+                "Cos":                    lambda x: pl.Expr.cos(x),
+                "Cosh":                   lambda x: pl.Expr.cosh(x),
+                "Sin":                    lambda x: pl.Expr.sin(x),
+                "Sinh":                   lambda x: pl.Expr.sinh(x),
+                "Tan":                    lambda x: pl.Expr.tan(x),
+                "Tanh":                   lambda x: pl.Expr.tanh(x),
+                #ROUDING OPERATION
+                "Abs":                    lambda x: pl.Expr.abs(x),       
+                "Ceil":                   lambda x: pl.Expr.ceil(x),# 
+                "Floor":                  lambda x: pl.Expr.floor(x),#
+                #EXPONENTS AND LOGARITHMS
+                "Exp":                    lambda x: pl.Expr.exp(x),
+                "Ln":                     lambda x: pl.Expr.log(x),#30
+                #"Log":                    lambda x,base: pl.Expr.log(x,base=base),#base must be a number
+                "Lb":                     lambda x: pl.Expr.log(x,2),
+                "Lg":                     lambda x: pl.Expr.log10(x),
+                "LogOnePlus":             lambda x: pl.Expr.log1p(x),
 
-        "Sqrt":                   lambda x: pl.Expr.sqrt(x),
-        "Square":                 lambda x: x**2,
-        "Negate":                 lambda x: -x,   
-        "Add":                    lambda lst:reduce(lambda x, y: x + y,lst),
-        "Subtract":               lambda lst:reduce(lambda x, y: x - y,lst),
-        "Multiply":               lambda lst:reduce(lambda x, y: x * y,lst),
-        "Divide":                 lambda lst:reduce(lambda x, y: x / y,lst),
-        "Rational":               lambda lst:reduce(lambda x, y: x / y,lst),
-        "Power":                  lambda lst:reduce(lambda x, y: x**y, lst),
-        "Max":                    lambda lst:reduce(lambda x, y: pl.max(x,y), lst),
-    }
+                "Sqrt":                   lambda x: pl.Expr.sqrt(x),
+                "Square":                 lambda x: x**2,
+                "Negate":                 lambda x: -x,   
+                "Add":                    lambda lst:reduce(lambda x, y: x + y,lst),
+                "Subtract":               lambda lst:reduce(lambda x, y: x - y,lst),
+                "Multiply":               lambda lst:reduce(lambda x, y: x * y,lst),
+                "Divide":                 lambda lst:reduce(lambda x, y: x / y,lst),
+                "Rational":               lambda lst:reduce(lambda x, y: x / y,lst),
+                "Power":                  lambda lst:reduce(lambda x, y: x**y, lst),
+                "Max":                    lambda lst:reduce(lambda x, y: pl.max(x,y), lst),
+            }
+        def append(self,d:dict):
+            self.env.update(d)
 
-
-    def replace_str(self,lst,target:str,sub)->list:
-        if isinstance(lst, list):
-            return [self.replace_str(item,target,sub) for item in lst]
-        elif isinstance(lst,str):
-            if target in lst :
-                if isinstance(sub,str):
-                    s = lst.replace(target,sub)
-                    return s
+        def replace_str(self,lst,target:str,sub)->list:
+            if isinstance(lst, list):
+                return [self.replace_str(item,target,sub) for item in lst]
+            elif isinstance(lst,str):
+                if target in lst :
+                    if isinstance(sub,str):
+                        s = lst.replace(target,sub)
+                        return s
+                    else:
+                        return sub
                 else:
-                    return sub
+                    return lst
             else:
                 return lst
-        else:
-            return lst
-
-    def parse_sum(self,textlist,extra_funcs):
-        if not textlist or len(textlist) != 3:
-            msg = ("The Sum Expression List is either empty or wrong format")
-            raise ProblemError(msg)
         
-        #GET ITERATER
-        logic_list = textlist[2]
-        if logic_list[0] != "Triple":
-            msg = (f"The Control Operation is not recognizable,No keyword:Triple is found")
-            raise ProblemError(msg)
-        hold_list = logic_list[1]
-        if hold_list[0] != "Hold":
-            msg = ("The Control Operation is not recognizable,No keyword:Hold is found")
-            raise ProblemError(msg)
-        holder:str = hold_list[1]
-        start = logic_list[2]
-        end = logic_list[3]
+        def parse_sum(self,expr):
+            if not expr or len(expr) != 3:
+                msg = ("The Sum Expression List is either empty or wrong format")
+                raise ProblemError(msg)
+            
+            #GET ITERATER
+            logic_list = expr[2]
+            if logic_list[0] != "Triple":
+                msg = (f"The Control Operation is not recognizable,No keyword:Triple is found")
+                raise ProblemError(msg)
+            hold_list = logic_list[1]
+            if hold_list[0] != "Hold":
+                msg = ("The Control Operation is not recognizable,No keyword:Hold is found")
+                raise ProblemError(msg)
+            holder:str = hold_list[1]
+            start = logic_list[2]
+            end = logic_list[3]
 
-        #REPLACE ITERATER IN EXPRESSION WITH HODLER
-        expr = textlist[1]
-        pl_list = []
-        for i in range(start,end+1):
-            it_name = '_'+holder
-            new_it  = '_'+str(i)
-            l = self.replace_str(expr,it_name,new_it)
-            for func in extra_funcs:
-                if new_it in func:
-                    l = self.replace_str(l,func,extra_funcs[func])
-            pl_list.append(l)
-
-        new_expr = ["Add"]
-        for e in pl_list:
-            new_expr.append(e)
-        return new_expr
-    
-    def parser(self,textlist,extra_funcs:dict={}):
-        """
-        it will parse Polish Notation, and return polars expression.
-        Arguments:
-            textlist, It is a Polish notation that describe a function in list e.g.
-            ["Multiply", ["Sqrt", 2], "x2"]
-        Raises:
-            ProblemError: If the type of the text neither str,list nor int,float, it will 
-            raise type error; If the operation in textlist not found, it means we currently
-            don't support such function operation.
-        """
-        if isinstance(textlist, str):
-            # Handle variable symbols
-            if textlist in self.functions:
-                return self.parser(self.functions[textlist])
-            else:
-                return pl.col(textlist) 
-        elif isinstance(textlist, (int,float)):
-            # Handle numeric constants
-            return textlist
-        elif isinstance(textlist, list):
-            # Handle function expressions
-            op = textlist[0]
-            operands = textlist[1:]
-            length = len(operands)
-            if op in self.functions:
-                if length == 1:
-                    return self.functions[op](self.parser(textlist[1]))
-                elif length > 1:
-                    return self.functions[op](self.parser(e) for e in operands)
-            elif op == "Sum":
-                new_expr = self.parse_sum(textlist,extra_funcs)
-                return self.parser(new_expr)
+            #REPLACE ITERATER IN EXPRESSION WITH HODLER
+            expr = expr[1]
+            pl_list = []
+            for i in range(start,end+1):
+                it_name = '_'+holder
+                new_it  = '_'+str(i)
+                l = self.replace_str(expr,it_name,new_it)
+                pl_list.append(l)
+            new_expr = ["Add"]
+            for e in pl_list:
+                new_expr.append(e)
+            return new_expr
+        
+        def parse(self,expr):
+            """
+            it will parse Polish Notation, and return polars expression.
+            Arguments:
+                expr, It is a Polish notation that describe a function in list e.g.
+                ["Multiply", ["Sqrt", 2], "x2"]
+            Raises:
+                ProblemError: If the type of the text neither str,list nor int,float, it will 
+                raise type error; If the operation in expr not found, it means we currently
+                don't support such function operation.
+            """
+            if expr is None: return expr
+            if isinstance(expr, str):
+                # Handle variable symbols
+                if expr in self.env:
+                    return self.parse(self.env[expr])
+                else:
+                    return pl.col(expr) 
+            elif isinstance(expr, (int,float)):
+                # Handle numeric constants
+                return expr
+            elif isinstance(expr, list):
+                # Handle function expressions
+                op = expr[0]
+                operands = expr[1:]
+                length = len(operands)
+                if op in self.env:
+                    if length == 1:
+                        return self.env[op](self.parse(expr[1]))
+                    elif length > 1:
+                        return self.env[op](self.parse(e) for e in operands)
+                elif op == "Sum":
+                    new_expr = self.parse_sum(expr)
+                    return self.parse(new_expr)
+                else:
+                    #raise error message:
+                    msg = (f"{op} is not found")
+                    raise ProblemError(msg)
             else:
                 #raise error message:
-                msg = (f"{op} is not found")
+                text_type = type(expr)
+                msg = (f"The type of {text_type} is not found.")
                 raise ProblemError(msg)
-        else:
-            #raise error message:
-            text_type = type(textlist)
-            msg = (f"The type of {text_type} is not found.")
-            raise ProblemError(msg)
-        
-    def replace_values(self,lst,constants:dict):
-        if isinstance(lst, list):
-            return [self.replace_values(item,constants) for item in lst]
-        elif lst in constants:
-            return constants[lst]
-        else:
-            return lst
-    def to_value(self, func, constants:dict):
-        """
-        In json file, some values are described as a function using constants;
-        to_value will calculate the function with constants and return value.
-        """
-        if func is None:
-            return None
-        result = 0 
-        if isinstance(func,(int, float)):
-            result = func
-        elif isinstance(func, str):
-            result = constants[func]
-        elif isinstance(func,list):
-            new_list = self.replace_values(func,constants)
-            result = self.parser(new_list)
-        else:
-            #raise error message:
-            text_type = type(func)
-            msg = (f"the type of {text_type} is not found;")
-            raise ProblemError(msg)
-        return result
+            
+    # MULTIOBJECTIVE PROBLEM 
+    def __init__(self,json_data):
+       
+        #DEFINE KEYWORDS
+        #Whenever the keyword in the json file has been altered,
+        #change the name here instead of going into the functions.
+        self.CONSTANTS:str          = "constants"
+        self.VARIABLES:str          = "variables"
+        self.EXTRA:str              = "extra_func"
+        self.OBJECTIVES:str         = "objectives"
+        self.CONSTRAINTS:str        = "constraints"
+        self.NAME:str               = "shortname"
+        self.VALUE:str              = "value"
+        self.FUNC:str               = "func"
+        self.LB:str                 = "lowerbound"
+        self.UB:str                 = "upperbound"
+        self.IV:str                 = "initialvalue"
+        self.MAX:str                = "max"
+
+        #CREATE MATH PARSER
+        self.parser = self.MathParser()
+
+        #GET DESDEO PROBLEM
+        variables,objectives,constraints = \
+        self.json_to_problem(json_data)
+        super().__init__(objectives, variables, constraints) 
+    
     def json_to_problem(self, json_data: dict):
         """
         it will parse json data that decribe in multi-objective optimization format.
@@ -1909,13 +1911,14 @@ class PolarsMOProblem(MOProblem):
                 name = d[self.NAME]
                 value = d[self.VALUE]
                 constants[name] = value
+            self.parser.append(constants)
         
         #DESDEO VARIABLES
         desdeo_vars = []
         for d in variables_list:
             name = d[self.NAME] 
-            lower_bound = self.to_value(d[self.LB],constants)           
-            upper_bound = self.to_value(d[self.UB],constants)   
+            lower_bound = self.parser.parse(d[self.LB])           
+            upper_bound = self.parser.parse(d[self.UB])   
             initial_value = d[self.IV] 
             if initial_value is None: initial_value = (lower_bound+upper_bound)/2
             desdeo_var = Variable(name, 
@@ -1930,18 +1933,19 @@ class PolarsMOProblem(MOProblem):
         if extra_func:
             for f in extra_func:
                 name = f[self.NAME]
-                textlist = f[self.FUNC]
-                extra_funcs[name] = textlist
+                expr = f[self.FUNC]
+                extra_funcs[name] = expr
+            self.parser.append(extra_funcs)
 
         #DESDEO OBJECTIVES
         desdeo_objs = []
         for obj in objectives_list:
             name = obj[self.NAME]
-            lower_bound = self.to_value(obj[self.LB],constants) 
-            upper_bound = self.to_value(obj[self.UB],constants)
+            lower_bound = self.parser.parse(obj[self.LB])
+            upper_bound = self.parser.parse(obj[self.UB])
+
             is_maximize = obj[self.MAX]
-            new_list = self.replace_values(obj[self.FUNC],constants)
-            polars_func = self.parser(new_list,extra_funcs)
+            polars_func = self.parser.parse(obj[self.FUNC])
             print(polars_func)
             if lower_bound is None: lower_bound = -np.inf
             if upper_bound is None: upper_bound = np.inf
@@ -1954,36 +1958,13 @@ class PolarsMOProblem(MOProblem):
         if constraints_list:
             for cst in constraints_list:
                 name = cst[self.NAME]  
-                polars_func = self.parser(cst[self.FUNC])   
+                polars_func = self.parser.parse(cst[self.FUNC])   
                 desdeo_cst = ScalarConstraint(name,len(variables_list),len(objectives_list),
                                     polars_func)
                 desdeo_csts.append(desdeo_cst)   
         return desdeo_vars,desdeo_objs,desdeo_csts
     
-    # MULTIOBJECTIVE PROBLEM 
-    def __init__(self,json_data):
-       
-        #DEFINE KEYWORDS
-        #Whenever the keyword in the json file has been altered,
-        #change the name here instead of going into the functions.
-        self.CONSTANTS:str          = "constants"
-        self.VARIABLES:str          = "variables"
-        self.EXTRA:str              = "extra_func"
-        self.OBJECTIVES:str         = "objectives"
-        self.CONSTRAINTS:str        = "constraints"
-        self.NAME:str               = "shortname"
-        self.VALUE:str              = "value"
-        self.FUNC:str               = "func"
-        self.LB:str                 = "lowerbound"
-        self.UB:str                 = "upperbound"
-        self.IV:str                 = "initialvalue"
-        self.MAX:str                = "max"
 
-        #GET DESDEO PROBLEM
-        variables,objectives,constraints = \
-        self.json_to_problem(json_data)
-        super().__init__(objectives, variables, constraints) 
-    
     #Override the evaluate function . 
     def evaluate(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
