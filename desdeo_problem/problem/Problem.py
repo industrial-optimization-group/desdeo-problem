@@ -1746,6 +1746,13 @@ class PolarsMOProblem(MOProblem):
         "Sqrt":                   lambda x: pl.Expr.sqrt(x),
         "Square":                 lambda x: x**2,
         "Negate":                 lambda x: -x,   
+        "Add":                    lambda lst:reduce(lambda x, y: x + y,lst),
+        "Subtract":               lambda lst:reduce(lambda x, y: x - y,lst),
+        "Multiply":               lambda lst:reduce(lambda x, y: x * y,lst),
+        "Divide":                 lambda lst:reduce(lambda x, y: x / y,lst),
+        "Rational":               lambda lst:reduce(lambda x, y: x / y,lst),
+        "Power":                  lambda lst:reduce(lambda x, y: x**y, lst),
+        "Max":                    lambda lst:reduce(lambda x, y: pl.max(x,y), lst),
     }
 
 
@@ -1812,39 +1819,23 @@ class PolarsMOProblem(MOProblem):
         """
         if isinstance(textlist, str):
             # Handle variable symbols
-            return pl.col(textlist) 
+            if textlist in self.functions:
+                return self.parser(self.functions[textlist])
+            else:
+                return pl.col(textlist) 
         elif isinstance(textlist, (int,float)):
             # Handle numeric constants
             return textlist
         elif isinstance(textlist, list):
             # Handle function expressions
             op = textlist[0]
+            operands = textlist[1:]
+            length = len(operands)
             if op in self.functions:
-                return self.functions[op](self.parser(textlist[1]))
-            elif op == "Add":
-                result = self.parser(textlist[1]) 
-                for sub_expr in textlist[2:]:
-                    result = result + self.parser(sub_expr)
-                return result
-            elif op == "Substract":
-                result = self.parser(textlist[1]) 
-                for sub_expr in textlist[2:]:
-                    result = result - self.parser(sub_expr)
-                return result
-            elif op == "Multiply":
-                result = self.parser(textlist[1]) 
-                for sub_expr in textlist[2:]:
-                    result = result * self.parser(sub_expr)
-                return result
-            elif op == "Divide" or op == "Rational":
-                result = self.parser(textlist[1]) 
-                for sub_expr in textlist[2:]:
-                    result = result / self.parser(sub_expr)
-                return result
-            elif op == "Power":
-                return self.parser(textlist[1])**self.parser(textlist[2])
-            elif op == "Max":
-                return pl.max(self.parser(textlist[1]),self.parser(textlist[2]))
+                if length == 1:
+                    return self.functions[op](self.parser(textlist[1]))
+                elif length > 1:
+                    return self.functions[op](self.parser(e) for e in operands)
             elif op == "Sum":
                 new_expr = self.parse_sum(textlist,extra_funcs)
                 return self.parser(new_expr)
@@ -2021,4 +2012,4 @@ class PolarsMOProblem(MOProblem):
         return EvaluationResults(
                 objective_vectors, fitness, constraint_values
         )
-    
+
