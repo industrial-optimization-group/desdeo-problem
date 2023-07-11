@@ -1785,11 +1785,11 @@ class PolarsMOProblem(MOProblem):
             #GET ITERATER
             logic_list = expr[2]
             if logic_list[0] != "Triple":
-                msg = (f"The Control Operation is not recognizable,No keyword:Triple is found")
+                msg = (f"The Control Operation is not recognizable, No keyword: Triple is not found ")
                 raise ProblemError(msg)
             hold_list = logic_list[1]
             if hold_list[0] != "Hold":
-                msg = ("The Control Operation is not recognizable,No keyword:Hold is found")
+                msg = ("The Control Operation is not recognizable,No keyword:Hold is not found")
                 raise ProblemError(msg)
             holder:str = hold_list[1]
             start = logic_list[2]
@@ -1844,7 +1844,7 @@ class PolarsMOProblem(MOProblem):
                     return self.parse(new_expr)
                 else:
                     #raise error message:
-                    msg = (f"{op} is not found")
+                    msg = (f"{op} is not found.")
                     raise ProblemError(msg)
             else:
                 #raise error message:
