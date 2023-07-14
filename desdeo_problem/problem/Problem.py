@@ -2092,20 +2092,3 @@ class MathJsonMOProblem(MOProblem):
             msg = ("incorrect parser")
             raise ProblemError(msg)            
 
-import json
-# f = open('desdeo_problem/problem/real_example2.json')  
-f = open('desdeo_problem/problem/real_example21.json')  
-data = json.load(f)
-p = MathJsonMOProblem(data,parser="polars")
-# res3 = p.evaluate(np.array([[6, 3], [4,3], [7,4]]))
-# print(res3)
-
-# res3 = p.evaluate(np.array([[1, 3], [5, 20]]))
-# print(res3)
-# res3 = p.evaluate(np.array([[1, -1, 0], [5, 5, 2]]))
-# print(res3)
-
-res3 = p.evaluate(np.array([[1,2,6, 3], 
-                            [1,2,4,3], 
-                            [1,2,7,4]]))
-print(res3)
