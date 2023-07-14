@@ -1715,14 +1715,17 @@ class DiscreteDataProblem:
 
 
 
-class PolarsMOProblem(MOProblem):
+class MathJsonMOProblem(MOProblem):
 
     #MATH JSON PARSER 
     class MathParser:
-        def __init__(self):
+        def __init__(self, parser:str="polars"):
             # Environment model:
             # It provides a way to represent and track the association between variables and their corresponding
-            self.env:dict = {
+            self.env:dict = {}
+            self.parser = parser
+            if parser == "polars":
+                polars_env = {
                 #TRIGONOMETRIC OPERATION
                 "Arccos":                 lambda x: pl.Expr.arccos(x),#  x ∊ [−1, 1] 
                 "Arccosh":                lambda x: pl.Expr.arccosh(x),
@@ -1758,7 +1761,77 @@ class PolarsMOProblem(MOProblem):
                 "Rational":               lambda lst:reduce(lambda x, y: x / y,lst),
                 "Power":                  lambda lst:reduce(lambda x, y: x**y, lst),
                 "Max":                    lambda lst:reduce(lambda x, y: pl.max(x,y), lst),
-            }
+                }
+                self.append(polars_env)
+            elif parser == "pandas":
+                pandas_env = {
+                #TRIGONOMETRIC OPERATION
+                "Sin":                   lambda a: 'sin(%s)' % (a),
+                "Cos":                   lambda a: 'cos(%s)' % (a),
+        #       "Tan":                   lambda a: 'tan(%s)' % (a),
+                "Arcsin":                lambda a: 'arcsin(%s)' % (a),#∀ x ∊ [ − 1 , 1 ] 
+                "Arccos":                lambda a: 'arccos(%s)' % (a),
+                "Arctan":                lambda a: 'arctan(%s)' % (a), #∀ x ∊ ( − 1 , 1 ) 
+                "Sinh":                  lambda a: 'sinh(%s)' % (a),
+                "Cosh":                  lambda a: 'cosh(%s)' % (a),
+                "Tanh":                  lambda a: 'tanh(%s)' % (a),
+                "Arcsinh":               lambda a: 'arcsinh(%s)' % (a),
+                "Arccosh":               lambda a: 'arccosh(%s)' % (a),#∀x >= 1 ,
+                "Arctanh":               lambda a: 'arctanh(%s)' % (a), 
+                "Arctan2":               lambda a,b: 'arctan2(%s,%s)' % (a,b),
+                #EXPONENTS AND LOGARITHMS
+                "Exp":                   lambda a: 'exp(%s)' % (a),
+                "Ln":                    lambda a: 'log(%s)' % (a),
+                #"Log":                  lambda a,b: 'log(%s,%s)' % (a,b),
+                #"Lb":                   lambda a: 'log(%s,2)'% a,
+                "Lg":                    lambda a: 'log10(%s)' % (a),
+                "LogOnePlus":            lambda a: 'log1p(%s)' % (a),   
+                #BOOL OPERATION
+                "Equal":                 lambda a,b: '(%s == %s)' % (a, b),  
+                "Greater":               lambda a,b: '(%s >  %s)' % (a, b),
+                "GreaterEqual":          lambda a,b: '(%s >= %s)' % (a, b),
+                "Less":                  lambda a,b: '(%s <  %s)' % (a, b),
+                "LessEqual":             lambda a,b: '(%s <= %s)' % (a, b),
+                "NotEqual":              lambda a,b: '(%s != %s)' % (a, b),
+                #BASIC OPERATION
+                "Add":                   lambda lst:reduce(lambda x, y: 
+                                                            '(%s +  %s)'%(x,y) 
+                                                            if isinstance(x,str) or isinstance(y,str) 
+                                                            else x+y, 
+                                                            lst),
+                "Substract":             lambda lst:reduce(lambda x, y: 
+                                                            '(%s -  %s)'%(x,y) 
+                                                            if isinstance(x,str) or isinstance(y,str) 
+                                                            else x-y, 
+                                                            lst),
+                "Negate":                lambda a: '(-%s)' % a,
+                "Multiply":              lambda lst:reduce(lambda x, y: 
+                                                            '(%s *  %s)'%(x,y) 
+                                                            if isinstance(x,str) or isinstance(y,str) 
+                                                            else x*y, 
+                                                            lst),
+                "Divide":                lambda lst:reduce(lambda x, y: 
+                                                            '(%s /  %s)'%(x,y) 
+                                                            if isinstance(x,str) or isinstance(y,str) 
+                                                            else x/y, 
+                                                            lst),
+                "Power":                 lambda lst:reduce(lambda x, y: 
+                                                            '(%s**  %s)'%(x,y) 
+                                                            if isinstance(x,str) or isinstance(y,str) 
+                                                            else x**y, 
+                                                            lst),
+                "Root":                  lambda a,b: '(%s ** (1/%s))' % (a, b),
+                "Sqrt":                  lambda a  : '(%s ** (1/2))' % a if isinstance(a,str) else a**(1/2),
+                "Square":                lambda a  : '(%s ** (2))'  % a if isinstance(a,str)  else a**(2),
+                # Max function is not supported in pandas.eval()
+                # "Max":                   lambda lst:reduce(lambda a,b:'@rowmax(%s,%s)'%(a,b), lst),
+                }
+                self.append(pandas_env)
+            else:
+                msg = ("incorrect parser")
+                raise ProblemError(msg)
+        def __get_parser_name__(self):
+            return self.parser        
         def append(self,d:dict):
             self.env.update(d)
 
@@ -1825,7 +1898,13 @@ class PolarsMOProblem(MOProblem):
                 if expr in self.env:
                     return self.parse(self.env[expr])
                 else:
-                    return pl.col(expr) 
+                    if self.__get_parser_name__() == "polars":
+                        return pl.col(expr) 
+                    elif self.__get_parser_name__() == "pandas":
+                        return expr 
+                    else:
+                        msg = ("incorrect parser")
+                        raise ProblemError(msg)
             elif isinstance(expr, (int,float)):
                 # Handle numeric constants
                 return expr
@@ -1844,7 +1923,7 @@ class PolarsMOProblem(MOProblem):
                     return self.parse(new_expr)
                 else:
                     #raise error message:
-                    msg = (f"{op} is not found.")
+                    msg = (f"I am sorry the operator:{op} is not found.")
                     raise ProblemError(msg)
             else:
                 #raise error message:
@@ -1853,7 +1932,7 @@ class PolarsMOProblem(MOProblem):
                 raise ProblemError(msg)
             
     # MULTIOBJECTIVE PROBLEM 
-    def __init__(self,json_data):
+    def __init__(self,json_data,parser:str="polars"):
        
         #DEFINE KEYWORDS
         #Whenever the keyword in the json file has been altered,
@@ -1872,7 +1951,7 @@ class PolarsMOProblem(MOProblem):
         self.MAX:str                = "max"
 
         #CREATE MATH PARSER
-        self.parser = self.MathParser()
+        self.parser = self.MathParser(parser=parser)
 
         #GET DESDEO PROBLEM
         variables,objectives,constraints = \
@@ -1965,32 +2044,68 @@ class PolarsMOProblem(MOProblem):
         return desdeo_vars,desdeo_objs,desdeo_csts
     
 
+
     #Override the evaluate function . 
     def evaluate(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
-    ) -> EvaluationResults:    
+    ) -> EvaluationResults:
+        parser_name = self.parser.__get_parser_name__()
         d = {}
         var_name = self.variable_names #call super 
         for i in range(len(var_name)):
             d[var_name[i]] = decision_vectors[:,i]
-        polars_dataframe = pl.DataFrame(d)
-        objs = []
-        for obj in self.objectives:
-            objs.append(obj.evaluator.alias(obj.name))
-        result = polars_dataframe.select(objs)
-        objective_vectors = result.to_numpy()
-        # print(objective_vectors)
-   
-        cons = []
-        constraint_values = np.nan
-        if self.constraints:
-            for con in self.constraints:
-                cons.append(con.evaluator.alias(con.name))
-            result = polars_dataframe.select(cons)
-            constraint_values = result.to_numpy()
-        # print(constraint_values)
-        fitness = np.nan
-        return EvaluationResults(
-                objective_vectors, fitness, constraint_values
-        )
+        if parser_name == "polars":
+            df = pl.DataFrame(d)
+            objs = []
+            for obj in self.objectives:
+                objs.append(obj.evaluator.alias(obj.name))
+            result = df.select(objs)
+            objective_vectors = result.to_numpy()
 
+            cons = []
+            constraint_values = np.nan
+            if self.constraints:
+                for con in self.constraints:
+                    cons.append(con.evaluator.alias(con.name))
+                result = df.select(cons)
+                constraint_values = result.to_numpy()
+            fitness = np.nan
+            return EvaluationResults(
+                    objective_vectors, fitness, constraint_values
+            )
+        elif parser_name == "pandas":
+            df = pd.DataFrame(d)
+            objs = []
+            for obj in self.objectives:
+                n = df.eval(obj.evaluator).to_numpy()
+                objs.append(n)
+            cons = []
+            if self.constraints:
+                for con in self.constraints:
+                    n = df.eval(con.evaluator).to_numpy()
+                    cons.append(n)
+            fitness = np.nan
+            return EvaluationResults(
+                    objs, fitness, cons
+            )
+        else:
+            msg = ("incorrect parser")
+            raise ProblemError(msg)            
+
+import json
+# f = open('desdeo_problem/problem/real_example2.json')  
+f = open('desdeo_problem/problem/real_example21.json')  
+data = json.load(f)
+p = MathJsonMOProblem(data,parser="polars")
+# res3 = p.evaluate(np.array([[6, 3], [4,3], [7,4]]))
+# print(res3)
+
+# res3 = p.evaluate(np.array([[1, 3], [5, 20]]))
+# print(res3)
+# res3 = p.evaluate(np.array([[1, -1, 0], [5, 5, 2]]))
+# print(res3)
+
+res3 = p.evaluate(np.array([[1,2,6, 3], 
+                            [1,2,4,3], 
+                            [1,2,7,4]]))
+print(res3)
