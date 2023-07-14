@@ -2069,7 +2069,9 @@ class MathJsonMOProblem(MOProblem):
                     cons.append(con.evaluator.alias(con.name))
                 result = df.select(cons)
                 constraint_values = result.to_numpy()
-            fitness = np.nan
+            fitness = self.evaluate_fitness(objective_vectors)
+            # Update ideal values
+            self.update_ideal(objective_vectors, fitness)
             return EvaluationResults(
                     objective_vectors, fitness, constraint_values
             )
@@ -2084,7 +2086,9 @@ class MathJsonMOProblem(MOProblem):
                 for con in self.constraints:
                     n = df.eval(con.evaluator).to_numpy()
                     cons.append(n)
-            fitness = np.nan
+            fitness = self.evaluate_fitness(objective_vectors)
+            # Update ideal values
+            self.update_ideal(objective_vectors, fitness)
             return EvaluationResults(
                     objs, fitness, cons
             )
