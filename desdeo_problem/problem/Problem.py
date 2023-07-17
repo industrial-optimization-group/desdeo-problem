@@ -2052,6 +2052,12 @@ class MathJsonMOProblem(MOProblem):
         parser_name = self.parser.__get_parser_name__()
         d = {}
         var_name = self.variable_names #call super 
+
+        # Reshape decision_vectors with single row to work with the code
+        shape = np.shape(decision_vectors)
+        if len(shape) == 1:
+            decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
+
         for i in range(len(var_name)):
             d[var_name[i]] = decision_vectors[:,i]
         if parser_name == "polars":
