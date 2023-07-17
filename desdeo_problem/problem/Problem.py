@@ -1720,6 +1720,52 @@ class MathJsonMOProblem(MOProblem):
     #MATH JSON PARSER 
     class MathParser:
         def __init__(self, parser:str="polars"):
+            
+            #DEFINE OPERATORS
+            #Whenever the OPERATORS in the json file has been altered,
+            #change the name here instead of going into the environment model.
+
+            #TRIGONOMETRIC OPERATION
+            self.ARCCOS:str             = "Arccos"
+            self.ARCCOSH:str            = "Arccosh"
+            self.ARCSIN:str             = "Arcsin"
+            self.ARCSINH:str            = "Arcsinh"
+            self.ARCTAN:str             = "Arctan"
+            self.ARCTANH:str            = "Arctanh"
+            self.COS:str                = "Cos"
+            self.COSH:str               = "Cosh"
+            self.SIN:str                = "Sin"
+            self.SINH:str               = "Sinh"
+            self.TAN:str                = "Tan"
+            self.TANH:str               = "Tanh"
+            #ROUDING OPERATION
+            self.ABS:str                = "Abs"
+            self.CEIL:str               = "Ceil"
+            self.FLOOR:str              = "Floor"
+            #EXPONENTS AND LOGARITHMS
+            self.EXP:str                = "Exp"
+            self.LN:str                 = "Ln"
+            self.LB:str                 = "Lb"
+            self.LG:str                 = "Lg"
+            self.LOP:str                = "LogOnePlus"
+            #BASIC OPERATORS
+            self.SQRT:str               = "Sqrt"
+            self.SQUARE:str             = "Square"
+            self.NEGATE:str             = "Negate"
+            self.ADD:str                = "Add"            
+            self.SUB:str                = "Subtract"        
+            self.MUL:str                = "Multiply"        
+            self.DIV:str                = "Divide"          
+            self.RATIONAL:str           = "Rational"        
+            self.POW:str                = "Power"           
+            self.MAX:str                = "Max"                      
+            
+            self.EQUAL:str              = "Equal"
+            self.GREATER:str            = "Greater"
+            self.GE:str                 = "GreaterEqual"
+            self.LESS:str               = "Less"
+            self.LE:str                 = "LessEqual"
+            self.NE:str                 = "NotEqual"
             # Environment model:
             # It provides a way to represent and track the association between variables and their corresponding
             self.env:dict = {}
@@ -1727,104 +1773,115 @@ class MathJsonMOProblem(MOProblem):
             if parser == "polars":
                 polars_env = {
                 #TRIGONOMETRIC OPERATION
-                "Arccos":                 lambda x: pl.Expr.arccos(x),#  x ∊ [−1, 1] 
-                "Arccosh":                lambda x: pl.Expr.arccosh(x),
-                "Arcsin":                 lambda x: pl.Expr.arcsin(x),
-                "Arcsinh":                lambda x: pl.Expr.arcsinh(x),
-                "Arctan":                 lambda x: pl.Expr.arctan(x),#
-                "Arctanh":                lambda x: pl.Expr.arctanh(x),# # x ∊ [−1, 1] 
-                "Cos":                    lambda x: pl.Expr.cos(x),
-                "Cosh":                   lambda x: pl.Expr.cosh(x),
-                "Sin":                    lambda x: pl.Expr.sin(x),
-                "Sinh":                   lambda x: pl.Expr.sinh(x),
-                "Tan":                    lambda x: pl.Expr.tan(x),
-                "Tanh":                   lambda x: pl.Expr.tanh(x),
+                self.ARCCOS:                 lambda x: pl.Expr.arccos(x),#  x ∊ [−1, 1] 
+                self.ARCCOSH:                lambda x: pl.Expr.arccosh(x),
+                self.ARCSIN:                 lambda x: pl.Expr.arcsin(x),
+                self.ARCSINH:                lambda x: pl.Expr.arcsinh(x),
+                self.ARCTAN:                 lambda x: pl.Expr.arctan(x),#
+                self.ARCTANH:                lambda x: pl.Expr.arctanh(x),# # x ∊ [−1, 1] 
+                self.COS:                    lambda x: pl.Expr.cos(x),
+                self.COSH:                   lambda x: pl.Expr.cosh(x),
+                self.SIN:                    lambda x: pl.Expr.sin(x),
+                self.SINH:                   lambda x: pl.Expr.sinh(x),
+                self.TAN:                    lambda x: pl.Expr.tan(x),
+                self.TANH:                   lambda x: pl.Expr.tanh(x),
                 #ROUDING OPERATION
-                "Abs":                    lambda x: pl.Expr.abs(x),       
-                "Ceil":                   lambda x: pl.Expr.ceil(x),# 
-                "Floor":                  lambda x: pl.Expr.floor(x),#
+                self.ABS:                    lambda x: pl.Expr.abs(x),       
+                self.CEIL:                   lambda x: pl.Expr.ceil(x),# 
+                self.FLOOR:                  lambda x: pl.Expr.floor(x),#
                 #EXPONENTS AND LOGARITHMS
-                "Exp":                    lambda x: pl.Expr.exp(x),
-                "Ln":                     lambda x: pl.Expr.log(x),#30
-                #"Log":                    lambda x,base: pl.Expr.log(x,base=base),#base must be a number
-                "Lb":                     lambda x: pl.Expr.log(x,2),
-                "Lg":                     lambda x: pl.Expr.log10(x),
-                "LogOnePlus":             lambda x: pl.Expr.log1p(x),
-
-                "Sqrt":                   lambda x: pl.Expr.sqrt(x),
-                "Square":                 lambda x: x**2,
-                "Negate":                 lambda x: -x,   
-                "Add":                    lambda lst:reduce(lambda x, y: x + y,lst),
-                "Subtract":               lambda lst:reduce(lambda x, y: x - y,lst),
-                "Multiply":               lambda lst:reduce(lambda x, y: x * y,lst),
-                "Divide":                 lambda lst:reduce(lambda x, y: x / y,lst),
-                "Rational":               lambda lst:reduce(lambda x, y: x / y,lst),
-                "Power":                  lambda lst:reduce(lambda x, y: x**y, lst),
-                "Max":                    lambda lst:reduce(lambda x, y: pl.max(x,y), lst),
+                self.EXP:                    lambda x: pl.Expr.exp(x),
+                self.LN:                     lambda x: pl.Expr.log(x),#30
+                self.LB:                     lambda x: pl.Expr.log(x,2),
+                self.LG:                     lambda x: pl.Expr.log10(x),
+                self.LOP:                    lambda x: pl.Expr.log1p(x),
+                #BASIC OPERATORS
+                self.SQRT:                   lambda x: pl.Expr.sqrt(x),
+                self.SQUARE:                 lambda x: x**2,
+                self.NEGATE:                 lambda x: -x,   
+                self.ADD:                    lambda lst:reduce(lambda x, y: x + y,lst),
+                self.SUB:                    lambda lst:reduce(lambda x, y: x - y,lst),
+                self.MUL:                    lambda lst:reduce(lambda x, y: x * y,lst),
+                self.DIV:                    lambda lst:reduce(lambda x, y: x / y,lst),
+                self.RATIONAL:               lambda lst:reduce(lambda x, y: x / y,lst),
+                self.POW:                    lambda lst:reduce(lambda x, y: x**y, lst),
+                self.MAX:                    lambda lst:reduce(lambda x, y: pl.max(x,y), lst),
+                #BOOL OPERATION
+                self.EQUAL:                  lambda lst:reduce(lambda x, y: x == y,lst),
+                self.GREATER:                lambda lst:reduce(lambda x, y: x > y,lst),
+                self.GE:                     lambda lst:reduce(lambda x, y: x >= y,lst),
+                self.LESS:                   lambda lst:reduce(lambda x, y: x < y,lst),
+                self.LE:                     lambda lst:reduce(lambda x, y: x <= y,lst),
+                self.NE:                     lambda lst:reduce(lambda x, y: x != y,lst),
                 }
                 self.append(polars_env)
             elif parser == "pandas":
                 pandas_env = {
                 #TRIGONOMETRIC OPERATION
-                "Sin":                   lambda a: 'sin(%s)' % (a),
-                "Cos":                   lambda a: 'cos(%s)' % (a),
-        #       "Tan":                   lambda a: 'tan(%s)' % (a),
-                "Arcsin":                lambda a: 'arcsin(%s)' % (a),#∀ x ∊ [ − 1 , 1 ] 
-                "Arccos":                lambda a: 'arccos(%s)' % (a),
-                "Arctan":                lambda a: 'arctan(%s)' % (a), #∀ x ∊ ( − 1 , 1 ) 
-                "Sinh":                  lambda a: 'sinh(%s)' % (a),
-                "Cosh":                  lambda a: 'cosh(%s)' % (a),
-                "Tanh":                  lambda a: 'tanh(%s)' % (a),
-                "Arcsinh":               lambda a: 'arcsinh(%s)' % (a),
-                "Arccosh":               lambda a: 'arccosh(%s)' % (a),#∀x >= 1 ,
-                "Arctanh":               lambda a: 'arctanh(%s)' % (a), 
-                "Arctan2":               lambda a,b: 'arctan2(%s,%s)' % (a,b),
+                self.ARCCOS:            lambda a: 'arccos(%s)' % (a),
+                self.ARCCOSH:           lambda a: 'arccosh(%s)' % (a),#∀x >= 1 ,
+                self.ARCSIN:            lambda a: 'arcsin(%s)' % (a),#∀ x ∊ [ − 1 , 1 ] 
+                self.ARCSINH:           lambda a: 'arcsinh(%s)' % (a),
+                self.ARCTAN:            lambda a: 'arctan(%s)' % (a), #∀ x ∊ ( − 1 , 1 ) 
+                self.ARCTANH:           lambda a: 'arctanh(%s)' % (a), 
+                self.COS:               lambda a: 'cos(%s)' % (a),
+                self.COSH:              lambda a: 'cosh(%s)' % (a),
+                self.SIN:               lambda a: 'sin(%s)' % (a),
+                self.SINH:              lambda a: 'sinh(%s)' % (a),
+                self.TAN:               lambda a: 'tan(%s)' % (a),
+                self.TANH:              lambda a: 'tanh(%s)' % (a),
+                #ROUDING OPERATION
+                self.ABS:               lambda a: 'abs(%s)'%(a),
+                # self.CEIL:              lambda a: 'ceil(%s)'%(a),   #Pandas.eval() not support ceil
+                # self.FLOOR:             lambda a: 'floor(%s)'%(a),  #Pandas.eval() not support floor
                 #EXPONENTS AND LOGARITHMS
-                "Exp":                   lambda a: 'exp(%s)' % (a),
-                "Ln":                    lambda a: 'log(%s)' % (a),
-                #"Log":                  lambda a,b: 'log(%s,%s)' % (a,b),
-                #"Lb":                   lambda a: 'log(%s,2)'% a,
-                "Lg":                    lambda a: 'log10(%s)' % (a),
-                "LogOnePlus":            lambda a: 'log1p(%s)' % (a),   
-                #BOOL OPERATION
-                "Equal":                 lambda a,b: '(%s == %s)' % (a, b),  
-                "Greater":               lambda a,b: '(%s >  %s)' % (a, b),
-                "GreaterEqual":          lambda a,b: '(%s >= %s)' % (a, b),
-                "Less":                  lambda a,b: '(%s <  %s)' % (a, b),
-                "LessEqual":             lambda a,b: '(%s <= %s)' % (a, b),
-                "NotEqual":              lambda a,b: '(%s != %s)' % (a, b),
+                self.EXP:               lambda a: 'exp(%s)' % (a),
+                self.LN:                lambda a: 'log(%s)' % (a),
+                self.LB:                lambda a: 'log(%s,2)'% a,
+                self.LG:                lambda a: 'log10(%s)' % (a),
+                self.LOP:               lambda a: 'log1p(%s)' % (a),   
                 #BASIC OPERATION
-                "Add":                   lambda lst:reduce(lambda x, y: 
+                self.SQRT:               lambda a  : '(%s ** (1/2))' % a if isinstance(a,str) else a**(1/2),
+                self.SQUARE:             lambda a  : '(%s ** (2))'  % a if isinstance(a,str)  else a**(2),  
+                self.NEGATE:             lambda a: '(-%s)' % a,
+                self.ADD:                lambda lst:reduce(lambda x, y: 
                                                             '(%s +  %s)'%(x,y) 
                                                             if isinstance(x,str) or isinstance(y,str) 
                                                             else x+y, 
                                                             lst),
-                "Subtract":             lambda lst:reduce(lambda x, y: 
+                self.SUB:                lambda lst:reduce(lambda x, y: 
                                                             '(%s -  %s)'%(x,y) 
                                                             if isinstance(x,str) or isinstance(y,str) 
                                                             else x-y, 
-                                                            lst),
-                "Negate":                lambda a: '(-%s)' % a,
-                "Multiply":              lambda lst:reduce(lambda x, y: 
+                                                            lst),     
+                self.MUL:                lambda lst:reduce(lambda x, y: 
                                                             '(%s *  %s)'%(x,y) 
                                                             if isinstance(x,str) or isinstance(y,str) 
                                                             else x*y, 
-                                                            lst),
-                "Divide":                lambda lst:reduce(lambda x, y: 
+                                                            lst),     
+                self.DIV:                lambda lst:reduce(lambda x, y: 
+                                                            '(%s /  %s)'%(x,y) 
+                                                            if isinstance(x,str) or isinstance(y,str) 
+                                                            else x/y, 
+                                                            lst),     
+                self.RATIONAL:           lambda lst:reduce(lambda x, y: 
                                                             '(%s /  %s)'%(x,y) 
                                                             if isinstance(x,str) or isinstance(y,str) 
                                                             else x/y, 
                                                             lst),
-                "Power":                 lambda lst:reduce(lambda x, y: 
+                self.POW:                lambda lst:reduce(lambda x, y: 
                                                             '(%s**  %s)'%(x,y) 
                                                             if isinstance(x,str) or isinstance(y,str) 
                                                             else x**y, 
-                                                            lst),
-                "Root":                  lambda a,b: '(%s ** (1/%s))' % (a, b),
-                "Sqrt":                  lambda a  : '(%s ** (1/2))' % a if isinstance(a,str) else a**(1/2),
-                "Square":                lambda a  : '(%s ** (2))'  % a if isinstance(a,str)  else a**(2),
-                # Max function is not supported in pandas.eval()
-                # "Max":                   lambda lst:reduce(lambda a,b:'@rowmax(%s,%s)'%(a,b), lst),
+                                                            lst),     
+                #self.MAX:                lambda lst:reduce(lambda a,b:'where(%s,%s)'%(a,b), lst),    # Max function is not supported in pandas.eval()
+                #BOOL OPERATION
+                self.EQUAL:             lambda a,b: '(%s == %s)' % (a, b),  
+                self.GREATER:           lambda a,b: '(%s >  %s)' % (a, b),
+                self.GE:                lambda a,b: '(%s >= %s)' % (a, b),
+                self.LESS:              lambda a,b: '(%s <  %s)' % (a, b),
+                self.LE:                lambda a,b: '(%s <= %s)' % (a, b),
+                self.NE:                lambda a,b: '(%s != %s)' % (a, b),
                 }
                 self.append(pandas_env)
             else:
