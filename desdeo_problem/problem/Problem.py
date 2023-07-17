@@ -1799,7 +1799,7 @@ class MathJsonMOProblem(MOProblem):
                                                             if isinstance(x,str) or isinstance(y,str) 
                                                             else x+y, 
                                                             lst),
-                "Substract":             lambda lst:reduce(lambda x, y: 
+                "Subtract":             lambda lst:reduce(lambda x, y: 
                                                             '(%s -  %s)'%(x,y) 
                                                             if isinstance(x,str) or isinstance(y,str) 
                                                             else x-y, 
@@ -2083,10 +2083,11 @@ class MathJsonMOProblem(MOProblem):
             )
         elif parser_name == "pandas":
             df = pd.DataFrame(d)
-            objs = []
+            dic = {}
             for obj in self.objectives:
-                n = df.eval(obj.evaluator).to_numpy()
-                objs.append(n)
+                dic[obj.name] = df.eval(obj.evaluator).to_list()
+            new_df = pd.DataFrame(dic)
+            objective_vectors = new_df.to_numpy()
             cons = []
             if self.constraints:
                 for con in self.constraints:
@@ -2096,7 +2097,7 @@ class MathJsonMOProblem(MOProblem):
             # Update ideal values
             self.update_ideal(objective_vectors, fitness)
             return EvaluationResults(
-                    objs, fitness, cons
+                    objective_vectors, fitness, cons
             )
         else:
             msg = ("incorrect parser")
