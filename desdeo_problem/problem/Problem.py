@@ -2082,7 +2082,6 @@ class MathJsonMOProblem(MOProblem):
 
             is_maximize = obj[self.MAX]
             polars_func = self.parser.parse(obj[self.FUNC])
-            print(polars_func)
             if lower_bound is None: lower_bound = -np.inf
             if upper_bound is None: upper_bound = np.inf
             desdeo_obj = ScalarObjective(name,polars_func,lower_bound,upper_bound,
