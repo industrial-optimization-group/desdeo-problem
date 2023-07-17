@@ -569,3 +569,23 @@ def test_real_example22():
                                 [472.8,50.8616    ],
                                 [653.1,219.62020556]])
     npt.assert_allclose(objective_vectors, expected_result)
+
+def test_real_example23():
+    p = MathJsonMOProblem(real_example23)
+    # Variable values
+    xs = np.array([[50, 50, 10, 10], [11, 63, 78, 187]])
+    objective_vectors = p.evaluate(xs).objectives
+    assert objective_vectors.shape[0] == 2
+    expected_result = np.array([[5.87155000e+05,9.97116000e+01],
+ [1.04028236e+06,3.47096113e+06]])
+    npt.assert_allclose(objective_vectors, expected_result)
+
+def test_real_example24():
+    p = MathJsonMOProblem(real_example24)
+    # Variable values
+    xs = np.array([[2, 20], [3.3, 41.7]])
+    objective_vectors = p.evaluate(xs).objectives
+    assert objective_vectors.shape[0] == 2
+    expected_result = np.array([[2.40200000e+03,3.82209881e+00],
+                                [5.00730000e+03,3.94676667e+00]])
+    npt.assert_allclose(objective_vectors, expected_result)
