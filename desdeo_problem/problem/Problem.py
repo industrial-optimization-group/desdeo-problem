@@ -1716,9 +1716,21 @@ class DiscreteDataProblem:
 
 
 class MathJsonMOProblem(MOProblem):
+    """A problem class for multi-objective optimization problem in JSON file.
 
-    #MATH JSON PARSER 
+    Arguments:
+        json_data (dict): A file that describe multi-objective optimization problem
+        parser (str): Names of the parser:choose (polars,pandas)
+    """
+    # MATH JSON PARSER 
     class MathParser:
+        """A inner class for only parsing functions in JSON file which defined as CortexJS:
+            https://cortexjs.io/compute-engine/
+        
+            Arguments:
+            parser (str): Names of the parser:choose (polars,pandas)
+        """ 
+
         def __init__(self, parser:str="polars"):
             
             #DEFINE OPERATORS
@@ -1892,7 +1904,14 @@ class MathJsonMOProblem(MOProblem):
         def append(self,d:dict):
             self.env.update(d)
 
+        
         def replace_str(self,lst,target:str,sub)->list:
+            """Replace a target in list with a substitution
+
+            Example
+            replace_str("["Max", "g_i", ["Add","g_i","f_i"]]]", "_i", "_1") --->
+            ["Max", "g_1", ["Add","g_1","f_1"]]]
+            """
             if isinstance(lst, list):
                 return [self.replace_str(item,target,sub) for item in lst]
             elif isinstance(lst,str):
@@ -1908,6 +1927,12 @@ class MathJsonMOProblem(MOProblem):
                 return lst
         
         def parse_sum(self,expr):
+            """Convert Sum Operation into Add Operation
+
+            Example:
+            parse_sum(" ["Sum", ["Max", "g_i", 0], ["Triple", ["Hold", "i"], 1, 3]]" ) --->
+            ["Add", ["Max", "g_1", 0],["Max", "g_2", 0],["Max", "g_3", 0] ]
+            """
             if not expr or len(expr) != 3:
                 msg = ("The Sum Expression List is either empty or wrong format")
                 raise ProblemError(msg)
@@ -1988,7 +2013,7 @@ class MathJsonMOProblem(MOProblem):
                 msg = (f"The type of {text_type} is not found.")
                 raise ProblemError(msg)
             
-    # MULTIOBJECTIVE PROBLEM 
+    # START MULTIOBJECTIVE PROBLEM 
     def __init__(self,json_data,parser:str="polars"):
        
         #DEFINE KEYWORDS
@@ -2014,16 +2039,18 @@ class MathJsonMOProblem(MOProblem):
         variables,objectives,constraints = \
         self.json_to_problem(json_data)
         super().__init__(objectives, variables, constraints) 
-    
+
+    # PARSE JSON FILE
     def json_to_problem(self, json_data: dict):
         """
         it will parse json data that decribe in multi-objective optimization format.
         , and return desdeo Variables, Objectives, and Constraints.
+
         Arguments:
             json_data(dict), it is a json file that contains muti-objective optimization
             information. 
         Raises:
-            ProblemError: TODO.
+            ProblemError:
         """
 
         #GET DATA FROM JSON
@@ -2047,6 +2074,7 @@ class MathJsonMOProblem(MOProblem):
                 name = d[self.NAME]
                 value = d[self.VALUE]
                 constants[name] = value
+            #UPDATE PARSER ENVIRONMENT
             self.parser.append(constants)
         
         #DESDEO VARIABLES
@@ -2063,14 +2091,14 @@ class MathJsonMOProblem(MOProblem):
                             upper_bound)
             desdeo_vars.append(desdeo_var)
 
-        #if objectives function will use constraints 
-        # or other functions in advance, then get those functions
+        #FUNCTIONS THAT NEED BEFORE OBJECTIVES AND CONSTAINTS 
         extra_funcs = {}            
         if extra_func:
             for f in extra_func:
                 name = f[self.NAME]
                 expr = f[self.FUNC]
                 extra_funcs[name] = expr
+            #UPDATE PARSER ENVIRONMENT
             self.parser.append(extra_funcs)
 
         #DESDEO OBJECTIVES
@@ -2099,24 +2127,26 @@ class MathJsonMOProblem(MOProblem):
                 desdeo_csts.append(desdeo_cst)   
         return desdeo_vars,desdeo_objs,desdeo_csts
     
-
-
-    #Override the evaluate function . 
+    # OVERRIDE THE EVALUATE FUNCTION 
     def evaluate(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
     ) -> EvaluationResults:
+        
         parser_name = self.parser.__get_parser_name__()
+        #BIND VARIABLE NAME WITH DATA
         d = {}
-        var_name = self.variable_names #call super 
+        var_name = self.variable_names #FROM PARENT CLASS
+        for i in range(len(var_name)):
+            d[var_name[i]] = decision_vectors[:,i]
+        
 
         # Reshape decision_vectors with single row to work with the code
         shape = np.shape(decision_vectors)
         if len(shape) == 1:
             decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
 
-        for i in range(len(var_name)):
-            d[var_name[i]] = decision_vectors[:,i]
         if parser_name == "polars":
+            #CREATE POLARS DATAFRAME
             df = pl.DataFrame(d)
             objs = []
             for obj in self.objectives:
@@ -2138,6 +2168,7 @@ class MathJsonMOProblem(MOProblem):
                     objective_vectors, fitness, constraint_values
             )
         elif parser_name == "pandas":
+            #CREATE PANDAS DATAFRAME
             df = pd.DataFrame(d)
             dic = {}
             for obj in self.objectives:
