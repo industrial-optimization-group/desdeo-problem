@@ -1769,7 +1769,7 @@ class MathJsonMOProblem(MOProblem):
             # Environment model:
             # It provides a way to represent and track the association between variables and their corresponding
             self.env:dict = {}
-            self.parser = parser
+            self.parser:str = parser
             if parser == "polars":
                 polars_env = {
                 #TRIGONOMETRIC OPERATION
@@ -2159,4 +2159,3 @@ class MathJsonMOProblem(MOProblem):
         else:
             msg = ("incorrect parser")
             raise ProblemError(msg)            
-
