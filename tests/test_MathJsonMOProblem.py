@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from desdeo_problem.problem import MathJsonMOProblem
+from desdeo_problem.problem import MOProblem
 from desdeo_problem.problem.Problem import ProblemError
 import numpy.testing as npt
 #DEFINE TESTCASES
@@ -39,6 +39,7 @@ real_example21 = {
             "shortname":"x1",
             "lowerbound":"a",
             "upperbound":["Multiply",3,"a"],
+            "type":"RealNumber",
             "initialvalue":None
         },
         {
@@ -46,18 +47,21 @@ real_example21 = {
             "shortname":"x2",
             "lowerbound":["Multiply",["Sqrt",2],"a"],
             "upperbound":["Multiply",3,"a"],
+            "type":"RealNumber",
             "initialvalue":None
         },
         {
             "shortname":"x3",
             "lowerbound":["Multiply",["Sqrt",2],"a"],
             "upperbound":["Multiply",3,"a"],
+            "type":"RealNumber",
             "initialvalue":None
         },
         {
             "shortname":"x4",
             "lowerbound":"a",
             "upperbound":["Multiply",3,"a"],
+            "type":"RealNumber",
             "initialvalue":None
         }
     ],
@@ -121,6 +125,7 @@ real_example22 = {
             "shortname":"x_1",
             "lowerbound":0.2,
             "upperbound":15,
+            "type":"RealNumber",
             "initialvalue":None
         },
         {
@@ -128,12 +133,14 @@ real_example22 = {
             "shortname":"x_2",
             "lowerbound":0,
             "upperbound":20,
+            "type":"RealNumber",
             "initialvalue":None
         },
         {
             "shortname":"x_3",
             "lowerbound":0,
             "upperbound":40,
+            "type":"RealNumber",
             "initialvalue":None
         }
     ],
@@ -227,6 +234,7 @@ real_example23 = {
           "shortname":"x_1",
           "lowerbound":1,
           "upperbound":100,
+          "type":"RealNumber",
           "initialvalue":None
       },
       {
@@ -234,18 +242,21 @@ real_example23 = {
           "shortname":"x_2",
           "lowerbound":1,
           "upperbound":100,
+          "type":"RealNumber",
           "initialvalue":None
       },
       {
           "shortname":"x_3",
           "lowerbound":10,
           "upperbound":200,
+          "type":"RealNumber",
           "initialvalue":None
       },
       {
           "shortname":"x_4",
           "lowerbound":10,
           "upperbound":240,
+          "type":"RealNumber",
           "initialvalue":None
       }
   ],
@@ -360,6 +371,7 @@ real_example24 = {
             "shortname":"x_1",
             "lowerbound":0.5,
             "upperbound":4,
+            "type":"RealNumber",
             "initialvalue":None
         },
         {
@@ -367,6 +379,7 @@ real_example24 = {
             "shortname":"x_2",
             "lowerbound":4,
             "upperbound":40,
+            "type":"RealNumber",
             "initialvalue":None
         }
     ],
@@ -507,6 +520,7 @@ analytical_problem = {
             "shortname":"x1",
             "lowerbound":-0.5,
             "upperbound":0.5,
+            "type":"RealNumber",
             "initialvalue":0
         },
         {
@@ -514,6 +528,7 @@ analytical_problem = {
             "shortname":"x2",
             "lowerbound":-0.5,
             "upperbound":0.5,
+            "type":"RealNumber",
             "initialvalue":0
         }
     ],
@@ -551,7 +566,7 @@ analytical_problem = {
 #START TESTING
 #python -m pytest tests/test_MathJsonMOProblem.py
 def test_real_example21():
-    p = MathJsonMOProblem(real_example21)
+    p = MOProblem(json=real_example21)
     # Variable values
     xs = np.array([2, 2, 2, 2])
     objective_vectors = p.evaluate(xs).objectives
@@ -560,7 +575,7 @@ def test_real_example21():
     npt.assert_allclose(objective_vectors, expected_result)
 
 def test_real_example22():
-    p = MathJsonMOProblem(real_example22)
+    p = MOProblem(json=real_example22)
     # Variable values
     xs = np.array([[10., 10., 20.], [12., 10., 20.], [11.5, 15, 35]])
     objective_vectors = p.evaluate(xs).objectives
@@ -571,7 +586,7 @@ def test_real_example22():
     npt.assert_allclose(objective_vectors, expected_result)
 
 def test_real_example23():
-    p = MathJsonMOProblem(real_example23)
+    p = MOProblem(json=real_example23)
     # Variable values
     xs = np.array([[50, 50, 10, 10], [11, 63, 78, 187]])
     objective_vectors = p.evaluate(xs).objectives
@@ -581,7 +596,7 @@ def test_real_example23():
     npt.assert_allclose(objective_vectors, expected_result)
 
 def test_real_example24():
-    p = MathJsonMOProblem(real_example24)
+    p = MOProblem(json=real_example24)
     # Variable values
     xs = np.array([[2, 20], [3.3, 41.7]])
     objective_vectors = p.evaluate(xs).objectives
