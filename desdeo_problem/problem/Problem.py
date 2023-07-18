@@ -848,70 +848,77 @@ class MOProblem(ProblemBase):
     # TODO: use_surrogate : Union[bool, List[bool]]
     def __init__(
         self,
-        objectives: List[Union[ScalarObjective, VectorObjective]],
-        variables: List[Variable],
+        objectives: List[Union[ScalarObjective, VectorObjective]] = None,
+        variables: List[Variable] = None,
         constraints: List[ScalarConstraint] = None,
         nadir: Optional[np.ndarray] = None,
         ideal: Optional[np.ndarray] = None,
+        json: dict = {},
     ):
-        super().__init__()
-        self.__objectives: List[Union[ScalarObjective, VectorObjective]] = objectives
-        self.__variables: List[Variable] = variables
-        self.__constraints: List[ScalarConstraint] = constraints
-        self.__n_of_variables: int = len(self.variables)
-        self.__n_of_objectives: int = sum(
-            map(self.number_of_objectives, self.__objectives)
-        )
-        if self.constraints is not None:
-            self.__n_of_constraints: int = len(self.constraints)
+        if json:#if json is empty
+            self.__mathjson =  MathJsonMOProblem(json)
+            self.__isJsonOn = True
+        elif objectives and variables is not None:
+            super().__init__()
+            self.__objectives: List[Union[ScalarObjective, VectorObjective]] = objectives
+            self.__variables: List[Variable] = variables
+            self.__constraints: List[ScalarConstraint] = constraints
+            self.__n_of_variables: int = len(self.variables)
+            self.__n_of_objectives: int = sum(
+                map(self.number_of_objectives, self.__objectives)
+            )
+            if self.constraints is not None:
+                self.__n_of_constraints: int = len(self.constraints)
+            else:
+                self.__n_of_constraints = 0
+
+            # Multiplier to convert maximization to minimization
+            max_multiplier = np.asarray([1, -1])
+            to_maximize = [objective.maximize for objective in objectives]
+            # Does not work
+            # to_maximize = sum(to_maximize, [])  # To flatten the list
+            to_maximize = (
+                np.hstack(to_maximize) * 1
+            )  # To flatten list and convert to zeros and ones
+            # to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
+            self._max_multiplier = max_multiplier[to_maximize]
+
+            self.nadir_fitness = np.full(self.__n_of_objectives, np.inf, dtype=float)
+            self.nadir = self.nadir_fitness * self._max_multiplier
+            self.ideal_fitness = np.full(self.__n_of_objectives, np.inf, dtype=float)
+            self.ideal = self.ideal_fitness * self._max_multiplier
+
+            # Nadir vector must be the same size as the number of objectives
+            if nadir is not None:
+                if len(nadir) != self.n_of_objectives:
+                    msg = (
+                        "The length of the nadir vector does not match the"
+                        "number of objectives: Length nadir {}, number of "
+                        "objectives {}."
+                    ).format(len(nadir), self.n_of_objectives)
+                    raise ProblemError(msg)
+                self.nadir = nadir
+
+            # Ideal vector must be the same size as the number of objectives
+            if ideal is not None:
+                if len(ideal) != self.n_of_objectives:
+                    msg = (
+                        "The length of the ideal vector does not match the"
+                        "number of objectives: Length ideal {}, number of "
+                        "objectives {}."
+                    ).format(len(ideal), self.n_of_objectives)
+                    raise ProblemError(msg)
+                self.ideal = ideal
+
+            self.nadir_fitness = self.nadir * self._max_multiplier
+            self.ideal_fitness = self.ideal * self._max_multiplier
+
+            # Objective and variable names
+            self.objective_names = self.get_objective_names()
+            self.variable_names = self.get_variable_names()
+            self.fitness_names = self.objective_names
         else:
-            self.__n_of_constraints = 0
-
-        # Multiplier to convert maximization to minimization
-        max_multiplier = np.asarray([1, -1])
-        to_maximize = [objective.maximize for objective in objectives]
-        # Does not work
-        # to_maximize = sum(to_maximize, [])  # To flatten the list
-        to_maximize = (
-            np.hstack(to_maximize) * 1
-        )  # To flatten list and convert to zeros and ones
-        # to_maximize = np.asarray(to_maximize) * 1  # Convert to zeros and ones
-        self._max_multiplier = max_multiplier[to_maximize]
-
-        self.nadir_fitness = np.full(self.__n_of_objectives, np.inf, dtype=float)
-        self.nadir = self.nadir_fitness * self._max_multiplier
-        self.ideal_fitness = np.full(self.__n_of_objectives, np.inf, dtype=float)
-        self.ideal = self.ideal_fitness * self._max_multiplier
-
-        # Nadir vector must be the same size as the number of objectives
-        if nadir is not None:
-            if len(nadir) != self.n_of_objectives:
-                msg = (
-                    "The length of the nadir vector does not match the"
-                    "number of objectives: Length nadir {}, number of "
-                    "objectives {}."
-                ).format(len(nadir), self.n_of_objectives)
-                raise ProblemError(msg)
-            self.nadir = nadir
-
-        # Ideal vector must be the same size as the number of objectives
-        if ideal is not None:
-            if len(ideal) != self.n_of_objectives:
-                msg = (
-                    "The length of the ideal vector does not match the"
-                    "number of objectives: Length ideal {}, number of "
-                    "objectives {}."
-                ).format(len(ideal), self.n_of_objectives)
-                raise ProblemError(msg)
-            self.ideal = ideal
-
-        self.nadir_fitness = self.nadir * self._max_multiplier
-        self.ideal_fitness = self.ideal * self._max_multiplier
-
-        # Objective and variable names
-        self.objective_names = self.get_objective_names()
-        self.variable_names = self.get_variable_names()
-        self.fitness_names = self.objective_names
+            raise ProblemError("MOProblem initial error")
 
     @property
     def n_of_constraints(self) -> int:
@@ -1148,44 +1155,47 @@ class MOProblem(ProblemBase):
             ValueError: If decision_vectors violate the lower or upper bounds.
 
         """
-        # Reshape decision_vectors with single row to work with the code
-        shape = np.shape(decision_vectors)
-        if len(shape) == 1:
-            decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
+        if self.__isJsonOn:
+            return self.__mathjson.evaluate(decision_vectors)
+        else:
+            # Reshape decision_vectors with single row to work with the code
+            shape = np.shape(decision_vectors)
+            if len(shape) == 1:
+                decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
 
-        # Checking bounds; warn if bounds are breached.
-        if np.any(self.get_variable_lower_bounds() > decision_vectors):
-            warn("Some decision variable values violate lower bounds")
-        if np.any(self.get_variable_upper_bounds() < decision_vectors):
-            warn("Some decision variable values violate upper bounds")
+            # Checking bounds; warn if bounds are breached.
+            if np.any(self.get_variable_lower_bounds() > decision_vectors):
+                warn("Some decision variable values violate lower bounds")
+            if np.any(self.get_variable_upper_bounds() < decision_vectors):
+                warn("Some decision variable values violate upper bounds")
 
-        (n_rows, n_cols) = np.shape(decision_vectors)
+            (n_rows, n_cols) = np.shape(decision_vectors)
 
-        if n_cols != self.n_of_variables:
-            msg = (
-                "The length of the input vectors does not match the number "
-                "of variables in the problem: Input vector length {}, "
-                "number of variables {}."
-            ).format(n_cols, self.n_of_variables)
-            raise ProblemError(msg)
+            if n_cols != self.n_of_variables:
+                msg = (
+                    "The length of the input vectors does not match the number "
+                    "of variables in the problem: Input vector length {}, "
+                    "number of variables {}."
+                ).format(n_cols, self.n_of_variables)
+                raise ProblemError(msg)
 
-        objective_vectors, uncertainity = self.evaluate_objectives(
-            decision_vectors, use_surrogate=use_surrogate
-        )
+            objective_vectors, uncertainity = self.evaluate_objectives(
+                decision_vectors, use_surrogate=use_surrogate
+            )
 
-        constraint_values = self.evaluate_constraint_values(
-            decision_vectors, objective_vectors
-        )
+            constraint_values = self.evaluate_constraint_values(
+                decision_vectors, objective_vectors
+            )
 
-        # Calculate fitness, which is always to be minimized
-        fitness = self.evaluate_fitness(objective_vectors)
+            # Calculate fitness, which is always to be minimized
+            fitness = self.evaluate_fitness(objective_vectors)
 
-        # Update ideal values
-        self.update_ideal(objective_vectors, fitness)
+            # Update ideal values
+            self.update_ideal(objective_vectors, fitness)
 
-        return EvaluationResults(
-            objective_vectors, fitness, constraint_values, uncertainity
-        )
+            return EvaluationResults(
+                objective_vectors, fitness, constraint_values, uncertainity
+            )
 
     def evaluate_objectives(
         self, decision_vectors: np.ndarray, use_surrogate: bool = False
@@ -2133,18 +2143,18 @@ class MathJsonMOProblem(MOProblem):
     ) -> EvaluationResults:
         
         parser_name = self.parser.__get_parser_name__()
-        #BIND VARIABLE NAME WITH DATA
-        d = {}
-        var_name = self.variable_names #FROM PARENT CLASS
-        for i in range(len(var_name)):
-            d[var_name[i]] = decision_vectors[:,i]
-        
 
         # Reshape decision_vectors with single row to work with the code
         shape = np.shape(decision_vectors)
         if len(shape) == 1:
             decision_vectors = np.reshape(decision_vectors, (1, shape[0]))
 
+        #BIND VARIABLE NAME WITH DATA
+        d = {}
+        var_name = self.variable_names #FROM PARENT CLASS
+        for i in range(len(var_name)):
+            d[var_name[i]] = decision_vectors[:,i]
+        
         if parser_name == "polars":
             #CREATE POLARS DATAFRAME
             df = pl.DataFrame(d)
