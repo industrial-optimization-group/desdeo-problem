@@ -58,6 +58,7 @@ class Variable:
         initial_value: float,
         lower_bound: float = -np.inf,
         upper_bound: float = np.inf,
+        type: str = "RealNumber"
     ) -> None:
 
         self.__name: str = name
@@ -65,6 +66,7 @@ class Variable:
         self.__lower_bound: float
         self.__upper_bound: float
         self.__current_value: float  # NOTE: This is probably a useless attr
+        self.__type:str = type #RealNumber or Integer
         # Check that the bounds make sense
         if not (lower_bound < upper_bound):
             msg = ("Lower bound {} should be less than the upper bound " "{}.").format(lower_bound, upper_bound)
