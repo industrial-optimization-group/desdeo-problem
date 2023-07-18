@@ -855,8 +855,12 @@ class MOProblem(ProblemBase):
         ideal: Optional[np.ndarray] = None,
         json: dict = {},
     ):
+        self.__isJsonOn = False
         if json:#if json is empty
             self.__mathjson =  MathJsonMOProblem(json)
+            self.__init__(self.__mathjson.objectives,
+                          self.__mathjson.variables,
+                          self.__mathjson.constraints)
             self.__isJsonOn = True
         elif objectives and variables is not None:
             super().__init__()
