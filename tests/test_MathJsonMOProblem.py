@@ -628,6 +628,158 @@ mop_example = {
     "__ProblemDescription":"problem on https://desdeo-problem.readthedocs.io/en/latest/notebooks/Defining_a_problem.html#Multiobjective-Optimization-Problem"
 }
 
+mop5 = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x",
+            "lowerbound":-30,
+            "upperbound":30,
+            "type":"RealNumber",
+            "initialvalue":0
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"y",
+            "lowerbound":-30,
+            "upperbound":30,
+            "type":"RealNumber",
+            "initialvalue":0
+        }
+    ],
+    "extra_func":[
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f1",
+            "func":
+            [
+                "Add",
+                ["Multiply", 0.5, ["Add", ["Square", "x"], ["Square", "y"]]],
+                ["Sin", ["Add", ["Square", "x"], ["Square", "y"]]]
+              ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f2",
+            "func":
+            [
+                "Add",
+                ["Divide", ["Square",["Add",["Multiply",3,"x"], ["Multiply",-2,"y"],4]],8],
+                ["Divide", ["Square",["Add","x", ["Negate","y"],1]],27],
+                15
+            ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f3",
+            "func":
+            [
+                "Add",
+                ["Divide", 1, ["Add", ["Square", "x"], ["Square", "y"], 1]],
+                [
+                  "Multiply",
+                  -1.1,
+                  [
+                    "Exp",
+                    [
+                      "Subtract",
+                      ["Negate", ["Square", "y"]],
+                      ["Square", "x"]
+                    ]
+                  ]
+                ]
+              ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[],
+    "__problemName":"Four bar truss design problem",
+    "__problemDescription":"test problems on https://desdeo-emo.readthedocs.io/en/latest/notebooks/Example.html"
+}
+
+
+mop7 = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x",
+            "lowerbound":-400,
+            "upperbound":400,
+            "type":"RealNumber",
+            "initialvalue":0
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"y",
+            "lowerbound":-400,
+            "upperbound":400,
+            "type":"RealNumber",
+            "initialvalue":0
+        }
+    ],
+    "extra_func":[
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f1",
+            "func":
+            [
+                "Add",
+                ["Divide", ["Square",["Subtract","x",2]], 2],
+                ["Divide", ["Square",["Add","y",1]],     13],
+                3
+              ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f2",
+            "func":
+            [
+                "Add",
+                ["Divide", ["Square",["Add","x","y",-3]],             36],
+                ["Divide", ["Square",["Add",["Subtract","y","x"],2]],  8],
+                -17
+              ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f3",
+            "func":
+            [
+                "Add",
+                ["Divide", ["Square",["Add","x", ["Multiply",2,"y"],-1]],175],
+                ["Divide", ["Square",["Subtract",["Multiply",2,"y"],"x"]],17],
+                -13
+              ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[],
+    "__problemName":"Four bar truss design problem",
+    "__problemDescription":"test problems on https://desdeo-emo.readthedocs.io/en/latest/notebooks/Example.html"
+}
+
 #START TESTING
 #python -m pytest tests/test_MathJsonMOProblem.py
 def test_real_example21():
@@ -689,4 +841,24 @@ def test_mop_example():
     expected_result = np.array([[  40. ,  2000. ,   120. ],
                                 [  42. ,  2400. ,   140. ],
                                 [  61.5, 6037.5 ,  207.5]])
+    npt.assert_allclose(objective_vectors, expected_result)
+
+def test_mop5():
+    p = MOProblem(json=mop5)
+    # Variable values
+    xs = np.array([[2, 20], [3.3, 41.7]])
+    objective_vectors = p.evaluate(xs).objectives
+    assert objective_vectors.shape[0] == 2
+    expected_result = np.array([[2.02953744e+02, 1.38203704e+02, 2.46913580e-03],
+                            [8.74976998e+02, 6.70587176e+02, 5.71173991e-04]])
+    npt.assert_allclose(objective_vectors, expected_result)
+
+def test_mop7():
+    p = MOProblem(json=mop7)
+    # Variable values
+    xs = np.array([[2, 20], [3.3, 41.7]])
+    objective_vectors = p.evaluate(xs).objectives
+    assert objective_vectors.shape[0] == 2
+    expected_result = np.array([[ 36.92307692,  43.02777778,  81.54689076],
+                                [144.09807692, 236.02,       406.38086723]])
     npt.assert_allclose(objective_vectors, expected_result)
