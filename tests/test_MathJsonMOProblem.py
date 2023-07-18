@@ -562,6 +562,71 @@ analytical_problem = {
     "__ProblemDescription":"This problem is from DESDEO example Analytical problem on https://desdeo-problem.readthedocs.io/en/latest/notebooks/analytical_problem.html"
 }
 
+mop_example = {
+    "constants":[],
+    "variables":[  
+        {
+            "longname":"variables 1",
+            "shortname":"x1",
+            "lowerbound":-2,
+            "upperbound":5,
+            "type":"RealNumber",
+            "initialvalue":1
+        },
+        {
+            "longname":"variables 2",
+            "shortname":"x2",
+            "lowerbound":-1,
+            "upperbound":10,
+            "type":"RealNumber",
+            "initialvalue":1
+        },
+        {
+            "longname":"variables 2",
+            "shortname":"x3",
+            "lowerbound":0,
+            "upperbound":3,
+            "type":"RealNumber",
+            "initialvalue":1
+        }
+    ],
+    "extra_func":[],
+    "objectives":[
+        { 
+            "longname":"objectives 1",
+            "shortname":"f_1",
+            "func":["Add","x1","x2","x3"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"objectives 2",
+            "shortname":"f_2",
+            "func":["Multiply","x1","x2","x3"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"objectives 3",
+            "shortname":"f_3",
+            "func":["Add",["Multiply","x1","x2"],"x3"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[ 
+        {
+            "longname":"constraints 1",
+            "shortname":"g1",
+            "func":["Subtract", 10, ["Add","x1","x2","x3"]]
+        }
+    ],
+    "__ProblemName":"name",
+    "__ProblemDescription":"problem on https://desdeo-problem.readthedocs.io/en/latest/notebooks/Defining_a_problem.html#Multiobjective-Optimization-Problem"
+}
 
 #START TESTING
 #python -m pytest tests/test_MathJsonMOProblem.py
@@ -603,4 +668,25 @@ def test_real_example24():
     assert objective_vectors.shape[0] == 2
     expected_result = np.array([[2.40200000e+03,3.82209881e+00],
                                 [5.00730000e+03,3.94676667e+00]])
+    npt.assert_allclose(objective_vectors, expected_result)
+
+def test_analytical_problem():
+    p = MOProblem(json=analytical_problem)
+    # Variable values
+    xs = np.array([2, 2, 2, 2])
+    objective_vectors = p.evaluate(xs).objectives
+    assert objective_vectors.shape[0] == 1
+    expected_result = np.array([[ 2., -2.]])
+    npt.assert_allclose(objective_vectors, expected_result)
+
+
+def test_mop_example():
+    p = MOProblem(json=mop_example)
+    # Variable values
+    xs = np.array([[10., 10., 20.], [12., 10., 20.], [11.5, 15, 35]])
+    objective_vectors = p.evaluate(xs).objectives
+    assert objective_vectors.shape[0] == 3
+    expected_result = np.array([[  40. ,  2000. ,   120. ],
+                                [  42. ,  2400. ,   140. ],
+                                [  61.5, 6037.5 ,  207.5]])
     npt.assert_allclose(objective_vectors, expected_result)
