@@ -2039,6 +2039,7 @@ class MathJsonMOProblem(MOProblem):
         self.FUNC:str               = "func"
         self.LB:str                 = "lowerbound"
         self.UB:str                 = "upperbound"
+        self.TYPE:str               = "type"
         self.IV:str                 = "initialvalue"
         self.MAX:str                = "max"
 
@@ -2092,13 +2093,15 @@ class MathJsonMOProblem(MOProblem):
         for d in variables_list:
             name = d[self.NAME] 
             lower_bound = self.parser.parse(d[self.LB])           
-            upper_bound = self.parser.parse(d[self.UB])   
+            upper_bound = self.parser.parse(d[self.UB])
+            var_type = d[self.TYPE]
             initial_value = d[self.IV] 
             if initial_value is None: initial_value = (lower_bound+upper_bound)/2
             desdeo_var = Variable(name, 
                             initial_value,
                             lower_bound,
-                            upper_bound)
+                            upper_bound,
+                            var_type)
             desdeo_vars.append(desdeo_var)
 
         #FUNCTIONS THAT NEED BEFORE OBJECTIVES AND CONSTAINTS 
