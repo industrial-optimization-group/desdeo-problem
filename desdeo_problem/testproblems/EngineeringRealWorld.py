@@ -110,7 +110,7 @@ def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
                             5.0, 5.28, 5.40, 5.53, 5.72, 6.0, 6.16, 6.32, 6.60, 7.11,
                             7.20, 7.80, 7.90, 8.0, 8.40, 8.69, 9.0, 9.48, 10.27, 11.0,
                             11.06, 11.85, 12.0, 13.0, 14.0, 15.0])
-
+    
     # Returns discrete value for x1
     def feas_val(x: np.ndarray) -> np.array:
         fv_2d = np.repeat(np.atleast_2d(feasible_vals), x.shape[0], axis=0)
@@ -122,11 +122,11 @@ def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return x[:, 0] * x[:, 2] - 7.735 * (x[:, 0]**2 / x[:, 1]) - 180
+        return -(x[:, 0] * x[:, 2] - 7.735 * (x[:, 0]**2 / x[:, 1]) - 180 )
 
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return 4 - x[:, 2] / x[:, 1]
+        return -(4 - x[:, 2] / x[:, 1])
 
     # Objective functions
     def f_1(x: np.ndarray) -> np.ndarray:
@@ -194,17 +194,17 @@ def re23(var_iv: np.array = np.array([50, 50, 100, 120])) -> MOProblem:
         x = np.atleast_2d(x)
         x = x.astype(float)
         x[:, 0] = 0.0625 * (np.round(x[:,0]))
-        return x[:, 0] - (0.0193 * x[:, 2])
+        return -(x[:, 0] - (0.0193 * x[:, 2]))
 
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = x.astype(float)
         x[:, 1] = 0.0625 * (np.round(x[:,1]))
-        return x[:, 1] - (0.00954 * x[:, 2])
+        return -(x[:, 1] - (0.00954 * x[:, 2]))
 
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (np.pi * x[:, 2]**2 * x[:, 3]) + ((4/3) * np.pi * x[:, 2]**3) - 1296000
+        return -( (np.pi * x[:, 2]**2 * x[:, 3]) + ((4/3) * np.pi * x[:, 2]**3) - 1296000 )
 
     # Objective functions
     def f_1(x: np.ndarray) -> np.ndarray:
@@ -278,19 +278,19 @@ def re24(var_iv : np.array = np.array([2, 25])) -> MOProblem:
     # Constrain functions
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return 1.0 - ((4500 / (x[:, 0] * x[:, 1])) / 700)
+        return -(1.0 - ((4500 / (x[:, 0] * x[:, 1])) / 700))
 
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return 1.0 - ((1800 / x[:, 1]) / 450)
+        return -(1.0 - ((1800 / x[:, 1]) / 450))
 
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return 1.0 - (((56.2 * 10000) / (700000 * x[:, 0] * x[:, 1]**2)) / 1.5)
+        return -(1.0 - (((56.2 * 10000) / (700000 * x[:, 0] * x[:, 1]**2)) / 1.5) )
 
     def g_4(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return 1.0 - ((4500 / (x[:,0] * x[:, 1])) / ((700000 * x[:, 0]**2) / 100))
+        return -(1.0 - ((4500 / (x[:,0] * x[:, 1])) / ((700000 * x[:, 0]**2) / 100)) )
 
     # Objective functions
     def f_1(x: np.ndarray) -> np.ndarray:
@@ -374,7 +374,7 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (
+        return -(
             -((8 * (((4.0 * (x[:, 1] / x[:, 2]) - 1) / 
             (4.0 * (x[:, 1] / x[:, 2]) - 4)) + 
             ((0.615 * x[:, 2]) / x[:, 1])) * 1000 * x[:, 1]) 
@@ -384,34 +384,34 @@ def re25(var_iv: np.array = np.array([35, 15, 0.207])) -> MOProblem:
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (
+        return -(
             - ( 1000 / ( ( 11.5 * 10**6 * x[:, 2]**4) / ( 8 * np.round(x[:, 0]) * x[:, 1]**3 ) ) ) + 1.05 * ( np.round( x[:, 0]) + 2) * x[:, 2] + 14
         )
 
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (
+        return -(
             -3 + (x[:, 1] / x[:, 2])
         )
 
     def g_4(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             - (300 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) + 6
         )
 
     def g_5(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (
+        return -(
             -(300 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) - ((1000 - 300) / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) - (1.05 * (np.round(x[:, 0]) + 2) * x[:, 2]) + ((1000 / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3))) + (1.05 * ( np.round(x[:, 0]) + 2) * x[:, 2]))
         )
 
     def g_6(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
         x = feas_val(x)
-        return (
+        return -(
             -1.25 + ((1000 - 300) / ((11.5 * 10**6 * x[:, 2]**4) / (8 * np.round(x[:, 0]) * x[:, 1]**3)))
         )
 
@@ -507,19 +507,19 @@ def re31(var_iv: np.array = np.array([50.0, 50.0, 2.0])) -> MOProblem:
     # Constrain functions
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             0.1 - f_1(x)
         )
 
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             10**5 - f_2(x)
             )
 
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             10**5 
             - ((80 * np.sqrt(1 + x[:, 2]**2 ) 
             / (x[:, 2] * x[:, 1])))
@@ -621,26 +621,26 @@ def re32(var_iv: np.array = np.array([2.5, 5.0, 5.0, 2.5])) -> MOProblem:
     # Constrain functions
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             13600 - tau(x)
         )
 
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             30000 - sigma(x)
         )
 
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             x[:, 3] - x[:, 0]
         )
             
 
     def g_4(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             p_c(x) - 6000
         )
 
@@ -726,19 +726,19 @@ def re33(var_iv: np.array = np.array([67.5, 92.5, 2000, 15])) -> MOProblem:
     # Constrain functions
     def g_1(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             (x[:, 1] - x[:, 0]) - 20
         )
 
     def g_2(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             0.4 - (x[:, 2] / (3.14 * (x[:, 1]**2 - x[:, 0]**2)))
         )
 
     def g_3(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             1 - ((2.22 * 10**-3 * x[:, 2] * (x[:, 1]**3 - x[:, 0]**3)) / 
             (x[:, 1]**2 - x[:, 0]**2)**2)
         )
@@ -746,7 +746,7 @@ def re33(var_iv: np.array = np.array([67.5, 92.5, 2000, 15])) -> MOProblem:
 
     def g_4(x: np.ndarray, _ = None) -> np.ndarray:
         x = np.atleast_2d(x)
-        return (
+        return -(
             ((2.66 * 10**-2 * x[:, 2] * x[:, 3] * (x[:, 1]**3 - x[:, 0]**3)) / 
             (x[:, 1]**2 - x[:, 0]**2)) - 900
         )
@@ -800,3 +800,498 @@ def re33(var_iv: np.array = np.array([67.5, 92.5, 2000, 15])) -> MOProblem:
     problem = MOProblem(variables=variables, objectives=objectives, constraints=constraints)
 
     return problem
+
+
+def re34():
+    re34_json = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":1,
+            "upperbound":3,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":1,
+            "upperbound":3,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":1,
+            "upperbound":3,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_4",
+            "lowerbound":1,
+            "upperbound":3,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_5",
+            "lowerbound":1,
+            "upperbound":3,
+            "type":"RealNumber",
+            "initialvalue":None
+        }
+    ],
+    "extra_func":[
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f1",
+            "func":
+                [
+                    "Add",
+                    ["Multiply", 2.3573285, "x_1"],
+                    ["Multiply", 2.3220035, "x_2"],
+                    ["Multiply", 4.5688768, "x_3"],
+                    ["Multiply", 7.7213633, "x_4"],
+                    ["Multiply", 4.4559504, "x_5"],
+                    1640.2823
+                ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f2",
+            "func":[
+                    "Add", 
+                    ["Multiply", -0.1106, ["Square", "x_1"]], 
+                    ["Multiply", -0.3437, ["Square", "x_3"]], 
+                    ["Multiply", 0.1764, ["Square", "x_4"]], 
+                    ["Multiply", 1.15, "x_1"], 
+                    ["Multiply", -0.3695, "x_1", "x_4"], 
+                    ["Multiply", 0.0861, "x_1", "x_5"], 
+                    ["Multiply", -1.0427, "x_2"], 
+                    ["Multiply", 0.3628, "x_2", "x_4"], 
+                    ["Multiply", 0.9738, "x_3"], 
+                    ["Multiply", 0.8364, "x_4"], 
+                    6.5856
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f3",
+            "func":[
+                "Add", 
+                ["Multiply", -0.0241, ["Square", "x_2"]], 
+                ["Multiply", 0.0109, ["Square", "x_4"]], 
+                ["Multiply", 0.0181, "x_1"], 
+                ["Multiply", -0.0073, "x_1", "x_2"], 
+                ["Multiply", 0.1024, "x_2"], 
+                ["Multiply", 0.024, "x_2", "x_3"], 
+                ["Multiply", -0.0118, "x_2", "x_4"], 
+                ["Multiply", 0.0421, "x_3"], 
+                ["Multiply", -0.0204, "x_3", "x_4"], 
+                ["Multiply", -0.008, "x_3", "x_5"], 
+                -0.0551
+                ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=re34_json)
+    return p
+
+def re37():
+    re37_json = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":0,
+            "upperbound":1,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":0,
+            "upperbound":1,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":0,
+            "upperbound":1,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_4",
+            "lowerbound":0,
+            "upperbound":1,
+            "type":"RealNumber",
+            "initialvalue":None
+        }
+    ],
+    "extra_func":[
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f1",
+            "func":
+                [
+                "Add", 
+                ["Multiply", -0.167, ["Square", "x_1"]], 
+                ["Multiply", 0.0796, ["Square", "x_2"]], 
+                ["Multiply", 0.0877, ["Square", "x_3"]], 
+                ["Multiply", 0.0184, ["Square", "x_4"]], 
+                ["Multiply", 0.477, "x_1"], 
+                ["Multiply", -0.0129, "x_1", "x_2"], 
+                ["Multiply", -0.0634, "x_1", "x_3"], 
+                ["Multiply", -0.0521, "x_1", "x_4"], 
+                ["Multiply", -0.687, "x_2"], 
+                ["Multiply", -0.0257, "x_2", "x_3"], 
+                ["Multiply", 0.00156, "x_2", "x_4"], 
+                ["Multiply", -0.08, "x_3"], 
+                ["Multiply", 0.00198, "x_3", "x_4"], 
+                ["Multiply", -0.065, "x_4"], 
+                0.692
+            ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f2",
+            "func":[
+                    "Add", 
+                    ["Multiply", 0.175, ["Square", "x_1"]], 
+                    ["Multiply", -0.0701, ["Square", "x_2"]], 
+                    ["Multiply", 0.015, ["Square", "x_3"]], 
+                    ["Multiply", 0.0192, ["Square", "x_4"]], 
+                    ["Multiply", -0.322, "x_1"], 
+                    ["Multiply", 0.0185, "x_1", "x_2"], 
+                    ["Multiply", -0.251, "x_1", "x_3"], 
+                    ["Multiply", 0.0134, "x_1", "x_4"], 
+                    ["Multiply", 0.396, "x_2"], 
+                    ["Multiply", 0.179, "x_2", "x_3"], 
+                    ["Multiply", 0.0296, "x_2", "x_4"], 
+                    ["Multiply", 0.424, "x_3"], 
+                    ["Multiply", 0.0752, "x_3", "x_4"], 
+                    ["Multiply", 0.0226, "x_4"], 
+                    0.153
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f3",
+            "func":[
+                    "Add", 
+                    ["Multiply", -0.135, ["Square", "x_1"]], 
+                    ["Multiply", 0.0998, ["Square", "x_2"]], 
+                    ["Multiply", -0.226, ["Square", "x_3"]], 
+                    ["Multiply", -0.423, ["Square", "x_4"]], 
+                    ["Multiply", -0.205, "x_1"], 
+                    ["Multiply", -0.342, "x_1", ["Square", "x_2"]], 
+                    ["Multiply", -0.184, "x_1", ["Square", "x_4"]], 
+                    ["Multiply", 0.0141, "x_1", "x_2"], 
+                    ["Multiply", -0.281, "x_1", "x_2", "x_3"], 
+                    ["Multiply", 0.208, "x_1", "x_3"], 
+                    ["Multiply", 0.353, "x_1", "x_4"], 
+                    ["Multiply", 0.0307, "x_2"], 
+                    ["Multiply", 0.202, "x_2", ["Square", "x_1"]], 
+                    ["Multiply", 0.281, "x_2", ["Square", "x_3"]], 
+                    ["Multiply", -0.0301, "x_2", "x_3"], 
+                    ["Multiply", 0.108, "x_3"], 
+                    ["Multiply", -0.281, "x_3", ["Square", "x_1"]], 
+                    ["Multiply", -0.245, "x_3", ["Square", "x_2"]], 
+                    ["Multiply", -0.0497, "x_3", "x_4"], 
+                    ["Multiply", 1.019, "x_4"], 
+                    0.37
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=re37_json)
+    return p
+
+def re41():
+    re41_json = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":0.5,
+            "upperbound":1.5,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":0.45,
+            "upperbound":1.35,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":0.5,
+            "upperbound":1.5,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_4",
+            "lowerbound":0.5,
+            "upperbound":1.5,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+                {
+            "shortname":"x_5",
+            "lowerbound":0.875,
+            "upperbound":2.625,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_6",
+            "lowerbound":0.4,
+            "upperbound":1.2,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+                {
+            "shortname":"x_7",
+            "lowerbound":0.4,
+            "upperbound":1.2,
+            "type":"RealNumber",
+            "initialvalue":None
+        }
+    ],
+    "extra_func":[
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_1",
+            "func":["Negate",[
+                "Add", 
+                ["Multiply", 0.3717, "x_2", "x_4"], 
+                ["Multiply", 0.0092928, "x_3"], 
+                -1.16, 
+                1
+                ]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_2",
+            "func":["Negate",[
+                "Add", 
+                ["Multiply", 0.06486, "x_1"], 
+                ["Multiply", 0.0159, "x_1", "x_2"], 
+                ["Multiply", 0.019, "x_2", "x_7"], 
+                ["Multiply", -0.0144, "x_3", "x_5"], 
+                ["Multiply", -0.0154464, "x_6"], 
+                -0.261, 
+                0.32
+                ]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_3",
+            "func":["Negate",[
+                "Add", 
+                ["Multiply", 0.018, ["Square", "x_2"]], 
+                ["Multiply", 0.045195, "x_1"], 
+                ["Multiply", 0.0135168, "x_1"], 
+                ["Multiply", -0.03099, "x_2", "x_6"], 
+                ["Multiply", 0.018, "x_2", "x_7"], 
+                ["Multiply", -0.007176, "x_3"], 
+                ["Multiply", -0.023232, "x_3"], 
+                ["Multiply", -0.00817, "x_5"], 
+                ["Multiply", 0.00364, "x_5", "x_6"], 
+                -0.214, 
+                0.32
+                ]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_4",
+            "func":["Negate",[
+                "Add", 
+                ["Multiply", -0.227, ["Square", "x_2"]], 
+                ["Multiply", 0.61, "x_2"], 
+                ["Multiply", 0.031296, "x_3"], 
+                ["Multiply", 0.031872, "x_7"], 
+                -0.74, 
+                0.32
+                ]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_5",
+            "func":["Negate",[
+  "Add", 
+  ["Multiply", 4.2, "x_1", "x_2"], 
+  ["Multiply", -3.818, "x_3"], 
+  ["Multiply", -1.27296, "x_6"], 
+  ["Multiply", 2.68065, "x_7"], 
+  -28.98, 
+  32
+]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_6",
+            "func":["Negate",[
+  "Add", 
+  ["Multiply", 5.057, "x_1", "x_2"], 
+  ["Multiply", 3.795, "x_2"], 
+  ["Multiply", -2.95, "x_3"], 
+  ["Multiply", 3.4431, "x_7"], 
+  -33.86, 
+  -1.45728, 
+  32
+]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_7",
+            "func":["Negate",[
+  "Add", 
+  ["Multiply", 4.4505, "x_1"], 
+  ["Multiply", 9.9, "x_2"], 
+  -46.36, 
+  32
+]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_8",
+            "func":["Negate",[
+                "Add", 
+                ["Multiply", 0.19, "x_2", "x_3"], 
+                ["Multiply", 0.5, "x_4"], 
+                -4.72, 
+                4
+                ]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_9",
+            "func":["Negate",[
+    "Add", 
+    ["Multiply", 0.674, "x_1", "x_2"], 
+    ["Multiply", 0.67275, "x_2"], 
+    -10.58, 
+    9.9
+    ]],
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_10",
+            "func":["Negate",[
+                "Add", 
+                ["Multiply", 0.489, "x_3", "x_7"], 
+                ["Multiply", 0.843, "x_5", "x_6"], 
+                -16.45, 
+                15.7
+                ]],
+        }
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f1",
+            "func":
+                [
+                    "Add", 
+                    ["Multiply", 4.9, "x_1"], 
+                    ["Multiply", 6.67, "x_2"], 
+                    ["Multiply", 6.98, "x_3"], 
+                    ["Multiply", 4.01, "x_4"], 
+                    ["Multiply", 1.78, "x_5"], 
+                    ["Multiply", 0.00001, "x_6"], 
+                    ["Multiply", 2.73, "x_7"], 
+                    1.98
+
+            ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f2",
+            "func":[
+                    "Add", 
+                    ["Multiply", -0.19, "x_2", "x_3"], 
+                    ["Multiply", -0.5, "x_4"], 
+                    4.72
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f3",
+            "func":[
+                    "Multiply", 
+                    0.5, 
+                    [
+                        "Add", 
+                        ["Multiply", -0.674, "x_1", "x_2"], 
+                            ["Multiply", -0.67275, "x_2"], 
+                        ["Multiply", -0.489, "x_3", "x_7"], 
+                        ["Multiply", -0.843, "x_5", "x_6"], 
+                        10.58, 
+                        16.45
+                    ]
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+                {
+            "longname":"minimize the joint displacement",
+            "shortname":"f_3",
+            "func":["Sum", ["Max","g_i",0], ["Triple", ["Hold", "i"], 1, 10]],
+            "max": False,   
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=re41_json)
+    return p
+
+
