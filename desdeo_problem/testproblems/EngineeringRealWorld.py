@@ -2160,6 +2160,163 @@ def cre22():
     p = MOProblem(json=cre22_json)
     return p
 
+def cre23():
+    cre23_json = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":55,
+            "upperbound":80,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":75,
+            "upperbound":110,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":1000,
+            "upperbound":3000,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_4",
+            "lowerbound":11,
+            "upperbound":20,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+    ],
+    "extra_func":[
+    ],
+    "objectives":[  
+        {
+            "shortname":"f1",
+            "func":["Multiply", 
+                    1e-5, 
+                    ["Subtract", "x_4", 1], 
+                    ["Subtract", ["Square", "x_2"], 
+                    ["Square", "x_1"]]],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f2",
+            "func":[
+                    "Divide", 
+                    [
+                        "Multiply", 
+                        9.82, 
+                        1e6, 
+                        ["Subtract", ["Square", "x_2"], ["Square", "x_1"]]
+                    ], 
+                    [
+                        "Multiply", 
+                        "x_3", 
+                        "x_4", 
+                        [
+                        "Subtract", 
+                        ["Power", "x_2", 3], 
+                        ["Power", "x_1", 3]
+                        ]
+                    ]
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+    ],
+    "constraints":[
+        {
+            "shortname":"g1",
+            "func":["Max",["Negate",["Add", ["Negate", "x_1"], "x_2", -20] ],0],
+        },
+        {
+            "shortname":"g2",
+            "func":["Max",["Negate",
+                          [
+                            "Add", 
+                            [
+                                "Divide", 
+                                ["Negate", "x_3"], 
+                                [
+                                "Multiply", 
+                                3.14, 
+                                ["Subtract", ["Square", "x_2"], ["Square", "x_1"]]
+                                ]
+                            ], 
+                            0.4
+                            ]         
+                           ],0],
+        },
+        {
+            "shortname":"g3",
+            "func":["Max",["Negate",
+                            [
+                            "Add", 
+                            [
+                                "Divide", 
+                                [
+                                "Multiply", 
+                                -2.22, 
+                                1e-3, 
+                                "x_3", 
+                                [
+                                    "Subtract", 
+                                    ["Power", "x_2", 3], 
+                                    ["Power", "x_1", 3]
+                                ]
+                                ], 
+                                [
+                                "Square", 
+                                ["Subtract", ["Square", "x_2"], ["Square", "x_1"]]
+                                ]
+                            ], 
+                            1
+                            ]                          
+                                    
+                           ],0],
+        },
+        {
+            "shortname":"g4",
+            "func":["Max",["Negate",
+                           [
+  "Subtract", 
+  [
+    "Divide", 
+    [
+      "Multiply", 
+      2.66, 
+      1e-2, 
+      "x_3", 
+      "x_4", 
+      [
+        "Subtract", 
+        ["Power", "x_2", 3], 
+        ["Power", "x_1", 3]
+      ]
+    ], 
+    ["Subtract", ["Square", "x_2"], ["Square", "x_1"]]
+  ], 
+  900
+]
+                           ],0],
+        },
+    ],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=cre23_json)
+    return p
+
 import plotly.graph_objects as go
 from desdeo_emo.EAs.NSGAIII import NSGAIII
 #["Negate",
@@ -2208,10 +2365,11 @@ def test3():
 
 # test3()
 def test4():
-    p = cre22()
+    p = cre23()
     cre21_test = np.array([[41.7022063,  72.03245214,  1.00022875]])
     cre22_test = np.array([[2.15798227, 7.23121249, 0.10113231, 1.59887129]])
-    r = p.evaluate(cre22_test)
+    cre23_test = np.array([ [  65.42555012,  100.21135727, 1000.22874963,13.72099315]])
+    r = p.evaluate(cre23_test)
     print(r)
 
 test4()
