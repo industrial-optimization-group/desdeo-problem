@@ -801,7 +801,7 @@ def re33(var_iv: np.array = np.array([67.5, 92.5, 2000, 15])) -> MOProblem:
 
     return problem
 
-
+#Add Json formulas 
 def re34():
     re34_json = {
     "constants":[],
@@ -911,6 +911,340 @@ def re34():
     "__problemName":"RE"
     }
     p = MOProblem(json=re34_json)
+    return p
+#TODO: 2sd objective f[1] = max([x1, x2, x3, x4]),
+def re36():
+    re36_json = {
+    "constants":[],
+    "variables":[
+        {
+            "shortname":"x_1",
+            "lowerbound":12,
+            "upperbound":60,
+            "type":"Integer",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_2",
+            "lowerbound":12,
+            "upperbound":60,
+            "type":"Integer",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":12,
+            "upperbound":60,
+            "type":"Integer",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_4",
+            "lowerbound":12,
+            "upperbound":60,
+            "type":"Integer",
+            "initialvalue":None
+        }
+    ],
+    "extra_func":[
+        {
+            "shortname":"f_1",
+            "func":["Abs",
+                ["Subtract", 
+                 6.931, 
+                 ["Divide", 
+                  ["Multiply", ["Floor","x_3"], ["Floor","x_4"]], 
+                  ["Multiply", ["Floor","x_1"], ["Floor","x_2"]] ]
+                ]],
+        },
+        {
+            "shortname":"g_1",
+            "func":["Add", ["Divide", "f_1", 6.931], -0.5],
+        },
+    ],
+    "objectives":[  
+        {
+            "shortname":"f1",
+            "func":"f_1",
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f2",
+            "func":["Max","g_1",0],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f3",
+            "func":["Max","g_1",0],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=re36_json)
+    return p
+
+def re35():
+    re35_json = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":2.6,
+            "upperbound":3.6,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":0.7,
+            "upperbound":0.8,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":17,
+            "upperbound":28,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_4",
+            "lowerbound":7.3,
+            "upperbound":8.3,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_5",
+            "lowerbound":7.3,
+            "upperbound":8.3,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_6",
+            "lowerbound":2.9,
+            "upperbound":3.9,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_7",
+            "lowerbound":5.0,
+            "upperbound":5.5,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+    ],
+    "extra_func":[
+        {
+            "shortname":"tmpVar1",
+            "func":[
+                    "Add", 
+                    [
+                        "Multiply", 
+                        ["Square", 745], 
+                        ["Square", "x_4"], 
+                        [
+                        "Square", 
+                        ["Divide", 1, ["Multiply", "x_2", "x_3"]]
+                        ]
+                    ], 
+                    ["Multiply", 1.69, 1e7]
+                    ],
+        },
+        {
+            "shortname":"tmpVar2",
+            "func":["Add", ["Multiply", ["Square", 745], 
+                        ["Square", "x_5"], 
+                        [
+                        "Square", 
+                        ["Divide", 1, ["Multiply", "x_2", "x_3"]]
+                        ]
+                    ], ["Multiply", 1.575, 1e8]
+                    ],
+        },
+        { 
+            "shortname":"f_1",
+            "func":
+            ["Add", 
+             ["Multiply", 0.7854, 
+                ["Add", ["Multiply","x_4",["Square", "x_6"]], 
+                        ["Multiply","x_5",["Square", "x_7"]]
+                ]
+             ],
+             ["Multiply",7.477, 
+                ["Add", ["Power", "x_6", 3], ["Power", "x_7", 3] ]
+             ],
+             ["Multiply", -1.508, "x_1", ["Add", ["Square", "x_6"], ["Square", "x_7"]]],    
+            ["Multiply", 0.7854, "x_1", ["Square", "x_2"],
+             ["Add", 
+                [
+                    "Multiply", 
+                    ["Rational", 10, 3], 
+                    ["Square", "x_3"]
+                ], 
+                ["Multiply", 14.933, "x_3"], 
+                -43.0934
+            ]
+            ]
+            ],
+        },
+        {
+            "shortname":"f_2",
+            "func":["Divide", ["Sqrt", "tmpVar1"], ["Multiply", 0.1, ["Power", "x_6", 3]]],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"g_1",
+            "func":["Max",
+                    ["Subtract",
+                     ["Divide",1, ["Multiply", "x_1", "x_3", ["Square", "x_2"]]], 
+                     ["Rational", 1, 27]]
+                    ,0],
+        },
+        {
+            "shortname":"g_2",
+            "func":["Max",[
+                        "Add", 
+                        ["Divide", -1, 397.5], 
+                        [
+                            "Divide", 
+                            1, 
+                            [
+                            "Multiply", 
+                            "x_1", 
+                            ["Square", "x_2"], 
+                            ["Square", "x_3"]
+                            ]
+                        ]
+                        ]
+,0],
+        },
+        {
+            "shortname":"g_3",
+            "func":["Max",[
+                        "Add", 
+                        ["Divide", -1, 1.93], 
+                        [
+                            "Divide", 
+                            ["Power", "x_4", 3], 
+                            [
+                            "Multiply", 
+                            "x_2", 
+                            "x_3", 
+                            ["Power", "x_6", 4]
+                            ]
+                        ]
+                        ]
+                    ,0],
+        },
+        {
+            "shortname":"g_4",
+            "func":["Max",[
+                    "Add", 
+                    ["Divide", -1, 1.93], 
+                    [
+                        "Divide", 
+                        ["Power", "x_5", 3], 
+                        [
+                        "Multiply", 
+                        "x_2", 
+                        "x_3", 
+                        ["Power", "x_7", 4]
+                        ]
+                    ]
+                    ]
+                ,0],
+        },
+
+        {
+            "shortname":"g_5",
+            "func":["Max",
+                    ["Subtract", ["Multiply", "x_2", "x_3"], 40]
+                    ,0],
+        },
+        {
+            "shortname":"g_6",
+            "func":["Max",
+                    ["Subtract", ["Divide", "x_1", "x_2"], 12]
+                    ,0],
+        },
+        {
+            "shortname":"g_7",
+            "func":["Max",
+                    ["Add", ["Divide", ["Negate", "x_1"], "x_2"], 5]
+                    ,0],
+        },
+                {
+            "shortname":"g_8",
+            "func":["Max",
+                    ["Add", ["Multiply", 1.5, "x_6"], ["Negate", "x_4"], 1.9]
+                    ,0],
+        },
+        {
+            "shortname":"g_9",
+            "func":["Max",
+                    ["Add", ["Multiply", 1.1, "x_7"], ["Negate", "x_5"], 1.9]
+                    ,0],
+        },
+                {
+            "shortname":"g_10",
+            "func":["Max",
+                    ["Subtract", 
+                     "f_2",
+                      1300]
+                    ,0],
+        },
+                {
+            "shortname":"g_11",
+            "func":["Max",
+                    ["Subtract", 
+                     ["Divide", ["Sqrt", "tmpVar2"], 
+                      ["Multiply", 0.1, ["Power", "x_7", 3]]], 1100]
+                    ,0],
+        }
+    ],
+    "objectives":[  
+        {
+            "shortname":"f1",
+            "func":"f_1",
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f2",
+            "func":"f_2",
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f3",
+            "func":["Sum", ["Max","g_i",0], ["Triple", ["Hold", "i"], 1, 11]],
+            "max": False,   
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=re35_json)
     return p
 
 def re37():
@@ -1279,9 +1613,9 @@ def re41():
             "lowerbound":None,
             "upperbound":None
         },
-                {
+        {
             "longname":"minimize the joint displacement",
-            "shortname":"f_3",
+            "shortname":"f4",
             "func":["Sum", ["Max","g_i",0], ["Triple", ["Hold", "i"], 1, 10]],
             "max": False,   
             "lowerbound":None,
@@ -1792,7 +2126,7 @@ def re61():
     }
     p = MOProblem(json=re61_json)
     return p
-
+#TODO: RE91
 def cre21():
     cre21_json = {
     "constants":[],
@@ -2553,6 +2887,7 @@ def cre24():
     p = MOProblem(json=cre24_json)
     return p
 
+#TODO:2sd objective f[1] = max([x1, x2, x3, x4]),
 def cre31():
     cre31_json = {
     "constants":[],
@@ -3304,4 +3639,5 @@ def cre51():
     }
     p = MOProblem(json=cre51_json)
     return p
+
 
