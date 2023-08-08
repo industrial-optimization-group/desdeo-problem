@@ -1,0 +1,49 @@
+{
+    "constants":[],
+    "variables":[  
+        {
+            "longname":"Constants 1",
+            "shortname":"x1",
+            "lowerbound":-0.5,
+            "upperbound":0.5,
+            "type":"RealNumber",
+            "initialvalue":0
+        },
+        {
+            "longname":"Constants 2",
+            "shortname":"x2",
+            "lowerbound":-0.5,
+            "upperbound":0.5,
+            "type":"RealNumber",
+            "initialvalue":0
+        }
+    ],
+    "extra_func":[],
+    "objectives":[
+        { 
+            "longname":"objectives 1",
+            "shortname":"f_1",
+            "func":["Subtract",["Square","x1"],"x2"],
+            "max": false,
+            "lowerbound":0,
+            "upperbound":10
+        },
+        {
+            "longname":"objectives 2",
+            "shortname":"f_2",
+            "func":["Subtract",["Square","x2"],["Multiply",3,"x1"]],
+            "max": false,
+            "lowerbound":0,
+            "upperbound":10
+        }
+    ],
+    "constraints":[ 
+        {
+            "longname":"constraints 2",
+            "shortname":"g1",
+            "func":["Subtract",10,["Add","x1","x2"]]
+        }
+    ],
+    "__ProblemName":"name",
+    "__ProblemDescription":"This problem is from DESDEO example Analytical problem on https://desdeo-problem.readthedocs.io/en/latest/notebooks/analytical_problem.html"
+}

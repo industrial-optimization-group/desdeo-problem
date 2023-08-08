@@ -1,0 +1,70 @@
+{
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x",
+            "lowerbound":-400,
+            "upperbound":400,
+            "type":"RealNumber",
+            "initialvalue":0
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"y",
+            "lowerbound":-400,
+            "upperbound":400,
+            "type":"RealNumber",
+            "initialvalue":0
+        }
+    ],
+    "extra_func":[
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f1",
+            "func":
+            [
+                "Add",
+                ["Divide", ["Square",["Subtract","x",2]], 2],
+                ["Divide", ["Square",["Add","y",1]],     13],
+                3
+              ],
+            "max": false,
+            "lowerbound":null,
+            "upperbound":null
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f2",
+            "func":
+            [
+                "Add",
+                ["Divide", ["Square",["Add","x","y",-3]],             36],
+                ["Divide", ["Square",["Add",["Subtract","y","x"],2]],  8],
+                -17
+              ],
+            "max": false,
+            "lowerbound":null,
+            "upperbound":null
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f3",
+            "func":
+            [
+                "Add",
+                ["Divide", ["Square",["Add","x", ["Multiply",2,"y"],-1]],175],
+                ["Divide", ["Square",["Subtract",["Multiply",2,"y"],"x"]],17],
+                -13
+              ],
+            "max": false,
+            "lowerbound":null,
+            "upperbound":null
+        }
+    ],
+    "constraints":[],
+    "__problemName":"Four bar truss design problem",
+    "__problemDescription":"test problems on https://desdeo-emo.readthedocs.io/en/latest/notebooks/Example.html"
+}

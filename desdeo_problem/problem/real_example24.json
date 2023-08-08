@@ -1,0 +1,171 @@
+{
+    "constants":[
+        {
+            "longname":"sigma_b_max",
+            "shortname":"sigma_b_max",
+            "value":700
+        },
+        {
+            "longname":"omega_max",
+            "shortname":"omega_max",
+            "value":1.5
+        },
+        {
+            "shortname":"tau_max",
+            "value":450
+        },
+        {
+            "shortname":"omega",
+            "value":56.2e4
+        },
+        {
+            "shortname":"E",
+            "value":7e5
+        }
+    ],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":0.5,
+            "upperbound":4,
+            "type":"RealNumber",
+            "initialvalue":null
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":4,
+            "upperbound":40,
+            "type":"RealNumber",
+            "initialvalue":null
+        }
+    ],
+    "extra_func":[
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_1",
+            "func":
+            [
+                "Add", 
+                [
+                  "Divide", 
+                  ["Rational", -45, 7], 
+                  ["Multiply", "x_1", "x_2"]
+                ], 
+                1
+              ]
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_2",
+            "func":
+            [
+                "Add", 
+                ["Divide", ["Rational", -1, 4], "x_2"], 
+                1
+              ]
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_3",
+            "func":
+            [
+                "Add", 
+                [
+                  "Divide", 
+                  ["Rational", -281, 350], 
+                  ["Multiply", 1.5, "x_1", ["Square", "x_2"]]
+                ], 
+                1
+              ]
+        },
+        {
+            "shortname":"g_4",
+            "func":
+            [
+                "Add", 
+                [
+                  "Divide", 
+                  ["Rational", -9, 14], 
+                  ["Multiply", "x_2", ["Power", "x_1", 3]]
+                ], 
+                1
+              ]
+        }
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f_1",
+            "func":["Add", ["Multiply", 120, "x_2"], "x_1"],
+            "max": false,
+            "lowerbound":null,
+            "upperbound":null
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f_2",
+            "func":["Sum", ["Max", "g_i", 0], ["Triple", ["Hold", "i"], 1, 4]],
+            "max": false,   
+            "lowerbound":null,
+            "upperbound":null
+        }
+    ],
+    "constraints":[
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_1",
+            "func":
+            [
+                "Add", 
+                [
+                  "Divide", 
+                  ["Rational", -45, 7], 
+                  ["Multiply", "x_1", "x_2"]
+                ], 
+                1
+              ]
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_2",
+            "func":
+            [
+                "Add", 
+                ["Divide", ["Rational", -1, 4], "x_2"], 
+                1
+              ]
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_3",
+            "func":
+            [
+                "Add", 
+                [
+                  "Divide", 
+                  ["Rational", -281, 350], 
+                  ["Multiply", 1.5, "x_1", ["Square", "x_2"]]
+                ], 
+                1
+              ]
+        },
+        {
+            "shortname":"g_4",
+            "func":
+            [
+                "Add", 
+                [
+                  "Divide", 
+                  ["Rational", -9, 14], 
+                  ["Multiply", "x_2", ["Power", "x_1", 3]]
+                ], 
+                1
+              ]
+        }
+
+    ],
+    "__problemName":"Pressure vessel design problem",
+    "__problemDescription":"This problem is from DESDEO example Engineering real-world test problems on https://desdeo-problem.readthedocs.io/en/latest/problems/engineering_real_world.html#re-21-four-bar-truss-design-problem"
+}

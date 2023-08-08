@@ -1661,73 +1661,73 @@ def re61():
     "extra_func":[
         {
             "shortname":"g_1",
-            "func":[
+            "func":["Negate",[
                     "Add", 
                     ["Divide", -0.00139, ["Multiply", "x_1", "x_2"]], 
                     ["Multiply", -4.94, "x_3"], 
                     0.08, 
                     1
-                    ],
+                    ]],
         },
         {
             "shortname":"g_2",
-            "func":[
+            "func":["Negate",[
                 "Add", 
                 ["Divide", -0.000306, ["Multiply", "x_1", "x_2"]], 
                 ["Multiply", -1.082, "x_3"], 
                 0.0986, 
                 1
-                ],
+                ]],
         },
         {
             "shortname":"g_3",
-            "func":[
+            "func":["Negate",[
                     "Add", 
                     ["Divide", -12.307, ["Multiply", "x_1", "x_2"]], 
                     ["Multiply", -49408.24, "x_3"], 
                     -4051.02, 
                     50000
-                    ],
+                    ]],
         },
         {
             "shortname":"g_4",
-            "func":[
+            "func":["Negate",[
                     "Add", 
                     ["Divide", -2.098, ["Multiply", "x_1", "x_2"]], 
                     ["Multiply", -8046.33, "x_3"], 
                     696.71, 
                     16000
-                    ],
+                    ]],
         },
         {
             "shortname":"g_5",
-            "func":[
+            "func":["Negate",[
                     "Add", 
                     ["Divide", -2.138, ["Multiply", "x_1", "x_2"]], 
                     ["Multiply", -7883.39, "x_3"], 
                     705.04, 
                     10000
-                    ],
+                    ]],
         },
         {
             "shortname":"g_6",
-            "func":[
+            "func":["Negate",[
                     "Add", 
                     ["Multiply", -0.417, "x_1", "x_2"], 
                     ["Multiply", -1721.26, "x_3"], 
                     136.54, 
                     2000
-                    ],
+                    ]],
         },
                 {
             "shortname":"g_7",
-            "func":[
+            "func":["Negate", [
                     "Add", 
                     ["Divide", -0.164, ["Multiply", "x_1", "x_2"]], 
                     ["Multiply", -631.13, "x_3"], 
                     54.48, 
                     550
-                    ],
+                    ] ],
         },
     ],
     "objectives":[  
@@ -1808,11 +1808,137 @@ def re61():
     return p
 
 def cre21():
-    
+    cre21_json = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":0.00001,
+            "upperbound":100.0,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":0.00001,
+            "upperbound":100.0,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":1,
+            "upperbound":3.0,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+    ],
+    "extra_func":[
+        {
+            "shortname":"f_1",
+            "func":[
+                    "Add", 
+                    [
+                        "Multiply", 
+                        "x_1", 
+                        ["Sqrt", ["Add", ["Square", "x_3"], 16]]
+                    ], 
+                    [
+                        "Multiply", 
+                        "x_2", 
+                        ["Sqrt", ["Add", ["Square", "x_3"], 1]]
+                    ]
+                    ],
+        },
+        {
+            "shortname":"f_2",
+            "func":[
+                "Divide", 
+                [
+                    "Sqrt", 
+                    [
+                    "Multiply", 
+                    20, 
+                    ["Add", ["Square", "x_3"], 16]
+                    ]
+                ], 
+                ["Multiply", "x_1", "x_3"]
+                ],
+        },
+    ],
+    "objectives":[  
+        {
+            "shortname":"f1",
+            "func":[
+                    "Add", 
+                    [
+                        "Multiply", 
+                        "x_1", 
+                        ["Sqrt", ["Add", ["Square", "x_3"], 16]]
+                    ], 
+                    [
+                        "Multiply", 
+                        "x_2", 
+                        ["Sqrt", ["Add", ["Square", "x_3"], 1]]
+                    ]
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f2",
+            "func":["Divide", 
+                        ["Multiply", 
+                            20,
+                            ["Sqrt", ["Add", ["Square", "x_3"], 16]]
+                        ],
+                        ["Multiply", "x_1", "x_3"]
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+    ],
+    "constraints":[
+        {
+            "shortname":"g1",
+            "func":["Max",["Negate",["Subtract", 0.1, "f_1",]],0],
+        },
+        {
+            "shortname":"g2",
+            "func":["Max",["Negate",["Subtract", 100000, "f_2",]],0],
+        },
+        {
+            "shortname":"g_3",
+            "func":["Max",[
+                "Subtract", 
+                [
+                    "Divide", 
+                    [
+                    "Sqrt", 
+                    [
+                        "Multiply", 
+                        80, 
+                        ["Add", ["Square", "x_3"], 1]
+                    ]
+                    ], 
+                    ["Multiply", "x_2", "x_3"]
+                ], 
+                100000
+                ],0],
+        },
+    ],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=cre21_json)
+    return p
 
 import plotly.graph_objects as go
 from desdeo_emo.EAs.NSGAIII import NSGAIII
-
+#["Negate",
 def test():
     p: MOProblem = re23()
     # Variable values
@@ -1856,4 +1982,11 @@ def test3():
     #         mode="markers"))
     # fig1.show()
 
-test3()
+# test3()
+def test4():
+    p = cre21()
+    cre21_test = np.array([[41.7022063,  72.03245214,  1.00022875]])
+    r = p.evaluate(cre21_test)
+    print(r)
+
+test4()

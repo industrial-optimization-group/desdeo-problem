@@ -1,0 +1,108 @@
+{
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":0.2,
+            "upperbound":15,
+            "type":"RealNumber",
+            "initialvalue":null
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":0,
+            "upperbound":20,
+            "type":"RealNumber",
+            "initialvalue":null
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":0,
+            "upperbound":40,
+            "type":"RealNumber",
+            "initialvalue":null
+        }
+    ],
+    "extra_func":[
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_1",
+            "func":
+            [
+                "Add", 
+                [
+                  "Divide", 
+                  ["Multiply", -7.735, ["Square", "x_1"]], 
+                  ["Square", "x_2"]
+                ], 
+                ["Multiply", "x_1", "x_3"], 
+                -180
+            ]
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_2",
+            "func":
+            [
+                "Add", 
+                ["Divide", ["Negate", "x_3"], "x_2"], 
+                4
+            ]
+        }
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f_1",
+            "func":
+            [
+                "Add", 
+                ["Multiply", 29.4, "x_1"], 
+                ["Multiply", 0.6, "x_2", "x_3"]
+            ],
+            "max": false,
+            "lowerbound":null,
+            "upperbound":null
+        },
+        {
+            "longname":"minimize the joint displacement",
+            "shortname":"f_2",
+            "func":["Sum", ["Max", "g_i", 0], ["Triple", ["Hold", "i"], 1, 2]],
+            "max": false,   
+            "lowerbound":null,
+            "upperbound":null
+        }
+    ],
+    "constraints":[
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_1",
+            "func":
+            [
+                "Add", 
+                [
+                  "Divide", 
+                  ["Multiply", -7.735, ["Square", "x_1"]], 
+                  "x_2"
+                ], 
+                ["Multiply", "x_1", "x_3"], 
+                -180
+            ]
+        },
+        {
+            "longname":"minimize structural volume",
+            "shortname":"g_2",
+            "func":
+            [
+                "Add", 
+                ["Divide", ["Negate", "x_3"], "x_2"], 
+                4
+            ]
+        }
+
+    ],
+    "__problemName":"Pressure vessel design problem",
+    "__problemDescription":"This problem is from DESDEO example Engineering real-world test problems on https://desdeo-problem.readthedocs.io/en/latest/problems/engineering_real_world.html#re-21-four-bar-truss-design-problem"
+}

@@ -58,7 +58,8 @@ class Variable:
         initial_value: float,
         lower_bound: float = -np.inf,
         upper_bound: float = np.inf,
-        type: str = "RealNumber"
+        type: str = "RealNumber",
+        discr: np.array = [], 
     ) -> None:
 
         self.__name: str = name
