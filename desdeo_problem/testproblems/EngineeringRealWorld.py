@@ -1936,6 +1936,230 @@ def cre21():
     p = MOProblem(json=cre21_json)
     return p
 
+def cre22():
+    cre22_json = {
+    "constants":[
+        {"shortname":"P","value":6000},
+        {"shortname":"L","value":14},
+        {"shortname":"E","value":30e6},
+        {"shortname":"G","value":12e6},
+        {"shortname":"tauMax","value":13600},
+        {"shortname":"sigmaMax","value":30000},
+    ],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":0.125,
+            "upperbound":5.0,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":0.1,
+            "upperbound":10.0,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":0.1,
+            "upperbound":10.0,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_4",
+            "lowerbound":0.125,
+            "upperbound":5.0,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+    ],
+    "extra_func":[
+        {
+            "shortname":"M",
+            "func":["Multiply", "P", ["Add", "L", 
+                    ["Multiply", ["Rational", 1, 2], "x_2"]]
+                ],
+        },
+        {
+            "shortname":"tmpVar1",
+            "func":[
+                    "Add", 
+                    [
+                        "Multiply", 
+                        ["Square", ["Rational", 1, 2]], 
+                        ["Square", ["Add", "x_1", "x_3"]]
+                    ], 
+                    [
+                        "Multiply", 
+                        ["Rational", 1, 4], 
+                        ["Square", "x_2"]
+                    ]
+                    ],
+        },
+        {
+            "shortname":"R",
+            "func":["Sqrt", "tmpVar1"],
+        },
+        {
+            "shortname":"tmpVar2",
+            "func":[
+                    "Add", 
+                    [
+                        "Multiply", 
+                        ["Square", ["Rational", 1, 2]], 
+                        ["Square", ["Add", "x_1", "x_3"]]
+                    ], 
+                    [
+                        "Multiply", 
+                        ["Rational", 1, 12], 
+                        ["Square", "x_2"]
+                    ]
+                    ],
+        },
+        { 
+            "shortname":"J",
+            "func":["Multiply",2,["Sqrt",2],"x_1","x_2","tmpVar2"]
+        },
+        {
+            "shortname":"tauDashDash",
+            "func":["Divide", ["Multiply","M","R"],"J"  ],
+        },
+        {
+            "shortname":"tauDash",
+            "func":["Divide", "P", ["Multiply", "x_1", "x_2", ["Sqrt", 2]]],
+        },
+        {
+            "shortname":"tmpVar3",
+            "func":["Add", 
+                    ["Divide", ["Multiply", "tauDash", "x_2", "tauDashDash"], "R"], 
+                    ["Square", "tauDash"], 
+                    ["Square", "tauDashDash"]
+                    ],
+        },
+        {
+            "shortname":"tau",
+            "func":["Sqrt", "tmpVar3" ],
+        },
+        {
+            "shortname":"sigma",
+            "func":["Divide", 
+                    ["Multiply", 6, "L", "P"], 
+                    ["Multiply", "x_4", ["Square", "x_3"]]],
+        },
+        {
+            "shortname":"tmpVar4",
+            "func":[
+                        "Divide", 
+                        [
+                            "Multiply", 
+                            4.013, 
+                            "E", 
+                            [
+                            "Sqrt", 
+                            [
+                                "Multiply", 
+                                ["Rational", 1, 36], 
+                                ["Square", "x_3"], 
+                                ["Power", "x_4", 6]
+                            ]
+                            ]
+                        ], 
+                        ["Square", "L"]
+                        ],
+        },
+        {
+            "shortname":"tmpVar5",
+            "func":[
+                    "Divide", 
+                    [
+                        "Multiply", 
+                        ["Rational", 1, 2], 
+                        "x_3", 
+                        [
+                        "Sqrt", 
+                        [
+                            "Divide", 
+                            ["Multiply", ["Rational", 1, 4], "E"], 
+                            "G"
+                        ]
+                        ]
+                    ], 
+                    "L"
+                    ],
+        },
+        {
+            "shortname":"PC",
+            "func":["Multiply", 
+                    "tmpVar4",
+                    ["Subtract", 1, "tmpVar5"]],
+        },
+    ],
+    "objectives":[  
+        {
+            "shortname":"f1",
+            "func":["Add", ["Multiply", 1.10471, "x_2", ["Square", "x_1"]], 
+                    [
+                        "Multiply", 
+                        0.04811, 
+                        "x_3", 
+                        "x_4", 
+                        ["Add", "x_2", 14]
+                    ]
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f2",
+            "func":[
+                    "Divide", 
+                    [
+                        "Multiply", 
+                        4, 
+                        "P", 
+                        ["Power", "L", 3]
+                    ], 
+                    [
+                        "Multiply", 
+                        "E", 
+                        "x_4", 
+                        ["Power", "x_3", 3]
+                    ]
+                    ],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+    ],
+    "constraints":[
+        {
+            "shortname":"g1",
+            "func":["Max",["Negate",["Subtract", "tauMax", "tau",]],0],
+        },
+        {
+            "shortname":"g2",
+            "func":["Max",["Negate",["Subtract", "sigmaMax", "sigma",]],0],
+        },
+        {
+            "shortname":"g3",
+            "func":["Max",["Negate",["Subtract", "x_4", "x_1",]],0],
+        },
+        {
+            "shortname":"g4",
+            "func":["Max",["Negate",["Subtract", "PC", "P",]],0],
+        },
+    ],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=cre22_json)
+    return p
+
 import plotly.graph_objects as go
 from desdeo_emo.EAs.NSGAIII import NSGAIII
 #["Negate",
@@ -1984,9 +2208,10 @@ def test3():
 
 # test3()
 def test4():
-    p = cre21()
+    p = cre22()
     cre21_test = np.array([[41.7022063,  72.03245214,  1.00022875]])
-    r = p.evaluate(cre21_test)
+    cre22_test = np.array([[2.15798227, 7.23121249, 0.10113231, 1.59887129]])
+    r = p.evaluate(cre22_test)
     print(r)
 
 test4()
