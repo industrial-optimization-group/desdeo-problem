@@ -865,7 +865,7 @@ def re34():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f2",
             "func":[
                     "Add", 
@@ -886,7 +886,7 @@ def re34():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f3",
             "func":[
                 "Add", 
@@ -912,7 +912,7 @@ def re34():
     }
     p = MOProblem(json=re34_json)
     return p
-#TODO: 2sd objective f[1] = max([x1, x2, x3, x4]),
+
 def re36():
     re36_json = {
     "constants":[],
@@ -972,7 +972,9 @@ def re36():
         },
         {
             "shortname":"f2",
-            "func":["Max","g_1",0],
+            "func":["Max",["Floor","x_1"],
+                    ["Max",["Floor","x_2"],
+                     ["Max",["Floor","x_3"],["Floor","x_4"]]]],
             "max": False,
             "lowerbound":None,
             "upperbound":None
@@ -1312,7 +1314,7 @@ def re37():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f2",
             "func":[
                     "Add", 
@@ -1337,7 +1339,7 @@ def re37():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f3",
             "func":[
                     "Add", 
@@ -1581,7 +1583,7 @@ def re41():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f2",
             "func":[
                     "Add", 
@@ -1594,7 +1596,7 @@ def re41():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f3",
             "func":[
                     "Multiply", 
@@ -1614,7 +1616,7 @@ def re41():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f4",
             "func":["Sum", ["Max","g_i",0], ["Triple", ["Hold", "i"], 1, 10]],
             "max": False,   
@@ -1920,7 +1922,7 @@ def re42():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f2",
             "func":["Add", "steel_weight", "outfit_weight", "machinery_weight"],
             "max": False,
@@ -1928,7 +1930,7 @@ def re42():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f3",
             "func":["Negate",[ "Multiply", "cargo_DWT", "RTPA"]],
             "max": False,
@@ -1936,7 +1938,7 @@ def re42():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f4",
             "func":["Sum", ["Max","g_i",0], ["Triple", ["Hold", "i"], 1, 9]],
             "max": False,   
@@ -2060,7 +2062,7 @@ def re61():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f2",
             "func":["Multiply", 3000,"x_1"],
             "max": False,
@@ -2068,7 +2070,7 @@ def re61():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f3",
             "func":["Multiply", 699747300, "x_2", ["Power", ["Multiply", 2289, 0.06], -0.65]],
             "max": False,
@@ -2076,7 +2078,7 @@ def re61():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f4",
             "func":[
                     "Multiply", 
@@ -2096,7 +2098,7 @@ def re61():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f5",
             "func":[
                     "Multiply", 
@@ -2113,7 +2115,7 @@ def re61():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f6",
             "func":["Sum", ["Max","g_i",0], ["Triple", ["Hold", "i"], 1, 7]],
             "max": False,
@@ -2126,7 +2128,330 @@ def re61():
     }
     p = MOProblem(json=re61_json)
     return p
-#TODO: RE91
+
+def re91():
+    re61_json = {
+    "constants":[],
+    "variables":[
+        {
+            "longname":"Decision variable 1",
+            "shortname":"x_1",
+            "lowerbound":0.5,
+            "upperbound":1.5,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "longname":"Decision variable 2",
+            "shortname":"x_2",
+            "lowerbound":0.45,
+            "upperbound":1.35,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":0.5,
+            "upperbound":1.5,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+                {
+            "shortname":"x_4",
+            "lowerbound":0.5,
+            "upperbound":1.5,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+                {
+            "shortname":"x_5",
+            "lowerbound":0.875,
+            "upperbound":2.625,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+                {
+            "shortname":"x_6",
+            "lowerbound":0.4,
+            "upperbound":1.2,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+                {
+            "shortname":"x_7",
+            "lowerbound":0.4,
+            "upperbound":1.2,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_8",
+            "lowerbound":0.345,
+            "upperbound":0.351,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_9",
+            "lowerbound":0.192,
+            "upperbound":0.198,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+                        {
+            "shortname":"x_10",
+            "lowerbound":0,
+            "upperbound":10,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+                                {
+            "shortname":"x_11",
+            "lowerbound":0,
+            "upperbound":10,
+            "type":"RealNumber",
+            "initialvalue":None
+        },
+    ],
+    "extra_func":[
+        {
+            "shortname":"f_1",
+            "func":[
+                    "Add", 
+                    ["Multiply", 4.9, "x_1"], 
+                    ["Multiply", 6.67, "x_2"], 
+                    ["Multiply", 6.98, "x_3"], 
+                    ["Multiply", 4.01, "x_4"], 
+                    ["Multiply", 1.75, "x_5"], 
+                    ["Multiply", 0.00001, "x_6"], 
+                    ["Multiply", 2.73, "x_7"], 
+                    1.98
+                    ],
+        },
+        {
+            "shortname":"f_2",
+            "func":[
+                    "Add", 
+                    ["Multiply", -0.00931, "x_10", "x_2"], 
+                    ["Multiply", 0.01343, "x_10", "x_6"], 
+                    ["Multiply", -0.3717, "x_2", "x_4"], 
+                    ["Multiply", -0.484, "x_3", "x_9"], 
+                    1.16
+                    ],
+        },
+        {
+            "shortname":"f_3",
+            "func":[
+                    "Divide", 
+                    [
+                        "Add", 
+                        ["Multiply", -0.0159, "x_1", "x_2"], 
+                        ["Multiply", -0.188, "x_1", "x_8"], 
+                        ["Multiply", 0.00001575, "x_10", "x_11"], 
+                        ["Multiply", 0.87570001, "x_10", "x_5"], 
+                        ["Multiply", 0.00139, "x_11", "x_8"], 
+                        ["Multiply", -0.019, "x_2", "x_7"], 
+                        ["Multiply", 0.0144, "x_3", "x_5"], 
+                        ["Multiply", 0.08045, "x_6", "x_9"], 
+                        0.261
+                    ], 
+                    0.32
+                    ],
+        },
+        {
+            "shortname":"f_4",
+            "func":[
+                    "Divide", 
+                    [
+                        "Add", 
+                        ["Multiply", -0.018, ["Square", "x_2"]], 
+                        ["Multiply", -0.131, "x_1", "x_8"], 
+                        ["Multiply", -0.0704, "x_1", "x_9"], 
+                        ["Multiply", 0.0007715, "x_10", "x_5"], 
+                        ["Multiply", 0.00184, "x_10", "x_9"], 
+                        ["Multiply", 0.00121, "x_11", "x_8"], 
+                        ["Multiply", 0.03099, "x_2", "x_6"], 
+                        ["Multiply", -0.018, "x_2", "x_7"], 
+                        ["Multiply", 0.0208, "x_3", "x_8"], 
+                        ["Multiply", 0.121, "x_3", "x_9"], 
+                        ["Multiply", 0.00817, "x_5"], 
+                        ["Multiply", -0.00364, "x_5", "x_6"], 
+                        0.214
+                    ], 
+                    0.32
+                    ],
+        },
+        {
+            "shortname":"f_5",
+            "func":[
+                    "Divide", 
+                    [
+                        "Add", 
+                        ["Multiply", 0.227, ["Square", "x_2"]], 
+                        ["Multiply", 0.001232, "x_10", "x_3"], 
+                        ["Multiply", -0.61, "x_2"], 
+                        ["Multiply", -0.163, "x_3", "x_8"], 
+                        ["Multiply", -0.166, "x_7", "x_9"], 
+                        0.74
+                    ], 
+                    0.32
+                    ],
+        },
+        {
+            "shortname":"f_6",
+            "func":[
+                    "Multiply", 
+                    ["Rational", 32, 3], 
+                    [
+                        "Add", 
+                        ["Multiply", -4.2, "x_1", "x_2"], 
+                        ["Multiply", -5.057, "x_1", "x_2"], 
+                        ["Multiply", -12.9, "x_1", "x_8"], 
+                        ["Multiply", 0.1792, "x_10"], 
+                        ["Multiply", 0.1107, "x_10", "x_3"], 
+                        ["Multiply", 0.0207, "x_10", "x_5"], 
+                        ["Multiply", -0.0215, "x_10", "x_5"], 
+                        ["Multiply", 0.32, "x_10", "x_9"], 
+                        ["Multiply", -9.9, "x_2"], 
+                        ["Multiply", -11, "x_2", "x_8"], 
+                        ["Multiply", 3.818, "x_3"], 
+                        ["Multiply", 2.95, "x_3"], 
+                        ["Multiply", 6.63, "x_6", "x_9"], 
+                        ["Multiply", -7.77, "x_7", "x_8"], 
+                        ["Multiply", -9.98, "x_7", "x_8"], 
+                        ["Multiply", 22, "x_8", "x_9"], 
+                        28.98, 
+                        33.86, 
+                        46.36
+                    ]
+                    ],
+        },
+        {
+            "shortname":"f_7",
+            "func":[
+                    "Multiply", 
+                    ["Rational", 1, 4], 
+                    [
+                        "Add", 
+                        ["Multiply", 0.000191, ["Square", "x_11"]], 
+                        ["Multiply", -0.0122, "x_10", "x_4"], 
+                        ["Multiply", 0.009325, "x_10", "x_6"], 
+                        ["Multiply", -0.19, "x_2", "x_3"], 
+                        ["Multiply", -0.5, "x_4"], 
+                        4.72
+                    ]
+                    ],
+        },
+        {
+            "shortname":"f_8",
+            "func":[
+                    "Divide", 
+                    [
+                        "Add", 
+                        ["Multiply", -0.674, "x_1", "x_2"], 
+                        ["Multiply", -0.0198, "x_10", "x_4"], 
+                        ["Multiply", 0.028, "x_10", "x_6"], 
+                        ["Multiply", -1.95, "x_2", "x_8"], 
+                        10.58
+                    ], 
+                    9.9
+                    ],
+        },
+        {
+            "shortname":"f_9",
+            "func":[
+                    "Divide", 
+                    [
+                        "Add", 
+                        ["Multiply", -0.000786, ["Square", "x_11"]], 
+                        ["Multiply", 0.0432, "x_10", "x_9"], 
+                        ["Multiply", -0.0556, "x_11", "x_9"], 
+                        ["Multiply", -0.489, "x_3", "x_7"], 
+                        ["Multiply", -0.843, "x_5", "x_6"], 
+                        16.45
+                    ], 
+                    15.7
+                    ],
+        },
+    ],
+    "objectives":[  
+        {
+            "longname":"minimize structural volume",
+            "shortname":"f1",
+            "func":"f_1",
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+
+            "shortname":"f2",
+            "func":["Max", 0,"f_2"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+
+            "shortname":"f3",
+            "func":["Max", 0,"f_3"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f4",
+            "func":["Max", 0,"f_4"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f5",
+            "func":["Max", 0,"f_5"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+
+            "shortname":"f6",
+            "func":["Max", 0,"f_6"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+                {
+
+            "shortname":"f7",
+            "func":["Max", 0,"f_7"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+                {
+
+            "shortname":"f8",
+            "func":["Max", 0,"f_8"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+
+            "shortname":"f9",
+            "func":["Max", 0,"f_9"],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "constraints":[],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=re61_json)
+    return p
+
 def cre21():
     cre21_json = {
     "constants":[],
@@ -2887,7 +3212,87 @@ def cre24():
     p = MOProblem(json=cre24_json)
     return p
 
-#TODO:2sd objective f[1] = max([x1, x2, x3, x4]),
+def cre25():
+    cre25_json = {
+    "constants":[],
+    "variables":[
+        {
+            "shortname":"x_1",
+            "lowerbound":12,
+            "upperbound":60,
+            "type":"Integer",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_2",
+            "lowerbound":12,
+            "upperbound":60,
+            "type":"Integer",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_3",
+            "lowerbound":12,
+            "upperbound":60,
+            "type":"Integer",
+            "initialvalue":None
+        },
+        {
+            "shortname":"x_4",
+            "lowerbound":12,
+            "upperbound":60,
+            "type":"Integer",
+            "initialvalue":None
+        }
+    ],
+    "extra_func":[
+        {
+            "shortname":"f_1",
+            "func":["Abs",
+                ["Subtract", 
+                 6.931, 
+                 ["Divide", 
+                  ["Multiply", ["Floor","x_3"], ["Floor","x_4"]], 
+                  ["Multiply", ["Floor","x_1"], ["Floor","x_2"]] ]
+                ]],
+        },
+        {
+            "shortname":"g_1",
+            "func":["Add", ["Divide", "f_1", 6.931], -0.5],
+        },
+    ],
+    "objectives":[  
+        {
+            "shortname":"f1",
+            "func":"f_1",
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+        {
+            "shortname":"f2",
+            "func":["Max",["Floor","x_1"],
+                    ["Max",["Floor","x_2"],
+                     ["Max",["Floor","x_3"],["Floor","x_4"]]]],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        },
+    ],
+    "constraints":[
+        {
+            "shortname":"g1",
+            "func":["Max","g_1",0],
+            "max": False,
+            "lowerbound":None,
+            "upperbound":None
+        }
+    ],
+    "__problemName":"RE"
+    }
+    p = MOProblem(json=cre25_json)
+    return p
+
 def cre31():
     cre31_json = {
     "constants":[],
@@ -3573,7 +3978,7 @@ def cre51():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f2",
             "func":["Multiply", 3000,"x_1"],
             "max": False,
@@ -3581,7 +3986,7 @@ def cre51():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f3",
             "func":["Multiply", 699747300, "x_2", ["Power", ["Multiply", 2289, 0.06], -0.65]],
             "max": False,
@@ -3589,7 +3994,7 @@ def cre51():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f4",
             "func":[
                     "Multiply", 
@@ -3609,7 +4014,7 @@ def cre51():
             "upperbound":None
         },
         {
-            "longname":"minimize the joint displacement",
+
             "shortname":"f5",
             "func":[
                     "Multiply", 
@@ -3639,5 +4044,4 @@ def cre51():
     }
     p = MOProblem(json=cre51_json)
     return p
-
 
