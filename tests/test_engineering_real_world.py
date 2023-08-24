@@ -58,13 +58,13 @@ def test_evaluate_re22():
     p: MOProblem = re22()
 
     # Variable values
-    xs = np.array([[10., 10., 20.], [12., 10., 20.], [11.5, 15, 35]])
+    xs = np.array([[6.37192567e+00, 1.44064899e+01, 4.57499269e-03]])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 3
+    assert objective_vectors.shape[0] == 1
 
-    expected_result = np.array([[421.938, 2], [472.8, 2], [663.39, 164.0054642]])
+    expected_result = np.array([[185.84754575, 201.41659198]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
@@ -100,13 +100,13 @@ def test_evaluate_re23():
     p: MOProblem = re23()
 
     # Variable values
-    xs = np.array([[50, 50, 10, 10], [11, 63, 78, 187]])
+    xs = np.array([[42.28517847, 72.31212485, 10.02173122, 79.53649171]])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 2
+    assert objective_vectors.shape[0] == 1
 
-    expected_result = np.array([[2996.845703, 5.9616],[49848.35467, 4266017.057]])
+    expected_result = np.array([[   5211.1889184,  1266687.99823145]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
@@ -143,13 +143,13 @@ def test_evaluate_re24():
     p: MOProblem = re24()
 
     # Variable values
-    xs = np.array([[2, 20], [3.3, 41.7]])
+    xs = np.array([[ 1.95957702, 36.15606243]])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 2
+    assert objective_vectors.shape[0] == 1
 
-    expected_result = np.array([[2402, 3.63459881], [5007.3, 3.8568386109]])
+    expected_result = np.array([[4340.68706806,    0.        ]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
@@ -185,13 +185,13 @@ def test_evaluate_re25():
     p: MOProblem = re25()
 
     # Variable values
-    xs = np.array([[35.2, 15.5, 0.2], [1.5, 22.2, 0.4]])
+    xs = np.array([[29.77451832,  2.32877878,  0.09004689]])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 2
+    assert objective_vectors.shape[0] == 1
 
-    expected_result = np.array([[60.6336716, 34638.44539181], [34.0130175755, 494.270212155]])
+    expected_result = np.array([[1.55630109e+00, 7.85132763e+06]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
@@ -227,14 +227,13 @@ def test_evaluate_re31():
     p: MOProblem = re31()
 
     # Variable values
-    xs = np.array([[1.0, 2.0, 3.0], [62.3, 14.7, 1.2]])
+    xs = np.array([[41.7022063,  72.03245214,  1.00022875]])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 2
+    assert objective_vectors.shape[0] == 1
 
-    expected_result = np.array([[11.32455532, 33.3333333, 199924.503], 
-                                [283.1345722, 1.117207759, 199991.79866]])
+    expected_result = np.array([[273.82583798,   1.97697845, 273.72583798]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
@@ -270,14 +269,13 @@ def test_evaluate_re32():
     p: MOProblem = re32()
 
     # Variable values
-    xs = np.array([[1.0, 2.0, 3.0, 4.0],[2.5, 9, 3, 5]])
+    xs = np.array([[2.15798227, 7.23121249, 0.10113231, 1.59887129]])
 
     objective_vectors = p.evaluate(xs).objectives
 
-    assert objective_vectors.shape[0] == 2
+    assert objective_vectors.shape[0] == 1
 
-    expected_result = np.array([[11.44654, 0.0203259259, 18004862.58583042], 
-                                [78.7378875, 0.01626074, 35163507.96891048]])
+    expected_result = np.array([[3.73662096e+01, 1.32736634e+03, 3.07903225e+07]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
@@ -313,13 +311,13 @@ def test_evaluate_re33():
     p: MOProblem = re33()
 
     # Variable values
-    xs = np.array([60, 110, 2557, 12])
+    xs = np.array([[  65.42555012,  100.21135727, 1000.22874963,   13.72099315]])
 
     objective_vectors = p.evaluate(xs).objectives
 
     assert objective_vectors.shape[0] == 1
 
-    expected_result = np.array([[4.5815, 2.4397401, 106196.71729885972]])
+    expected_result = np.array([[3.59150353, 5.67635863, 0.        ]])
 
     npt.assert_allclose(objective_vectors, expected_result)
 
