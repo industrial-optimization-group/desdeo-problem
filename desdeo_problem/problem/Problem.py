@@ -31,12 +31,13 @@ from desdeo_problem.problem.Objective import (
     _ScalarObjective,
     ScalarObjective,
     ScalarDataObjective,
-)
-from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor
-from desdeo_problem.problem.Variable import Variable
-from desdeo_problem.utilities.MathParser import MathParser
-
-class ProblemError(Exception):
+)  
+from desdeo_problem.surrogatemodels.SurrogateModels import BaseRegressor  
+from desdeo_problem.problem.Variable import Variable  
+from desdeo_problem.utilities.MathParser import MathParser  
+  
+  
+class ProblemError(Exception):  
     """Raised when an error related to the Problem class is encountered.
 
     """
