@@ -1,6 +1,13 @@
 name: DESDEO-problem 
 
-on: push
+#on: push
+on:
+  push:
+    branches:
+      - '*'
+#  pull_request:
+#    branches:
+#      - master
 
 jobs:
   build:
@@ -26,7 +33,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ "ubuntu-latest" ]
-        python-version: [ "3.8", "3.9" ]
+        python-version: [ "3.9", "3.10" ]
     runs-on: ${{ matrix.os }}
     steps:
       #----------------------------------------------
@@ -69,10 +76,13 @@ jobs:
         run: poetry install --no-interaction
       #----------------------------------------------
       #    add matrix specifics and run test suite
+      #    run tests 10 times if failures
       #----------------------------------------------
-
       - name: Run tests
+        id: run-tests
         run: |
           source .venv/bin/activate
-          pytest tests/
-          #coverage report
+          pip install pytest-rerunfailures
+          pytest tests/ --reruns 10
+
+

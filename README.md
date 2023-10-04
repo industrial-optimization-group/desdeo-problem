@@ -1,5 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/desdeo-problem.svg)](https://badge.fury.io/py/desdeo-problem)
 [![Documentation Status](https://readthedocs.org/projects/desdeo-problem/badge/?version=latest)](https://desdeo-problem.readthedocs.io/en/latest/?badge=latest)
+[![DESDEO-problem](https://github.com/Sepuliini/desdeo-problem/actions/workflows/DESDEO-problem.yml/badge.svg)](https://github.com/Sepuliini/desdeo-problem/actions/workflows/DESDEO-problem.yml)
 
 # desdeo-problem
 
@@ -27,3 +28,5 @@ Documentation for this package can be found [here](https://desdeo-problem.readth
 ## Citation
 
 If you decide to use DESDEO is any of your works or research, we would appreciate you citing the appropiate paper published in [IEEE Access](https://doi.org/10.1109/ACCESS.2021.3123825) (open access).
+
+
