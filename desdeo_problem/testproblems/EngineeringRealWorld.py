@@ -14,6 +14,66 @@ from desdeo_problem.problem import Variable
 from desdeo_problem.problem import ScalarObjective
 from desdeo_problem.problem.Problem import MOProblem, ProblemBase
 
+def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
+    """ Four bar truss design problem. 
+    Two objectives and four variables.
+    
+    Arguments:
+        var_iv (np.array): Optional, initial variable values.
+            Defaults are [2, 2, 2, 2]. x1, x4 ∈ [a, 3a], x2, x3 ∈ [√2 a, 3a]
+            and a = F / sigma
+    Returns:
+        MOProblem: a problem object.
+    """
+
+    # Parameters
+    F = 10.0
+    sigma = 10.0
+    E = 2.0 * 1e5
+    L = 200.0
+    a = F / sigma
+
+    # Check the number of variables
+    if (np.shape(np.atleast_2d(var_iv)[0]) != (4,)):
+        raise RuntimeError("Number of variables must be four")
+
+    # Lower bounds
+    lb = np.array([a, np.sqrt(2) * a, np.sqrt(2) * a, a])
+    
+    # Upper bounds
+    ub = np.array([3 * a, 3 * a, 3 * a, 3 * a])
+
+    # Check the variable bounds
+    if np.any(lb > var_iv) or np.any(ub < var_iv):
+        raise ValueError("Initial variable values need to be between lower and upper bounds")
+
+    def f_1(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return L * ((2 * x[:, 0]) + np.sqrt(2.0) * x[:, 1] + np.sqrt(x[:, 2]) + x[:, 3])
+
+    def f_2(x: np.ndarray) -> np.ndarray:
+        x = np.atleast_2d(x)
+        return ((F * L) / E) * ((2.0 / x[:, 0]) + 
+            (2.0 * np.sqrt(2.0) / x[:, 1]) - (2.0 * np.sqrt(2.0) / x[:, 2]) + (2.0 / x[:, 3]))
+
+    objective_1 = ScalarObjective(name="minimize the structural volume", evaluator=f_1, maximize=[False])
+    objective_2 = ScalarObjective(name="minimize the joint displacement", evaluator=f_2, maximize=[False])
+
+    objectives = [objective_1, objective_2]
+
+    # The four variables determine the length of four bars
+    x_1 = Variable("x_1", 2 * a, a, 3 * a)
+    x_2 = Variable("x_2", 2 * a, (np.sqrt(2.0) * a), 3 * a)
+    x_3 = Variable("x_3", 2 * a, (np.sqrt(2.0) * a), 3 * a)
+    x_4 = Variable("x_4", 2 * a, a, 3 * a)
+
+    variables = [x_1, x_2, x_3, x_4]
+
+    problem = MOProblem(variables=variables, objectives=objectives)
+
+    return problem
+
+
 
 def re22(var_iv: np.array = np.array([7.2, 10, 20])) -> MOProblem:
     """ Reinforced concrete beam design problem.
