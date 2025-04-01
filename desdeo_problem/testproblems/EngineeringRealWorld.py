@@ -1,3 +1,9 @@
+import numpy as np
+from desdeo_problem.problem import MOProblem
+from desdeo_problem.problem import Variable
+from desdeo_problem.problem import ScalarObjective
+from desdeo_problem.problem.Problem import MOProblem, ProblemBase
+
 """
 A real-world multi-objective problem suite (the RE benchmark set)
 
@@ -6,13 +12,9 @@ optimization problem suite. Applied soft computing, 89, 106078.
 https://doi.org/10.1016/j.asoc.2020.106078 
 
 https://github.com/ryojitanabe/reproblems/blob/master/reproblem_python_ver/reproblem.py
+https://github.com/ryojitanabe/reproblems/blob/master/doc/re-supplementary_file.pdf
 
 """
-import numpy as np
-from desdeo_problem.problem import MOProblem
-from desdeo_problem.problem import Variable
-from desdeo_problem.problem import ScalarObjective
-from desdeo_problem.problem.Problem import MOProblem, ProblemBase
 
 def re21(var_iv: np.array = np.array([2, 2, 2, 2])) -> MOProblem:
     """ Four bar truss design problem. 
